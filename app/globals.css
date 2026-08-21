@@ -5,59 +5,88 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Colores Kelly's Cake */
-  --primary: oklch(0.205 0 0);
-  --secondary: oklch(0.97 0 0);
-  --surface: #FFFFFF;
-  --text: #1F2937;
-  --text-light: #6B7280;
-
-  /* Fuentes */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+
+  --kc-charcoal: #2C1810;
+  --kc-rose-gold: #C8956C;
+  --kc-blush: #E8C4B8;
+  --kc-cream: #FFFCF7;
+  --kc-ivory: #FFF8F0;
+  --kc-sand: #F5EDE4;
+  --kc-gold: #D4A574;
+  --kc-mocha: #8B7355;
+  --kc-deep: #1E0F08;
+
+  /* Aliases de compatibilidad con paleta anterior */
+  --cake-gold: var(--kc-rose-gold);
+  --cake-rose: var(--kc-blush);
+  --cake-blush: var(--kc-blush);
+  --cake-creme: var(--kc-cream);
+  --cake-ivory: var(--kc-ivory);
+  --cake-sand: var(--kc-sand);
+  --cake-chocolate: var(--kc-charcoal);
+  --cake-espresso: var(--kc-charcoal);
+
+  --background: #FFFCF7;
+  --foreground: #2C1810;
+  --card: #FFFFFF;
+  --card-foreground: #2C1810;
+  --popover: #FFFFFF;
+  --popover-foreground: #2C1810;
+  --primary: #2C1810;
+  --primary-foreground: #FFFCF7;
+  --secondary: #F5EDE4;
+  --secondary-foreground: #2C1810;
+  --muted: #F5EDE4;
+  --muted-foreground: #8B7355;
+  --accent: #E8C4B8;
+  --accent-foreground: #2C1810;
+  --destructive: #B91C1C;
+  --border: #E8DDD4;
+  --input: #E8DDD4;
+  --ring: #C8956C;
+  --chart-1: #C8956C;
+  --chart-2: #D4A574;
+  --chart-3: #E8C4B8;
+  --chart-4: #8B7355;
+  --chart-5: #2C1810;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #FFFCF7;
+  --sidebar-foreground: #2C1810;
+  --sidebar-primary: #2C1810;
+  --sidebar-primary-foreground: #FFFCF7;
+  --sidebar-accent: #F5EDE4;
+  --sidebar-accent-foreground: #2C1810;
+  --sidebar-border: #E8DDD4;
+  --sidebar-ring: #C8956C;
 }
 
 @theme inline {
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-text: var(--text);
-  --color-text-light: var(--text-light);
+  --color-kc-charcoal: var(--kc-charcoal);
+  --color-kc-rose-gold: var(--kc-rose-gold);
+  --color-kc-blush: var(--kc-blush);
+  --color-kc-cream: var(--kc-cream);
+  --color-kc-ivory: var(--kc-ivory);
+  --color-kc-sand: var(--kc-sand);
+  --color-kc-gold: var(--kc-gold);
+  --color-kc-mocha: var(--kc-mocha);
+  --color-kc-deep: var(--kc-deep);
+
+  /* Tailwind aliases para paleta anterior */
+  --color-cake-gold: var(--kc-rose-gold);
+  --color-cake-rose: var(--kc-blush);
+  --color-cake-blush: var(--kc-blush);
+  --color-cake-creme: var(--kc-cream);
+  --color-cake-ivory: var(--kc-ivory);
+  --color-cake-sand: var(--kc-sand);
+  --color-cake-chocolate: var(--kc-charcoal);
+  --color-cake-espresso: var(--kc-charcoal);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-playfair);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -80,12 +109,15 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-foreground: var(--foreground);
+  --color-background: var(--background);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -104,8 +136,13 @@ html {
 }
 
 body {
-  color: var(--text);
+  color: var(--foreground);
   font-family: var(--font-sans);
+  background-color: var(--kc-cream);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
 }
 
 .dark {

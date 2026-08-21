@@ -1,7 +1,8 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function TestPage() {
-  const { data, error } = await supabase.auth.getSession();
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
 
   return (
     <main className="mx-auto max-w-3xl p-10">
@@ -12,7 +13,7 @@ export default async function TestPage() {
       <pre className="rounded-lg bg-gray-100 p-4">
         {JSON.stringify(
           {
-            session: data.session,
+            user: data.user,
             error: error?.message,
           },
           null,

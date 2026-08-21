@@ -1,24 +1,72 @@
 import Image from "next/image";
+import Link from "next/link";
 import SectionTitle from "@/components/ui/SectionTitle";
 
-const categories = [
-  {
-    title: "Cumpleaños",
-    image: "/images/categories/birthday.jpg",
-  },
-  {
-    title: "Bodas",
-    image: "/images/categories/wedding.jpg",
-  },
-  {
-    title: "Temáticos",
-    image: "/images/categories/beer.jpg",
-  },
-];
+import { createClient } from "@/lib/supabase/server";
 
-export default function Categories() {
+type CategoryCard = {
+  id: string;
+  title: string;
+  image: string;
+  href: string;
+};
+
+export default async function Categories() {
+  const supabase = await createClient();
+
+  const { data: catalogs } = await supabase
+    .from("catalogo_personalizacion")
+    .select("id, nombre")
+    .eq("tipo", "celebration")
+    .eq("activo", true)
+    .eq("mostrar_en_categorias", true)
+    .order("orden");
+
+  if (!catalogs || catalogs.length === 0) {
+    return null;
+  }
+
+  const defaultImages = [
+    "/images/categories/birthday.jpg",
+    "/images/categories/wedding.jpg",
+    "/images/categories/beer.jpg",
+  ];
+
+  // Intentar cargar la primera imagen de cada catálogo
+  const categories: CategoryCard[] = await Promise.all(
+    catalogs.map(async (cat, index) => {
+      const { data: imgData } = await supabase
+        .from("catalogo_imagenes")
+        .select("media:media_id ( url )")
+        .eq("catalogo_id", cat.id)
+        .order("es_portada", { ascending: false })
+        .order("orden")
+        .limit(1);
+
+      const media = imgData?.[0]?.media;
+      const url = Array.isArray(media)
+        ? (media[0] as Record<string, unknown>)?.url
+        : (media as unknown as Record<string, unknown>)?.url;
+
+      return {
+        id: cat.id,
+        title: cat.nombre,
+        image: (url as string) ?? defaultImages[index % defaultImages.length],
+        href: `/catalogos/${cat.id}`,
+      };
+    })
+  );
+
+  if (categories.length === 0) {
+    return null;
+  }
+
+  return <CategoryGrid categories={categories} />;
+}
+
+function CategoryGrid({ categories }: { categories: CategoryCard[] }) {
   return (
-    <section className="bg-white py-24">
+    <section className="bg-kc-ivory py-24">
       <div className="mx-auto max-w-7xl px-6">
         <SectionTitle
           title="Explora nuestras categorías"
@@ -27,28 +75,34 @@ export default function Categories() {
 
         <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
-            <div
-              key={category.title}
-              className="overflow-hidden rounded-3xl bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
+            <Link
+              key={category.id}
+              href={category.href}
+              className="group relative overflow-hidden rounded-2xl shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
             >
-              <Image
-                src={category.image}
-                alt={category.title}
-                width={600}
-                height={400}
-                className="h-72 w-full object-cover"
-              />
+              <div className="relative h-80">
+                <Image
+                  src={category.image}
+                  alt={category.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-kc-charcoal/70 via-kc-charcoal/20 to-transparent" />
+              </div>
 
-              <div className="p-6">
-                <h3 className="text-2xl font-semibold text-[#0B1423]">
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <h3 className="font-[family-name:var(--font-playfair)] text-2xl font-semibold text-white">
                   {category.title}
                 </h3>
-
-                <button className="mt-4 font-semibold text-[#D8B07A] hover:underline">
-                  Ver colección →
-                </button>
+                <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-kc-blush transition-colors group-hover:text-white">
+                  Ver colección
+                  <span className="transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

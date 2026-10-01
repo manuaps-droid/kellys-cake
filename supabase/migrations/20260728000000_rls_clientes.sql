@@ -4,27 +4,23 @@
 
 ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Clientes leen su propio registro" ON public.clientes;
 -- Usuarios leen su propio registro
 CREATE POLICY "Clientes leen su propio registro"
 ON public.clientes
 FOR SELECT
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Clientes actualizan su propio registro" ON public.clientes;
 -- Usuarios actualizan su propio registro
 CREATE POLICY "Clientes actualizan su propio registro"
 ON public.clientes
 FOR UPDATE
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins leen todos los clientes" ON public.clientes;
 -- Admins leen todos los registros (para panel admin)
 CREATE POLICY "Admins leen todos los clientes"
 ON public.clientes
 FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM public.clientes c
-    WHERE c.user_id = auth.uid()
-      AND c.rol = 'admin'
-      AND c.activo = true
-  )
-);
+USING (public.is_admin());

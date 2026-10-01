@@ -41,15 +41,55 @@ export type ContactoConfig = z.infer<typeof contactoSchema>;
 // Marketing & conversión
 // -------------------------------------------------------------
 export const marketingSchema = z.object({
-  banner_activo: z.boolean(),
-  banner_titulo: z.string(),
-  banner_texto: z.string(),
-  banner_color: z.string(),
-  banner_link: z.string(),
-  envio_gratis_umbral: z.number().nullable(),
-  mostrar_testimonios: z.boolean(),
-  carrito_abandonado_minutos: z.number().nullable(),
-  carrito_abandonado_mensaje: z.string(),
+  // Banners y promociones base
+  banner_activo: z.boolean().default(false),
+  banner_titulo: z.string().default(""),
+  banner_texto: z.string().default(""),
+  banner_color: z.string().default("#C8956C"),
+  banner_link: z.string().default(""),
+  envio_gratis_umbral: z.coerce.number().nullable().default(null),
+  mostrar_testimonios: z.boolean().default(true),
+  carrito_abandonado_minutos: z.coerce.number().nullable().default(60),
+  carrito_abandonado_mensaje: z.string().default(""),
+
+  // 1. Fidelización & Rewards (Kelly's Rewards)
+  rewards_activo: z.boolean().default(true),
+  niveles_activo: z.boolean().default(true),
+  ruleta_activo: z.boolean().default(true),
+  fechas_especiales_activo: z.boolean().default(true),
+  streak_rewards_activo: z.boolean().default(true),
+  rasca_gana_activo: z.boolean().default(false),
+
+  // 2. Viral Loops & Referidos
+  referidos_activo: z.boolean().default(true),
+  cadena_regalos_activo: z.boolean().default(false),
+  quiz_torta_ideal_activo: z.boolean().default(false),
+  ediciones_limitadas_activo: z.boolean().default(false),
+  leaderboard_embajadoras_activo: z.boolean().default(false),
+
+  // 3. Conversión & Social Proof (Growth Hacking)
+  social_proof_activo: z.boolean().default(true),
+  exit_intent_activo: z.boolean().default(true),
+  popup_registro_activo: z.boolean().default(true),
+  precio_ancla_activo: z.boolean().default(true),
+  whatsapp_express_activo: z.boolean().default(true),
+
+  // 4. Monetización & Aumento de Ticket (Upsells & Bundles)
+  upsells_carrito_activo: z.boolean().default(true),
+  bundles_activo: z.boolean().default(true),
+  suscripciones_activo: z.boolean().default(false),
+  calculadora_porciones_activo: z.boolean().default(false),
+
+  // 5. Email Marketing & Automatizaciones
+  email_bienvenida_activo: z.boolean().default(true),
+  email_carrito_abandonado_activo: z.boolean().default(true),
+  email_post_compra_activo: z.boolean().default(true),
+  email_cumpleanos_activo: z.boolean().default(true),
+
+  // 6. SEO & Contenido
+  blog_activo: z.boolean().default(true),
+  seo_programatico_activo: z.boolean().default(false),
+  resenas_producto_activo: z.boolean().default(true),
 });
 
 export type MarketingConfig = z.infer<typeof marketingSchema>;

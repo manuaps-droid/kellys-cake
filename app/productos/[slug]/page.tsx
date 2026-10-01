@@ -7,8 +7,14 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AddToCartButton from "@/features/cart/components/AddToCartButton";
 import PrecioCantidadDropdown from "@/components/PrecioCantidadDropdown";
+import {
+  TOPPER_DISENAR_URL,
+  TOPPER_PRODUCTO_SLUG,
+} from "@/features/customization/constants/topper.constants";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ReviewsList } from "@/features/resenas/components/ReviewsList";
+import { getPublicMarketing } from "@/features/admin/configuracion/queries/public-config.query";
 
 export const revalidate = 600;
 
@@ -25,7 +31,7 @@ type ProductRow = {
 
 const BENEFICIOS = [
   { icon: CakeSlice, texto: "Hecho a mano, diario" },
-  { icon: Sparkles, texto: "Ingredientes premium" },
+  { icon: Sparkles, texto: "Ingredientes de calidad" },
   { icon: Truck, texto: "Delivery en Arequipa" },
   { icon: Clock, texto: "Pedidos con 24h de anticipación" },
 ];
@@ -35,7 +41,11 @@ export default async function ProductoDetallePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const [paramsResolved, marketing] = await Promise.all([
+    params,
+    getPublicMarketing(),
+  ]);
+  const { slug } = paramsResolved;
   const supabase = createAdminClient();
 
   const { data } = await supabase
@@ -165,10 +175,25 @@ export default async function ProductoDetallePage({
                     </p>
 
                     <div className="mt-5 max-w-xs">
-                      <AddToCartButton
-                        productoId={product.id}
-                        className="w-full rounded-full px-8 py-3 text-sm shadow-md shadow-kc-charcoal/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-                      />
+                      {product.slug === TOPPER_PRODUCTO_SLUG ? (
+                        <div className="flex flex-col gap-2">
+                          <Link
+                            href={TOPPER_DISENAR_URL}
+                            className="inline-flex w-full items-center justify-center rounded-full bg-kc-rose-gold px-8 py-3 text-sm font-medium text-white shadow-md shadow-kc-rose-gold/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-kc-rose-gold/90"
+                          >
+                            Diseñar mi topper
+                          </Link>
+                          <p className="text-center text-xs leading-relaxed text-kc-mocha">
+                            Escoge el diseño del topper, escribe tu nombre y
+                            agrégalo al carrito.
+                          </p>
+                        </div>
+                      ) : (
+                        <AddToCartButton
+                          productoId={product.id}
+                          className="w-full rounded-full px-8 py-3 text-sm shadow-md shadow-kc-charcoal/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                        />
+                      )}
                     </div>
                   </>
                 ) : presentaciones.length > 0 ? (
@@ -231,6 +256,13 @@ export default async function ProductoDetallePage({
               </p>
             </div>
           </div>
+
+          {/* Reseñas */}
+          {marketing?.resenas_producto_activo !== false && (
+            <div className="mt-14 border-t border-kc-sand/60 pt-10">
+              <ReviewsList productoId={product.id} />
+            </div>
+          )}
 
           {/* Volver */}
           <div className="mt-14 border-t border-kc-sand/60 pt-6">

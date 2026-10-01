@@ -10,6 +10,17 @@ import {
 
 import { ORDER_STATUS_LABEL } from "@/features/orders/constants/order-status";
 
+import AlertasReclamosAgenda, {
+  type AlertaReclamo,
+} from "@/features/reclamos/components/admin/AlertasReclamosAgenda";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  diasHabilesRestantes,
+  evaluarPlazo,
+} from "@/features/reclamos/utils/plazo.utils";
+
+export const dynamic = "force-dynamic";
+
 type Props = {
   searchParams: Promise<{
     semana?: string;
@@ -68,6 +79,38 @@ export default async function AdminAgendaPage({
   const filters = await searchParams;
   const weekOffset = getWeekOffset(filters);
 
+  // Reclamos pendientes para las alertas
+  const supabaseAdmin = createAdminClient();
+  const { data: reclamosPendientes } = await supabaseAdmin
+    .from("libro_reclamaciones")
+    .select("id, numero, tipo, nombres, apellidos, created_at, respondido_at")
+    .neq("estado", "resuelto");
+
+  const ahora = new Date();
+  const alertasReclamos: AlertaReclamo[] = (reclamosPendientes ?? []).map(
+    (r) => {
+      const { limite } = evaluarPlazo(r.created_at, r.respondido_at, ahora);
+      const diasRestantes = diasHabilesRestantes(limite, ahora);
+
+      return {
+        id: r.id,
+        numero: r.numero,
+        tipo: r.tipo,
+        nombres: r.nombres,
+        apellidos: r.apellidos,
+        limite,
+        diasRestantes,
+        nivel:
+          r.respondido_at === null && ahora > limite
+            ? ("vencido" as const)
+            : diasRestantes <= 5
+              ? ("urgente" as const)
+              : ("info" as const),
+      };
+    }
+  );
+  alertasReclamos.sort((a, b) => a.limite.getTime() - b.limite.getTime());
+
   const { programados, sinFecha } =
     await getAgendaOrdersService();
 
@@ -106,6 +149,9 @@ export default async function AdminAgendaPage({
         title="Agenda de Producción"
         description="Programa la producción según la fecha de entrega de cada pedido confirmado y pagado."
       />
+
+      {/* Alertas del Libro de Reclamaciones */}
+      <AlertasReclamosAgenda alertas={alertasReclamos} />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">

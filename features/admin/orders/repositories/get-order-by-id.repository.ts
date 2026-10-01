@@ -18,6 +18,8 @@ export async function getOrderByIdRepository(
       envio,
       total,
       metodo_pago,
+      referencia_pago,
+      estado_pago,
       tipo_pago,
       monto_pagado,
       fecha_entrega,
@@ -52,6 +54,30 @@ export async function getOrderByIdRepository(
     return null;
   }
 
+  // Buscar información de webhook de pasarela (Culqi / MercadoPago) para conciliación
+  let webhookPago = null;
+  try {
+    const { data: webhook } = await supabase
+      .from("pago_webhooks")
+      .select("id, fuente, status, external_reference, payment_id, created_at")
+      .or(`pedido_id.eq.${id}${data.referencia_pago ? `,external_reference.eq.${data.referencia_pago}` : ""}`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (webhook) {
+      webhookPago = {
+        fuente: webhook.fuente,
+        status: webhook.status,
+        external_reference: webhook.external_reference,
+        payment_id: webhook.payment_id,
+        created_at: webhook.created_at,
+      };
+    }
+  } catch (err) {
+    console.error("Error consultando webhook de pago:", err);
+  }
+
   return {
     id: data.id,
 
@@ -73,9 +99,15 @@ export async function getOrderByIdRepository(
 
     metodo_pago: data.metodo_pago,
 
+    referencia_pago: data.referencia_pago ?? null,
+
+    estado_pago: data.estado_pago ?? null,
+
     tipo_pago: data.tipo_pago,
 
     monto_pagado: data.monto_pagado,
+
+    webhook_pago: webhookPago,
 
     fecha_entrega: data.fecha_entrega ?? null,
 

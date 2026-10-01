@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import PageHeader from "@/components/common/PageHeader";
 
 import { getCustomerByIdAction } from "@/features/admin/customers/actions/get-customer-by-id.action";
+import DeleteCustomerButton from "@/features/admin/customers/components/DeleteCustomerButton";
+import CustomerRewardsAuditCard from "@/features/admin/customers/components/CustomerRewardsAuditCard";
 
 export default async function CustomerDetailPage({
   params,
@@ -57,6 +59,7 @@ export default async function CustomerDetailPage({
             <p className="text-sm text-gray-500">Celular</p>
             <p className="font-medium">{customer.celular ?? "-"}</p>
           </div>
+
           <div>
             <p className="text-sm text-gray-500">Rol</p>
             <p className="font-medium capitalize">{customer.rol}</p>
@@ -85,6 +88,12 @@ export default async function CustomerDetailPage({
           </div>
         </div>
       </Card>
+
+      {/* Auditoría de Puntos */}
+      <CustomerRewardsAuditCard
+        rewards={customer.rewards}
+        transacciones={customer.transacciones_puntos}
+      />
 
       {/* Pedidos */}
       <Card className="p-6">
@@ -178,6 +187,23 @@ export default async function CustomerDetailPage({
             </table>
           </div>
         )}
+      </Card>
+
+      {/* Zona de peligro */}
+      <Card className="border-red-200 p-6">
+        <h2 className="mb-2 text-lg font-semibold text-red-600">
+          Eliminar cliente
+        </h2>
+        <p className="mb-4 text-sm text-gray-500">
+          Elimina de forma permanente a este cliente, sus pedidos,
+          carrito, proyectos, reseñas y cuenta de acceso. Esta acción no
+          se puede deshacer.
+        </p>
+        <DeleteCustomerButton
+          customerId={customer.id}
+          customerName={fullName}
+          redirectToList
+        />
       </Card>
     </section>
   );

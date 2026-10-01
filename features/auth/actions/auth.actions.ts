@@ -48,6 +48,18 @@ export async function signUpAction(data: {
     };
   }
 
+  // Enviar email de bienvenida de forma asíncrona si está activo
+  try {
+    const { getPublicMarketing } = await import("@/features/admin/configuracion/queries/public-config.query");
+    const marketing = await getPublicMarketing();
+    if (marketing?.email_bienvenida_activo !== false) {
+      const { sendWelcomeEmail } = await import("@/features/marketing/services/email-automation.service");
+      sendWelcomeEmail(data.email, data.nombre.trim());
+    }
+  } catch (error) {
+    console.error("No se pudo enviar email de bienvenida", error);
+  }
+
   return {
     success: true,
   };

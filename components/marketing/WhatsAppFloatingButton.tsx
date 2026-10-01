@@ -27,7 +27,7 @@ export default function WhatsAppFloatingButton({ config }: Props) {
   const href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-30 lg:z-50 flex flex-col items-end gap-2">
       {open && (
         <div className="mb-1 max-w-xs rounded-2xl border border-green-100 bg-white p-4 shadow-2xl">
           <p className="text-sm font-semibold text-gray-800">

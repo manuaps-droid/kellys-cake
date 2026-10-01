@@ -10,6 +10,7 @@ import OrderInfoCard from "@/features/admin/orders/components/OrderInfoCard";
 import OrderItemsTable from "@/features/admin/orders/components/OrderItemsTable";
 import OrderSummaryCard from "@/features/admin/orders/components/OrderSummaryCard";
 import OrderDeliveryCard from "@/features/admin/orders/components/OrderDeliveryCard";
+import OrderPaymentAuditCard from "@/features/admin/orders/components/OrderPaymentAuditCard";
 
 type Props = {
   params: Promise<{
@@ -44,6 +45,19 @@ export default async function OrderDetailPage({
             Volver
           </Link>
         }
+      />
+
+      {/* Auditoría y Conciliación de Pago (Comprueba si el dinero corresponde a los productos) */}
+      <OrderPaymentAuditCard
+        total={order.total}
+        subtotal={order.subtotal}
+        envio={order.envio}
+        metodoPago={order.metodo_pago}
+        tipoPago={order.tipo_pago}
+        montoPagado={order.monto_pagado}
+        estadoPago={order.estado_pago}
+        referenciaPago={order.referencia_pago}
+        webhookPago={order.webhook_pago}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

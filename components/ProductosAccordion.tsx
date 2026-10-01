@@ -26,7 +26,9 @@ type Producto = {
   descripcion_corta: string | null;
   descripcion: string | null;
   precio: number | null;
+  mas_vendido: boolean;
   imagen_url: string | null;
+  imagen_url_2: string | null;
   tiers?: Tier[];
   presentaciones?: Presentacion[];
 };
@@ -130,20 +132,42 @@ export default function ProductosAccordion({ catalogos }: Props) {
                         {/* Imagen */}
                         <Link
                           href={`/productos/${product.slug}`}
-                          className="relative block aspect-square overflow-hidden bg-gray-100"
+                          className="group/img relative block aspect-square overflow-hidden bg-gray-100"
                         >
                           {product.imagen_url ? (
-                            <Image
-                              src={product.imagen_url}
-                              alt={product.nombre}
-                              fill
-                              sizes="(max-width: 768px) 50vw, 25vw"
-                              className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-110"
-                            />
+                            <>
+                              <Image
+                                src={product.imagen_url}
+                                alt={product.nombre}
+                                fill
+                                sizes="(max-width: 768px) 50vw, 25vw"
+                                className={`object-contain p-3 transition-all duration-700 ease-out group-hover:scale-110 ${
+                                  product.imagen_url_2
+                                    ? "group-hover:opacity-0"
+                                    : ""
+                                }`}
+                              />
+                              {product.imagen_url_2 && (
+                                <Image
+                                  src={product.imagen_url_2}
+                                  alt={`${product.nombre} - vista 2`}
+                                  fill
+                                  sizes="(max-width: 768px) 50vw, 25vw"
+                                  className="object-contain p-3 opacity-0 transition-all duration-700 ease-out group-hover:scale-110 group-hover:opacity-100"
+                                />
+                              )}
+                            </>
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-4xl transition-transform duration-700 group-hover:scale-110">
                               🍰
                             </div>
+                          )}
+
+                          {/* Badge "Más vendido" (esquina inferior izquierda) */}
+                          {product.mas_vendido && (
+                            <span className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-kc-rose-gold px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase shadow-sm">
+                              ★ Más vendido
+                            </span>
                           )}
 
                           {/* Badge imagen referencial (desaparece al hover) */}

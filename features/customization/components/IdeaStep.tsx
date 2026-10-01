@@ -39,8 +39,8 @@ export default function IdeaStep() {
       </h2>
 
       <p className="mt-6 text-lg leading-8 text-gray-600">
-        No te preocupes si no tienes todos los detalles.
-        Describe tu idea y nosotros te ayudaremos a hacerla realidad.
+        No hace falta que tengas todo resuelto. Describe lo que se te
+        ocurra y lo vamos puliendo juntos.
       </p>
 
       <div className="mt-10 rounded-3xl bg-white p-8 shadow">

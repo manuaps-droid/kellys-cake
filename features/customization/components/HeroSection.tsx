@@ -13,25 +13,23 @@ export default function HeroSection() {
       <div className="grid items-center gap-16 lg:grid-cols-2">
         <div>
           <span className="inline-flex items-center rounded-full bg-[#D8B07A]/10 px-4 py-2 text-sm font-semibold text-[#D8B07A]">
-            ✨ Diseños 100 % personalizados
+            Pastelería de Autor · Piezas Exclusivas
           </span>
 
           <h1 className="mt-8 font-playfair text-5xl font-bold leading-tight text-[#0B1423] md:text-6xl">
-            Diseña un pastel tan especial como tu celebración
+            Diseñamos la pieza central de tu celebración
           </h1>
 
           <p className="mt-8 max-w-xl text-lg leading-8 text-gray-600">
-            No importa si tienes una idea completa o solo algunas
-            imágenes que te inspiran. Nuestro equipo transformará tu
-            idea en un pastel único, elaborado especialmente para tu
-            celebración.
+            Cada detalle cuenta. Tú defines la ocasión y tus ideas de inspiración; nosotros aportamos
+            la técnica repostera, la armonía de sabores y una propuesta estética pensada para sorprender a tus invitados.
           </p>
 
           <div className="mt-10 space-y-4">
-            <Benefit text="Diseño completamente personalizado" />
-            <Benefit text="Hasta 4 imágenes de inspiración" />
-            <Benefit text="Cotización totalmente gratuita" />
-            <Benefit text="Respuesta en menos de 24 horas" />
+            <Benefit text="Diseño de autor exclusivo para tu evento" />
+            <Benefit text="Sube hasta 4 imágenes de inspiración" />
+            <Benefit text="Cotización detallada y 100% transparente" />
+            <Benefit text="Puntualidad y entrega garantizada para tu fecha" />
           </div>
 
           <div className="mt-12 flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -39,7 +37,7 @@ export default function HeroSection() {
               href="/personalizar/nuevo"
               className="inline-flex items-center justify-center rounded-full bg-[#0B1423] px-8 py-4 text-lg font-semibold text-white transition hover:bg-[#1A2538]"
             >
-              🎂 Comenzar mi diseño
+              Comenzar mi diseño
 
               <ArrowRight
                 size={20}
@@ -48,7 +46,7 @@ export default function HeroSection() {
             </Link>
 
             <span className="text-sm text-gray-500">
-              ⏱ Solo toma aproximadamente 3 minutos.
+              Solo te toma unos 3 minutos.
             </span>
           </div>
         </div>

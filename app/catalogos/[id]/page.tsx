@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -6,6 +5,8 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CatalogImageGallery from "@/features/admin/personalization/images/components/CatalogImageGallery";
 import CatalogProductsGallery from "@/features/admin/personalization/images/components/CatalogProductsGallery";
+import TopperPicker from "@/features/customization/components/TopperPicker";
+import { TOPPER_CATALOGO_ID, TOPPER_PRODUCTO_SLUG } from "@/features/customization/constants/topper.constants";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -30,10 +31,26 @@ export default async function CatalogDetailPage({ params }: Props) {
 
   if (!catalog) notFound();
 
+  const esTopper = catalog.id === TOPPER_CATALOGO_ID;
+
+  // Producto con el que se cobra el topper (se resuelve en el servidor)
+  let productoTopper: { id: string; precio: number | null } | null = null;
+
+  if (esTopper) {
+    const { data: p } = await supabase
+      .from("productos")
+      .select("id, precio")
+      .eq("slug", TOPPER_PRODUCTO_SLUG)
+      .eq("estado", "publicado")
+      .maybeSingle();
+
+    productoTopper = p ?? null;
+  }
+
   // 1) Obtener imágenes del catálogo (catalogo_imagenes)
   const { data: rels } = await supabase
     .from("catalogo_imagenes")
-    .select("id, media_id, orden, es_portada")
+    .select("id, media_id, orden, es_portada, precio, descripcion")
     .eq("catalogo_id", id)
     .order("orden");
 
@@ -55,6 +72,8 @@ export default async function CatalogDetailPage({ params }: Props) {
       url: (media?.url as string) ?? "",
       nombre: (media?.nombre as string) ?? "",
       es_portada: r.es_portada as boolean ?? false,
+      precio: (r.precio as number | null) ?? null,
+      descripcion: (r.descripcion as string | null) ?? null,
     };
   });
 
@@ -155,6 +174,15 @@ export default async function CatalogDetailPage({ params }: Props) {
     }
   }
 
+  const disenosTopper = catalogImages
+    .filter((d) => d.url !== "")
+    .map((d) => ({
+      id: d.id,
+      url: d.url,
+      nombre: d.nombre,
+      precio: d.precio,
+    }));
+
   return (
     <>
       <Navbar />
@@ -173,72 +201,58 @@ export default async function CatalogDetailPage({ params }: Props) {
           </div>
         </section>
 
-        <p className="text-kc-mocha text-sm mb-4">Imagenes referenciales</p>
+        {esTopper ? (
+          productoTopper && (
+            <TopperPicker
+              productoId={productoTopper.id}
+              precioBase={productoTopper.precio ?? 15}
+              disenos={disenosTopper}
+            />
+          )
+        ) : (
+          <>
+            <p className="text-kc-mocha text-sm mb-4">Imágenes referenciales</p>
 
-        {/* Productos del catálogo con checkboxes de portada */}
-        {productosParaMostrar.length > 0 && (
-          <CatalogProductsGallery
-            productos={productosParaMostrar}
-            catalogoId={id}
-          />
-        )}
+            {/* Productos del catálogo con checkboxes de portada */}
+            {productosParaMostrar.length > 0 && (
+              <CatalogProductsGallery
+                productos={productosParaMostrar}
+                catalogoId={id}
+              />
+            )}
 
-        {/* Galería de imágenes del catálogo (si las hay) */}
-        {catalogImages.length > 0 && (
-          <section className="bg-kc-cream py-16">
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
-                {catalogImages.map((img) => (
-                  <div
-                    key={img.id}
-                    className="mb-6 break-inside-avoid overflow-hidden rounded-2xl shadow-md transition-all duration-300 hover:shadow-2xl"
-                  >
-                    <div className="relative">
-                      <Image
-                        src={img.url}
-                        alt={img.nombre}
-                        width={500}
-                        height={500}
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="w-full object-cover"
-                      />
-                    </div>
+            {/* Galería de imágenes del catálogo (con opción de portada/eliminar) */}
+            {(productosParaMostrar.length === 0 && catalogImages.length === 0) && (
+              <section className="bg-kc-cream py-16">
+                <div className="mx-auto max-w-7xl px-6">
+                  <div className="rounded-xl border border-dashed p-12 text-center text-gray-500">
+                    No hay productos ni imágenes disponibles para este catálogo todavía.
                   </div>
-                ))}
+                </div>
+              </section>
+            )}
+
+            <CatalogImageGallery catalogImages={catalogImages} catalogoId={id} />
+
+            {/* CTA */}
+            <section className="bg-kc-ivory py-16 text-center">
+              <div className="mx-auto max-w-3xl px-6">
+                <h2 className="font-[family-name:var(--font-playfair)] text-3xl font-semibold text-kc-charcoal">
+                  ¿Te gustó lo que viste?
+                </h2>
+                <p className="mt-3 text-kc-mocha">
+                  Personaliza tu propio pastel inspirado en esta colección.
+                </p>
+                <Link
+                  href="/personalizar"
+                  className="mt-8 inline-flex rounded-full bg-kc-charcoal px-8 py-4 text-sm font-medium text-kc-cream transition hover:bg-kc-deep"
+                >
+                  Personalizar mi pastel
+                </Link>
               </div>
-            </div>
-          </section>
+            </section>
+          </>
         )}
-
-        {(productosParaMostrar.length === 0 && catalogImages.length === 0) && (
-          <section className="bg-kc-cream py-16">
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="rounded-xl border border-dashed p-12 text-center text-gray-500">
-                No hay productos ni imágenes disponibles para este catálogo todavía.
-              </div>
-            </div>
-          </section>
-        )}
-
-        <CatalogImageGallery catalogImages={catalogImages} catalogoId={id} />
-
-        {/* CTA */}
-        <section className="bg-kc-ivory py-16 text-center">
-          <div className="mx-auto max-w-3xl px-6">
-            <h2 className="font-[family-name:var(--font-playfair)] text-3xl font-semibold text-kc-charcoal">
-              ¿Te gustó lo que viste?
-            </h2>
-            <p className="mt-3 text-kc-mocha">
-              Personaliza tu propio pastel inspirado en esta colección.
-            </p>
-            <Link
-              href="/personalizar"
-              className="mt-8 inline-flex rounded-full bg-kc-charcoal px-8 py-4 text-sm font-medium text-kc-cream transition hover:bg-kc-deep"
-            >
-              Personalizar mi pastel
-            </Link>
-          </div>
-        </section>
       </main>
       <Footer />
     </>

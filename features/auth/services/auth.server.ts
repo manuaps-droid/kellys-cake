@@ -37,7 +37,7 @@ export async function getCurrentClient() {
     error,
   } = await supabase
     .from("clientes")
-    .select("id")
+    .select("id, ruleta_girada")
     .eq("user_id", user.id)
     .single();
 
@@ -56,7 +56,7 @@ export async function getCurrentClient() {
         rol: "cliente",
         activo: true,
       })
-      .select("id")
+      .select("id, ruleta_girada")
       .single();
 
     if (insertError || !nuevo) {

@@ -17,49 +17,49 @@ const options = [
     icon: Cake,
     title: "Tamaño",
     description:
-      "Desde celebraciones íntimas hasta eventos grandes.",
+      "Desde un pastel íntimo para dos hasta una mesa grande.",
   },
   {
     icon: Palette,
     title: "Colores",
     description:
-      "Creamos una combinación perfecta para tu temática.",
+      "Jugamos con los tonos hasta que calcen con tu temática.",
   },
   {
     icon: Candy,
     title: "Sabores",
     description:
-      "Elige entre nuestras deliciosas combinaciones.",
+      "Eliges entre los sabores que más nos encargan.",
   },
   {
     icon: Flower2,
     title: "Decoración",
     description:
-      "Flores, personajes, figuras y detalles únicos.",
+      "Flores de azúcar, personajes, figuras que tengan sentido para ti.",
   },
   {
     icon: MessageSquareQuote,
     title: "Mensaje",
     description:
-      "Añade una dedicatoria especial para sorprender.",
+      "Anímate con una frase que realmente quiera decir algo.",
   },
   {
     icon: Users,
     title: "Número de personas",
     description:
-      "Adaptamos el tamaño según tus invitados.",
+      "El tamaño se adapta a tu lista de invitados.",
   },
   {
     icon: CalendarDays,
     title: "Fecha y hora",
     description:
-      "Programa tu pedido para el momento perfecto.",
+      "Elige el día para que llegue fresco a la mesa.",
   },
   {
     icon: Truck,
     title: "Entrega",
     description:
-      "Delivery o recojo en tienda, tú decides.",
+      "Delivery o recojo en tienda, como te quede mejor.",
   },
 ];
 
@@ -68,7 +68,7 @@ export default function PersonalizationOptionsSection() {
     <Section className="bg-cake-ivory">
       <SectionHeader
         title="Todo lo que puedes personalizar"
-        subtitle="Cada pastel es único. Tú eliges los detalles y nosotros los convertimos en una creación inolvidable."
+        subtitle="Elegir los detalles es la parte divertida. Tú nos cuentas qué quieres y nosotros lo armamos."
       />
 
       <div className="mt-20 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">

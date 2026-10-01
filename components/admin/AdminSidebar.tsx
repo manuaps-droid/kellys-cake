@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import {
+  BookOpenText,
   CalendarDays,
   FolderOpen,
   ImageIcon,
@@ -95,6 +96,11 @@ const groups = [
         href: "/admin/contactos",
         label: "Contacto",
         icon: MessageSquare,
+      },
+      {
+        href: "/admin/reclamos",
+        label: "Libro de Reclamos",
+        icon: BookOpenText,
       },
     ],
   },

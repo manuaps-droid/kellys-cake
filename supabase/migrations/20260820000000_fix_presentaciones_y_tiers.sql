@@ -50,22 +50,8 @@ BEGIN
     CREATE POLICY "Admin full access on producto_presentaciones"
       ON public.producto_presentaciones
       FOR ALL
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.clientes c
-          WHERE c.user_id = auth.uid()
-            AND c.rol = 'admin'
-            AND c.activo = true
-        )
-      )
-      WITH CHECK (
-        EXISTS (
-          SELECT 1 FROM public.clientes c
-          WHERE c.user_id = auth.uid()
-            AND c.rol = 'admin'
-            AND c.activo = true
-        )
-      );
+      USING (public.is_admin())
+      WITH CHECK (public.is_admin());
   END IF;
 END $$;
 
@@ -101,22 +87,8 @@ BEGIN
     CREATE POLICY "Admin full access on producto_precio_cantidad"
       ON public.producto_precio_cantidad
       FOR ALL
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.clientes c
-          WHERE c.user_id = auth.uid()
-            AND c.rol = 'admin'
-            AND c.activo = true
-        )
-      )
-      WITH CHECK (
-        EXISTS (
-          SELECT 1 FROM public.clientes c
-          WHERE c.user_id = auth.uid()
-            AND c.rol = 'admin'
-            AND c.activo = true
-        )
-      );
+      USING (public.is_admin())
+      WITH CHECK (public.is_admin());
   END IF;
 END $$;
 

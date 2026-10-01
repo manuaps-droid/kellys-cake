@@ -35,7 +35,7 @@ export default function GallerySection() {
     <Section>
       <SectionHeader
         title="Algunas ideas que hemos hecho realidad"
-        subtitle="Cada pastel es diseñado especialmente para una celebración. Estas son algunas de nuestras creaciones."
+        subtitle="Una muestra chiquita de lo que sale de nuestra cocina. Cada uno fue pensado para una ocasión distinta."
       />
 
       <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">

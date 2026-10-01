@@ -5,23 +5,23 @@ const steps = [
   {
     icon: MessageCircle,
     number: "01",
-    title: "Cuéntanos tu idea",
+    title: "Cuéntanos tu celebración",
     description:
-      "Cuéntanos para qué ocasión es el pastel y comparte una imagen de referencia si la tienes.",
+      "¿Boda, cumpleaños, baby shower? Comparte tu idea y una referencia. Te respondemos el mismo día con opciones claras.",
   },
   {
     icon: PencilRuler,
     number: "02",
-    title: "Diseñamos tu pastel",
+    title: "Recibe tu cotización transparente",
     description:
-      "Te proponemos un diseño personalizado, el tamaño ideal y una cotización.",
+      "Te proponemos el diseño, calculamos las porciones exactas y te enviamos la cotización detallada. Sin costos ocultos, sin sorpresas.",
   },
   {
     icon: Cake,
     number: "03",
-    title: "Disfruta tu celebración",
+    title: "Disfruta sin preocupaciones",
     description:
-      "Elaboramos tu pastel con ingredientes de calidad y lo entregamos listo para sorprender.",
+      "Lo elaboramos con insumos seleccionados de alta calidad y te lo entregamos puntual. Tu pastel, tu momento, garantizado.",
   },
 ];
 
@@ -30,8 +30,8 @@ export default function HowItWorks() {
     <section className="bg-white py-24">
       <div className="mx-auto max-w-7xl px-6">
         <SectionTitle
-          title="¿Cómo funciona?"
-          subtitle="Encargar tu pastel es muy fácil."
+          title="Proceso claro, resultado perfecto"
+          subtitle="Tres pasos transparentes para que disfrutes sin complicaciones."
         />
 
         <div className="relative mt-16 grid gap-8 md:grid-cols-3">

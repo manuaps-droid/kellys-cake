@@ -163,13 +163,13 @@ export default function ContactForm() {
           </div>
 
           <div className="rounded-2xl bg-white/60 p-6">
-            <p className="text-2xl font-bold text-[#D8B07A]">Diseño único</p>
-            <p className="mt-1 text-sm text-gray-500">Cada pastel es una pieza exclusiva</p>
+            <p className="text-2xl font-bold text-[#D8B07A]">A la medida</p>
+            <p className="mt-1 text-sm text-gray-500">Cada pastel se arma para su mesa</p>
           </div>
 
           <div className="rounded-2xl bg-white/60 p-6">
-            <p className="text-2xl font-bold text-[#D8B07A]">Premium</p>
-            <p className="mt-1 text-sm text-gray-500">Ingredientes de primera calidad</p>
+            <p className="text-2xl font-bold text-[#D8B07A]">Buenos insumos</p>
+            <p className="mt-1 text-sm text-gray-500">Ingredientes elegidos con cuidado</p>
           </div>
         </motion.div>
       </div>

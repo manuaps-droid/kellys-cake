@@ -88,6 +88,8 @@ export default function WizardFooter() {
           body: JSON.stringify({
             token,
             amount: montoPagado,
+            deliveryFee,
+            tipoPago,
             currency: "PEN",
             email,
             description: title,
@@ -115,6 +117,8 @@ export default function WizardFooter() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: montoPagado,
+          deliveryFee,
+          tipoPago,
           title,
           email,
         }),

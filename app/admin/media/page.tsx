@@ -10,7 +10,7 @@ export default async function MediaPage() {
     <>
       <PageHeader
         title="Biblioteca Multimedia"
-        description="Sube y administra todas las imágenes del sitio."
+        description="Imágenes disponibles que aún no han sido asociadas a ningún producto. Las que ya pertenecen a un producto no se muestran aquí."
       />
 
       <MediaGalleryManager initialMedia={media} />

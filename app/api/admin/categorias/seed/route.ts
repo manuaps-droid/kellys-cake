@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 const CATEGORIAS = [
   { tipo: "categoria_producto", nombre: "Tortas", descripcion: "Pasteles y tortas personalizadas", orden: 1 },
@@ -12,6 +13,10 @@ const CATEGORIAS = [
 
 export async function POST() {
   try {
+    if (!(await checkIsAdmin())) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("catalogo_personalizacion")
@@ -30,6 +35,10 @@ export async function POST() {
 
 export async function DELETE() {
   try {
+    if (!(await checkIsAdmin())) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("catalogo_personalizacion")

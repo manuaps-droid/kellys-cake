@@ -41,47 +41,19 @@ GRANT USAGE ON SEQUENCE public.pedidos_numero_seq TO authenticated;
 DROP POLICY IF EXISTS "Admins ven todos los pedidos" ON public.pedidos;
 CREATE POLICY "Admins ven todos los pedidos"
   ON public.pedidos FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  );
+  USING (public.is_admin());
 
 -- Admins actualizan el estado de cualquier pedido
 DROP POLICY IF EXISTS "Admins actualizan pedidos" ON public.pedidos;
 CREATE POLICY "Admins actualizan pedidos"
   ON public.pedidos FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  );
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- Admins ven los items de todos los pedidos
 DROP POLICY IF EXISTS "Admins ven los items de todos los pedidos" ON public.pedido_items;
 CREATE POLICY "Admins ven los items de todos los pedidos"
   ON public.pedido_items FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  );
+  USING (public.is_admin());
 
 NOTIFY pgrst, 'reload schema';

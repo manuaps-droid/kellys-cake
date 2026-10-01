@@ -126,46 +126,18 @@ ALTER TABLE public.tienda_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins leen tienda_config" ON public.tienda_config;
 CREATE POLICY "Admins leen tienda_config"
   ON public.tienda_config FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  );
+  USING (public.is_admin());
 
 DROP POLICY IF EXISTS "Admins actualizan tienda_config" ON public.tienda_config;
 CREATE POLICY "Admins actualizan tienda_config"
   ON public.tienda_config FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  );
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admins insertan tienda_config" ON public.tienda_config;
 CREATE POLICY "Admins insertan tienda_config"
   ON public.tienda_config FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.clientes c
-      WHERE c.user_id = auth.uid()
-        AND c.rol = 'admin'
-        AND c.activo = true
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 -- Lectura pública (storefront) para secciones no sensibles.
 -- Leemos las secciones explícitamente públicas para no exponer
@@ -177,5 +149,12 @@ CREATE POLICY "Publico lee configuracion publica"
   USING (
     seccion IN ('tienda','contacto','marketing','seo','pixeles')
   );
+
+-- -------------------------------------------------------------
+-- Privilegios explícitos (en este proyecto los roles no heredan
+-- privilegios por defecto sobre tablas nuevas).
+-- -------------------------------------------------------------
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.tienda_config TO service_role;
+GRANT SELECT ON public.tienda_config TO anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';

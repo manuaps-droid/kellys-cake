@@ -49,7 +49,7 @@ export default async function Footer() {
 
   const nombreTienda = tienda?.nombre ?? "Kelly's Cake";
   const taglineTienda =
-    tienda?.tagline ?? "Pasteles personalizados de alta calidad para cada ocasión especial.";
+    tienda?.tagline ?? "Pastelería de autor para momentos que importan. Diseño, calidad y puntualidad en cada pieza.";
   const anio = new Date().getFullYear().toString().slice(2); // 2026 -> "26"
 
   const socials = [
@@ -133,6 +133,14 @@ export default async function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href="/libro-de-reclamaciones"
+                  className="text-sm font-semibold text-kc-blush/80 transition-colors hover:text-kc-rose-gold"
+                >
+                  Libro de Reclamaciones
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -192,11 +200,19 @@ export default async function Footer() {
       </div>
 
       <div className="border-t border-kc-mocha/20">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-6">
           <p className="text-xs text-kc-blush/40">
             © 20{anio} {nombreTienda}. Todos los derechos reservados.
           </p>
-          <p className="text-xs text-kc-blush/40">Hecho con amor en Perú</p>
+          <div className="flex items-center gap-5">
+            <Link
+              href="/libro-de-reclamaciones"
+              className="rounded-full border border-kc-mocha/40 px-4 py-1.5 text-xs font-semibold text-kc-blush/70 transition-colors hover:border-kc-rose-gold hover:text-kc-rose-gold"
+            >
+              Libro de Reclamaciones
+            </Link>
+            <p className="text-xs text-kc-blush/40">Hecho a mano en Perú</p>
+          </div>
         </div>
       </div>
     </footer>

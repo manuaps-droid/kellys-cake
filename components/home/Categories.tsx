@@ -69,8 +69,8 @@ function CategoryGrid({ categories }: { categories: CategoryCard[] }) {
     <section className="bg-kc-ivory py-24">
       <div className="mx-auto max-w-7xl px-6">
         <SectionTitle
-          title="Explora nuestras categorías"
-          subtitle="Encuentra el pastel perfecto para cada ocasión."
+          title="Cada celebración merece su propia pieza"
+          subtitle="Diseños de autor pensados para la ocasión que estás planeando."
         />
 
         <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">

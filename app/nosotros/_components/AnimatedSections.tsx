@@ -13,41 +13,41 @@ const fadeIn = {
 };
 
 const stats = [
-  { value: "15+", label: "Años de experiencia" },
-  { value: "6,000+", label: "Clientes satisfechos" },
+  { value: "15+", label: "Años metidos en esto" },
+  { value: "6,000+", label: "Familias atendidas" },
   { value: "4,000+", label: "Pasteles entregados" },
   { value: "4.9", label: "Calificación promedio" },
 ];
 
 const values = [
   {
-    icon: Heart,
-    title: "Hecho con amor",
-    desc: "Cada pastel lo preparamos como si fuera para nuestra propia familia. Ponemos alma en cada detalle.",
-  },
-  {
     icon: Award,
-    title: "Excelencia artesanal",
-    desc: "Ingredientes premium, técnicas de alta pastelería y un equipo apasionado por su oficio.",
+    title: "Diseño de Autor",
+    desc: "Cada pastel es concebido como una pieza única para tu celebración. Técnica profesional, proporciones exactas y estética cuidada.",
   },
   {
     icon: Users,
-    title: "Contigo en cada paso",
-    desc: "Te acompañamos desde la idea hasta el último bocado. Tu visión es nuestra guía.",
+    title: "Transparencia Total",
+    desc: "Cotizaciones detalladas y presupuestos claros desde el primer contacto. Sin costos ocultos ni sorpresas de último momento.",
+  },
+  {
+    icon: Heart,
+    title: "Puntualidad y Confianza",
+    desc: "Tu evento es irrepetible y no espera. Nos comprometemos con rigor a entregar en la fecha y hora exactas pactadas.",
   },
   {
     icon: Leaf,
-    title: "Compromiso con la calidad",
-    desc: "Seleccionamos cada insumo cuidando el sabor, la frescura y el impacto en nuestro entorno.",
+    title: "Insumos Certificados",
+    desc: "Utilizamos insumos de alta repostería, chocolates de origen y frutas frescas seleccionadas para asegurar sabor y estructura perfecta.",
   },
 ];
 
 const timeline = [
   { year: "2009", event: "Kellys Cake abre sus puertas en una pequeña cocina en Arequipa." },
-  { year: "2012", event: "Nuestra primera boda. 100 invitados, un pastel de 5 niveles y el amor como ingrediente secreto." },
-  { year: "2015", event: "Lanzamos la línea de tortas personalizadas. Cada cliente se convierte en co-creador." },
-  { year: "2021", event: "Nace nuestro sistema de personalización online para llegar a más hogares." },
-  { year: "2026", event: "Más de 6,000 familias nos han elegido. Seguimos horneando sueños." },
+  { year: "2012", event: "Nuestra primera boda. 100 invitados, un pastel de 5 niveles y bastante café de por medio." },
+  { year: "2015", event: "Apostamos por las tortas personalizadas. El cliente se vuelve parte de la cocina." },
+  { year: "2021", event: "Nace nuestro sistema de personalización online para llegar a más mesas." },
+  { year: "2026", event: "Pasamos las 6,000 familias. La cocina sigue con el mismo cariño del primer día." },
 ];
 
 export function HeroSection() {
@@ -65,21 +65,21 @@ export function HeroSection() {
 
       <motion.div {...fadeIn} className="relative z-10 mx-auto max-w-4xl px-6 py-32">
         <span className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-400/80">
-          Desde 2009
+          Pastelería de autor · Desde 2009
         </span>
 
         <h1 className="mt-8 font-playfair text-6xl font-bold leading-tight text-white md:text-7xl">
-          No solo hacemos
+          Cada pieza
           <br />
-          pasteles.{" "}
-          <span className="text-amber-300">Creamos momentos.</span>
+          cuenta una{" "}
+          <span className="text-amber-300">historia.</span>
         </h1>
 
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-gray-300">
-          Durante más de 15 años, hemos tenido el privilegio de estar en las
-          mesas de miles de familias arequipeñas. En cada cumpleaños, cada
-          aniversario, cada celebración — ahí estábamos, con un pastel que
-          contaba una historia.
+          Llevamos más de 15 años diseñando las piezas centrales de las
+          celebraciones arequipeñas. Cada pastel es una obra única, hecha
+          con técnica profesional, ingredientes certificados y el compromiso
+          de entregarlo perfecto. Así trabajamos, así nos conocen.
         </p>
 
         <div className="mt-10 flex gap-4">
@@ -87,7 +87,7 @@ export function HeroSection() {
             href="/personalizar"
             className="rounded-full bg-amber-400 px-8 py-3.5 text-sm font-semibold text-[#1A0F0A] transition-all hover:bg-amber-300 hover:shadow-xl hover:shadow-amber-400/30"
           >
-            Crea tu experiencia
+            Quiero mi pastel
           </Link>
 
           <Link
@@ -145,21 +145,19 @@ export function StorySection() {
 
           <div className="mt-8 space-y-5 text-base leading-8 text-gray-600">
             <p>
-              Kellys Cake nació en una pequeña cocina en Arequipa, con más
-              ilusión que recursos. Lo que comenzó como un emprendimiento
-              familiar se convirtió en un referente de la pastelería
-              personalizada en Arequipa.
+              Kelly&apos;s Cake nació en una cocina familiar en Arequipa y evolucionó con los años
+              hacia un taller de pastelería de autor especializado en piezas personalizadas para eventos
+              inolvidables.
             </p>
             <p>
-              No queremos ser la pastelería más grande. Queremos ser la que
-              mejor entiende a sus clientes, la que convierte un pastel
-              en un abrazo, una declaración de amor, una sorpresa
-              inolvidable.
+              Creemos que un momento importante no se puede improvisar. Por eso combinamos
+              técnicas de alta repostería con procesos claros: diseño colaborativo, porciones exactas
+              según tus invitados y presupuestos 100% transparentes.
             </p>
             <p>
-              Hoy, con más de 6,000 familias que han confiado en nosotros,
-              seguimos horneando con la misma pasión del primer día. Cada
-              pastel es único, porque cada historia lo es.
+              Más de 6,000 familias y celebraciones respaldan nuestro trabajo. Cada pieza
+              que sale de nuestro taller lleva la firma de nuestro oficio y el compromiso de hacer
+              que tu celebración luzca y sepa impecable.
             </p>
           </div>
         </motion.div>
@@ -184,9 +182,9 @@ export function StorySection() {
           <div className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-6 shadow-xl">
             <p className="font-playfair text-3xl font-bold text-[#D8B07A]">15+</p>
             <p className="text-sm text-gray-500">
-              años endulzando
+              años con algo
               <br />
-              momentos especiales
+              dulce en la mesa
             </p>
           </div>
         </motion.div>
@@ -239,7 +237,7 @@ export function TimelineSection() {
         <h2 className="mt-4 font-playfair text-4xl font-bold text-[#1A0F0A]">
           Hitos que nos han
           <br />
-          convertido en quienes somos
+          traído hasta aquí
         </h2>
       </motion.div>
 
@@ -275,19 +273,19 @@ export function CTASection() {
     <section className="bg-[#1A0F0A] py-32">
       <motion.div {...fadeIn} className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="font-playfair text-5xl font-bold leading-tight text-white">
-          ¿Listo para crear
+          ¿Listo para
           <br />
-          tu propia historia?
+          tu pastel?
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-gray-400">
-          Cuéntanos qué celebración tienes en mente y te ayudaremos a crear
-          un pastel tan único como el momento que vas a vivir.
+          Cuéntanos qué celebras y te ayudamos a elegir. Sabor, relleno,
+          diseño, tamaño: lo definimos entre los dos.
         </p>
         <Link
           href="/personalizar"
           className="mt-10 inline-block rounded-full bg-amber-400 px-10 py-4 text-base font-semibold text-[#1A0F0A] transition-all hover:bg-amber-300 hover:shadow-xl hover:shadow-amber-400/30"
         >
-          Comienza tu experiencia
+          Quiero empezar
         </Link>
       </motion.div>
     </section>

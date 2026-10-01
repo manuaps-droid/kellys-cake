@@ -48,7 +48,9 @@ export async function getCurrentClient() {
       .single();
 
     if (insertError || !nuevo) {
-      throw new Error("Cliente no encontrado.");
+      throw new Error(
+        `Cliente no encontrado. (${insertError?.message ?? "sin detalle"})`
+      );
     }
 
     cliente = nuevo;

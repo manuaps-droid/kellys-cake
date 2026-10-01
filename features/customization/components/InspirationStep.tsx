@@ -46,7 +46,8 @@ export default function InspirationStep() {
       </h2>
 
       <p className="mt-6 max-w-3xl text-lg leading-8 text-gray-600">
-        Puedes subir hasta cuatro imágenes.
+        Hasta cuatro imágenes. Pueden ser de Pinterest, de Instagram o
+        cualquier foto que te haya llamado la atención.
       </p>
 
       <label className="mt-10 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-[#D8B07A] bg-white p-16">

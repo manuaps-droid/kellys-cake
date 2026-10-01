@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createOrderService } from "@/features/checkout/services/checkout.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,17 +17,33 @@ export async function POST(request: NextRequest) {
 
     // 2. Parse and validate body
     const body = await request.json();
-    const { token, amount, currency = "PEN", email, description } = body;
+    const { token, currency = "PEN", email, description, deliveryFee, tipoPago } = body;
 
-    if (!token || !amount || !email) {
+    if (!token || !email) {
       return NextResponse.json(
         { success: false, message: "Datos incompletos." },
         { status: 400 }
       );
     }
 
-    // 3. Validate amount server-side (amount in centavos)
-    const amountInCents = Math.round(amount * 100);
+    // 3. Recalcular el monto de forma autoritativa en el servidor (Anti-Price Tampering)
+    let finalAmount: number;
+    try {
+      const orderData = await createOrderService(Math.max(0, Number(deliveryFee) || 0));
+      const serverTotal = orderData.total;
+      const serverAbono = Math.round(serverTotal * 0.5 * 100) / 100;
+      finalAmount = tipoPago === "abono" ? serverAbono : serverTotal;
+    } catch (cartErr) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: cartErr instanceof Error ? cartErr.message : "Error al validar el carrito.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const amountInCents = Math.round(finalAmount * 100);
 
     if (amountInCents < 100) {
       return NextResponse.json(

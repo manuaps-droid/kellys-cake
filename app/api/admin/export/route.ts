@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -62,7 +62,7 @@ const TABLES: Array<{ name: string; sql: string; orderby: string }> = [
     orderby: "created_at",
   },
   {
-    name: "productos",
+    name: "foodos_productos",
     sql: "*",
     orderby: "created_at",
   },
@@ -178,3 +178,4 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createOrderService } from "@/features/checkout/services/checkout.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +18,35 @@ export async function POST(request: NextRequest) {
 
     // 2. Parse and validate body
     const body = await request.json();
-    const { amount, title, email } = body;
+    const { title, email, deliveryFee, tipoPago } = body;
 
-    if (!amount || Number(amount) < 1 || !email) {
+    if (!email) {
       return NextResponse.json(
-        { success: false, message: "Datos incompletos." },
+        { success: false, message: "Correo requerido." },
+        { status: 400 }
+      );
+    }
+
+    // 3. Recalcular el monto de forma autoritativa en el servidor (Anti-Price Tampering)
+    let finalAmount: number;
+    try {
+      const orderData = await createOrderService(Math.max(0, Number(deliveryFee) || 0));
+      const serverTotal = orderData.total;
+      const serverAbono = Math.round(serverTotal * 0.5 * 100) / 100;
+      finalAmount = tipoPago === "abono" ? serverAbono : serverTotal;
+    } catch (cartErr) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: cartErr instanceof Error ? cartErr.message : "Error al validar el carrito.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (finalAmount < 1) {
+      return NextResponse.json(
+        { success: false, message: "Monto inválido para el pedido." },
         { status: 400 }
       );
     }
@@ -35,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Create checkout preference via Mercado Pago API
+    // 4. Create checkout preference via Mercado Pago API
     const origin = request.nextUrl.origin;
     const backUrl = `${origin}/checkout/success?mp=1`;
     const webhookUrl = `${origin}/api/payments/mercadopago/webhook`;
@@ -51,7 +76,7 @@ export async function POST(request: NextRequest) {
           {
             title: title || "Pedido Kelly's Cake",
             quantity: 1,
-            unit_price: Number(amount),
+            unit_price: Number(finalAmount.toFixed(2)),
             currency_id: "PEN",
           },
         ],

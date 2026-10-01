@@ -24,9 +24,9 @@ export default function WelcomeStep() {
       </h1>
 
       <p className="mt-8 max-w-2xl text-xl leading-9 text-gray-600">
-        Nos emociona ser parte de tu celebración.
-        En unos minutos conoceremos tu idea para
-        preparar una propuesta personalizada.
+        Gracias por llegar hasta aquí. En unos minutos nos cuentas tu idea
+        y con eso armamos la propuesta. Nada de formularios eternos, va a
+        ser rápido.
       </p>
 
       <Button

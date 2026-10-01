@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createOrderService } from "@/features/checkout/services/checkout.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,17 +17,33 @@ export async function POST(request: NextRequest) {
 
     // 2. Parse and validate body
     const body = await request.json();
-    const { token, amount, email, description, installments = 1 } = body;
+    const { token, email, description, installments = 1, deliveryFee, tipoPago } = body;
 
-    if (!token || !amount || !email) {
+    if (!token || !email) {
       return NextResponse.json(
         { success: false, message: "Datos incompletos." },
         { status: 400 }
       );
     }
 
-    // 3. Validate amount server-side
-    if (amount < 1) {
+    // 3. Recalcular el monto de forma autoritativa en el servidor (Anti-Price Tampering)
+    let finalAmount: number;
+    try {
+      const orderData = await createOrderService(Math.max(0, Number(deliveryFee) || 0));
+      const serverTotal = orderData.total;
+      const serverAbono = Math.round(serverTotal * 0.5 * 100) / 100;
+      finalAmount = tipoPago === "abono" ? serverAbono : serverTotal;
+    } catch (cartErr) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: cartErr instanceof Error ? cartErr.message : "Error al validar el carrito.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (finalAmount < 1) {
       return NextResponse.json(
         { success: false, message: "Monto mínimo: S/ 1.00" },
         { status: 400 }
@@ -42,7 +59,7 @@ export async function POST(request: NextRequest) {
         "X-Idempotency-Key": `${user.id}-${Date.now()}`,
       },
       body: JSON.stringify({
-        transaction_amount: amount,
+        transaction_amount: Number(finalAmount.toFixed(2)),
         token,
         description: description || "Pedido Kelly's Cake",
         installments,

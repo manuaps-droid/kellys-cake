@@ -34,15 +34,26 @@ export default function Hero() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="flex-1"
         >
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mb-4"
+          >
+            <span className="inline-block rounded-full border border-kc-rose-gold/30 bg-kc-rose-gold/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-kc-rose-gold">
+              Pastelería de autor
+            </span>
+          </motion.div>
+
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-8 font-[family-name:var(--font-playfair)] text-5xl font-semibold leading-[1.1] tracking-tight text-kc-charcoal lg:text-7xl"
+            className="mt-4 font-[family-name:var(--font-playfair)] text-5xl font-semibold leading-[1.1] tracking-tight text-kc-charcoal lg:text-7xl"
           >
-            Compartimos tus
+            Para momentos
             <br />
-            <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">mejores momentos</span>
+            <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">que importan</span>
           </motion.h1>
 
           <motion.p 
@@ -51,7 +62,9 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-kc-mocha"
           >
-            Diseñamos experiencias gastronómicas visuales para bodas, aniversarios y celebraciones exclusivas. Donde cada detalle cuenta y cada sabor es una obra de arte.
+            Diseñamos pasteles a la medida de tu celebración: tú eliges
+            el sabor, el diseño y la fecha. Nosotros ponemos la técnica,
+            los ingredientes premium y el compromiso de entregarlo perfecto.
           </motion.p>
 
           <motion.div 
@@ -83,9 +96,9 @@ export default function Hero() {
             className="mt-14 flex gap-10"
           >
             {[
-              { icon: Sparkles, label: "Diseños únicos" },
-              { icon: Award, label: "Ingredientes premium" },
-              { icon: Clock, label: "Entregas puntuales" },
+              { icon: Sparkles, label: "Diseño de autor, pieza única" },
+              { icon: Award, label: "Insumos de alta repostería" },
+              { icon: Clock, label: "Puntualidad garantizada" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-3 group">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-kc-rose-gold/20 bg-kc-rose-gold/10 transition-colors group-hover:bg-kc-rose-gold/20">
@@ -133,7 +146,7 @@ export default function Hero() {
                 {"★★★★★"}
               </div>
               <p className="mt-1 text-sm font-medium text-kc-charcoal">
-                +500 experiencias inolvidables
+                +500 pasteles entregados solo este año
               </p>
             </motion.div>
           </div>

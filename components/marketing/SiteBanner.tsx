@@ -1,4 +1,4 @@
-import Link from "next/link";
+import AnnouncementBar from "./AnnouncementBar";
 
 import type { MarketingConfig } from "@/features/admin/configuracion/validations/config.schema";
 
@@ -8,52 +8,64 @@ type Props = {
 
 /**
  * Banner promocional superior. Visible en toda la tienda cuando
- * `marketing.banner_activo = true` y hay título/texto.
+ * `marketing.banner_activo = true`.
+ *
+ * Construye una lista de mensajes rotativos:
+ *   1) El banner configurado por el admin (titulo + texto)
+ *   2) "Envío gratis desde S/ X" si hay umbral configurado
+ *   3) Mensajes estáticos de marketing
+ *
+ * Si el admin separa `banner_texto` con `|`, cada parte se convierte
+ * en un mensaje independiente (perdiendo el título, que va solo en la
+ * primera aparición).
  */
 export default function SiteBanner({ config }: Props) {
   if (!config.banner_activo) return null;
-  if (!config.banner_titulo && !config.banner_texto) return null;
 
-  const bg = config.banner_color || "#D8B07A";
-  const fg = contrastColor(bg);
+  const mensajes: { texto: string; href?: string }[] = [];
 
-  const inner = (
-    <div className="w-full px-4 py-2.5 text-center text-sm font-medium">
-      <span style={{ color: fg }}>
-        {config.banner_titulo && (
-          <strong style={{ color: fg }}>{config.banner_titulo}</strong>
-        )}
-        {config.banner_titulo && config.banner_texto ? " · " : ""}
-        {config.banner_texto}
-      </span>
-    </div>
-  );
+  // 1) Banner configurado por el admin
+  if (config.banner_titulo || config.banner_texto) {
+    if (config.banner_texto.includes("|")) {
+      // Modo multi-mensaje: cada parte separada por | es un slide
+      const partes = config.banner_texto.split("|").map((p) => p.trim()).filter(Boolean);
+      if (config.banner_titulo) {
+        mensajes.push({
+          texto: config.banner_titulo,
+          href: config.banner_link || undefined,
+        });
+      }
+      for (const parte of partes) {
+        mensajes.push({ texto: parte, href: config.banner_link || undefined });
+      }
+    } else {
+      const texto = [config.banner_titulo, config.banner_texto]
+        .filter(Boolean)
+        .join(" · ");
+      mensajes.push({ texto, href: config.banner_link || undefined });
+    }
+  }
+
+  // 2) Envío gratis por umbral
+  if (config.envio_gratis_umbral) {
+    mensajes.push({
+      texto: `Envío gratis desde S/ ${config.envio_gratis_umbral}`,
+      href: "/productos",
+    });
+  }
+
+  // 3) Mensajes estáticos de marca
+  mensajes.push({ texto: "Pastelería de autor · Cada pieza es única", href: "/personalizar" });
+  mensajes.push({
+    texto: "Cotización transparente en menos de 24h",
+    href: "/personalizar",
+  });
+  mensajes.push({ texto: "Insumos de alta repostería · Puntualidad garantizada" });
 
   return (
-    <div
-      style={{ backgroundColor: bg }}
-      className="sticky top-0 z-30 w-full"
-      role="region"
-      aria-label="Promoción"
-    >
-      {config.banner_link ? (
-        <Link href={config.banner_link} className="block w-full">
-          {inner}
-        </Link>
-      ) : (
-        inner
-      )}
-    </div>
+    <AnnouncementBar
+      messages={mensajes}
+      color={config.banner_color || "#1A0F0A"}
+    />
   );
-}
-
-// Calcula color de texto legible (negro o blanco) según la luminancia.
-function contrastColor(hex: string): string {
-  const m = hex.replace("#", "");
-  if (m.length < 6) return "#1A0F0A";
-  const r = parseInt(m.slice(0, 2), 16);
-  const g = parseInt(m.slice(2, 4), 16);
-  const b = parseInt(m.slice(4, 6), 16);
-  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return lum > 0.62 ? "#1A0F0A" : "#FFFFFF";
 }

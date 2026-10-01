@@ -33,11 +33,16 @@ import {
   PIXELES_FIELDS,
   NOTIF_FIELDS,
 } from "@/features/admin/configuracion/config/fields.config";
+import OrdenCatalogosTab from "@/features/admin/configuracion/components/OrdenCatalogosTab";
+import MarketingGrowthTab from "@/features/admin/configuracion/components/MarketingGrowthTab";
+
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const SECTIONS = [
   { value: "tienda", label: "Tienda" },
   { value: "contacto", label: "Contacto & Redes" },
-  { value: "marketing", label: "Marketing" },
+  { value: "marketing", label: "Marketing & Growth" },
+  { value: "orden_catalogos", label: "Orden de Catálogos" },
   { value: "seo", label: "SEO & Analytics" },
   { value: "pixeles", label: "Píxeles" },
   { value: "notificaciones", label: "Notificaciones" },
@@ -73,6 +78,15 @@ export default async function AdminConfiguracionPage() {
     if (!r.success) return {};
     return (r.data as Record<string, unknown>) ?? {};
   }
+
+  // Catálogos ordenables (se muestran todos, en su orden actual)
+  const supabaseAdmin = createAdminClient();
+  const { data: catalogsData } = await supabaseAdmin
+    .from("catalogo_personalizacion")
+    .select("id, nombre, tipo, activo, mostrar_en_productos, orden")
+    .order("orden", { ascending: true });
+
+  const catalogosOrden = catalogsData ?? [];
 
   return (
     <>
@@ -115,12 +129,22 @@ export default async function AdminConfiguracionPage() {
         </TabsContent>
 
         <TabsContent value="marketing">
+          <MarketingGrowthTab initialConfig={marketing} />
+        </TabsContent>
+
+        <TabsContent value="orden_catalogos">
           <div className="rounded-2xl border bg-white p-6">
-            <ConfigSectionForm
-              seccion="marketing"
-              fields={MARKETING_FIELDS}
-              defaultValues={withDefaults(marketingSchema, marketing)}
-            />
+            {catalogosOrden.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No hay catálogos creados todavía.
+              </p>
+            ) : (
+              <OrdenCatalogosTab
+                catalogos={catalogosOrden}
+                posicionArmaCaja={(marketing as any).posicion_arma_caja ?? 0}
+                marketingConfig={marketing}
+              />
+            )}
           </div>
         </TabsContent>
 

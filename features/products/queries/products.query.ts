@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 
 export async function getProducts() {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("productos")
+    .from("foodos_productos")
     .select("*")
     .order("created_at", { ascending: false });
 
@@ -19,7 +19,7 @@ export async function getProductById(id: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("productos")
+    .from("foodos_productos")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -35,7 +35,7 @@ export async function getProductBySlug(slug: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("productos")
+    .from("foodos_productos")
     .select("*")
     .eq("slug", slug)
     .maybeSingle();

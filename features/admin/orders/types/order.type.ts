@@ -63,6 +63,10 @@ export interface AdminOrder {
 
   monto_pagado?: number | null;
 
+  referencia_pago?: string | null;
+
+  estado_pago?: string | null;
+
   fecha_entrega?: string | null;
 
   hora_entrega?: string | null;
@@ -72,4 +76,12 @@ export interface AdminOrder {
   cliente: AdminOrderCustomer;
 
   pedido_items: AdminOrderItem[];
+
+  webhook_pago?: {
+    fuente: string;
+    status: string;
+    external_reference: string;
+    payment_id: string | null;
+    created_at: string;
+  } | null;
 }

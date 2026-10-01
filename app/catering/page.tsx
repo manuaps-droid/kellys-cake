@@ -6,7 +6,7 @@ import CateringForm from "@/features/catering/components/CateringForm";
 
 export const metadata = {
   title: "Catering | Kelly's Cake - Pasteles para Eventos",
-  description: "Servicio de catering para cumpleaños, eventos corporativos y celebraciones especiales. Solicita tu cotización personalizada.",
+  description: "Servicio de catering para cumpleaños, eventos corporativos y reuniones en Arequipa. Pide tu cotización y te la pasamos rápido.",
 };
 
 export default function CateringPage() {

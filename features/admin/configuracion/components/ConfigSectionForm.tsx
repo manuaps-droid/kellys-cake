@@ -37,11 +37,12 @@ export type FieldDef =
       type: "select";
       label: string;
       help?: string;
+      half?: boolean;
       options: Array<{ value: string; label: string }>;
     };
 
 type ConfigSectionFormProps = {
-  seccion: SeccionConfig;
+  seccion: string;
   fields: FieldDef[];
   defaultValues: Record<string, unknown>;
 };
@@ -61,7 +62,7 @@ export default function ConfigSectionForm({
 
   function onSubmit(values: FieldValues) {
     startTransition(async () => {
-      const result = await updateConfigAction(seccion, values);
+      const result = await updateConfigAction(seccion as any, values);
       if (result.success) {
         toast.success("Configuración actualizada correctamente.");
         setJustSaved(true);
@@ -75,7 +76,7 @@ export default function ConfigSectionForm({
   function renderField(f: FieldDef) {
     const name = f.key;
     const error = form.formState.errors[name];
-    const register = form.register as never;
+    const register = form.register as any;
     const baseClass =
       "h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 

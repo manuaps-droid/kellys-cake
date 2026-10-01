@@ -12,7 +12,7 @@ export default function HowItWorksSection() {
     <Section>
       <SectionHeader
         title="¿Cómo funciona?"
-        subtitle="Diseñamos tu pastel en tres sencillos pasos. Queremos que el proceso sea fácil, claro y emocionante."
+        subtitle="Te cuento cómo es el proceso, paso por paso. En total, te toma menos de diez minutos."
       />
 
       <div className="mt-20 grid gap-10 lg:grid-cols-3">
@@ -20,7 +20,7 @@ export default function HowItWorksSection() {
           icon={<Lightbulb size={36} />}
           number="01"
           title="Cuéntanos tu idea"
-          description="Describe cómo imaginas tu pastel. No necesitas tener todos los detalles, nosotros te ayudaremos a darle forma."
+          description="Describe cómo te imaginas el pastel. No hace falta tenerlo todo pensado; con la idea general nos sobra para empezar."
         />
 
         <StepCard
@@ -33,8 +33,8 @@ export default function HowItWorksSection() {
         <StepCard
           icon={<CakeSlice size={36} />}
           number="03"
-          title="Nosotros hacemos la magia"
-          description="Nuestro equipo revisará tu solicitud y preparará una propuesta personalizada con todos los detalles para tu celebración."
+          title="Nos ponemos manos a la obra"
+          description="Revisamos tu solicitud y te enviamos una propuesta con precios, tamaños y fechas. Sin compromiso."
         />
       </div>
     </Section>

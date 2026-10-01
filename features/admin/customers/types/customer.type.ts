@@ -18,6 +18,7 @@ export interface AdminCustomer {
   activo: boolean;
 
   foto: string | null;
+  dni?: string | null;
 
   pedidos?: {
     id: string;
@@ -31,6 +32,22 @@ export interface AdminCustomer {
     personas: number;
     presupuesto: number | null;
     estado: string;
+    created_at: string;
+  }[];
+
+  rewards?: {
+    puntos_totales: number;
+    puntos_disponibles: number;
+    nivel: string | null;
+  } | null;
+
+  transacciones_puntos?: {
+    id: string;
+    tipo: "ganancia" | "canje";
+    cantidad: number;
+    motivo: string;
+    referencia_id: string | null;
+    referencia_tipo: string | null;
     created_at: string;
   }[];
 }

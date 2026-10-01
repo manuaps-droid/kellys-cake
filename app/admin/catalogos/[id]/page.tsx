@@ -63,6 +63,10 @@ export default async function EditCatalogPage({
     }));
   }
 
+  const esCatalogoToppers =
+    result.catalog.tipo === "categoria_producto" &&
+    result.catalog.nombre.trim().toLowerCase() === "toppers";
+
   return (
     <section className="space-y-8">
       <PageHeader
@@ -100,6 +104,15 @@ export default async function EditCatalogPage({
           <CatalogImagesManager
             catalogoId={result.catalog.id}
             enableLabels
+          />
+        </Card>
+      )}
+
+      {esCatalogoToppers && (
+        <Card className="p-8">
+          <CatalogImagesManager
+            catalogoId={result.catalog.id}
+            enablePortada
           />
         </Card>
       )}

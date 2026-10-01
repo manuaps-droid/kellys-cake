@@ -11,6 +11,7 @@ import {
   TOPPER_DISENAR_URL,
   TOPPER_PRODUCTO_SLUG,
 } from "@/features/customization/constants/topper.constants";
+import TopperCrossSellBanner from "@/components/customization/TopperCrossSellBanner";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ReviewsList } from "@/features/resenas/components/ReviewsList";
@@ -222,6 +223,11 @@ export default async function ProductoDetallePage({
                   </>
                 )}
               </div>
+
+              {/* Cross-Selling Topper Inteligente */}
+              {product.slug !== TOPPER_PRODUCTO_SLUG && (
+                <TopperCrossSellBanner />
+              )}
 
               {/* Beneficios */}
               <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -1,5 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/home/Hero";
+import BrandLinesSection from "@/components/home/BrandLinesSection";
 import Categories from "@/components/home/Categories";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import BestSellers from "@/components/home/BestSellers";
@@ -12,6 +13,7 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <Hero />
+        <BrandLinesSection />
         <Categories />
         <FeaturedProducts />
         <BestSellers />

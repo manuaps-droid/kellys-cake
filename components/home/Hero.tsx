@@ -51,9 +51,9 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="mt-4 font-[family-name:var(--font-playfair)] text-5xl font-semibold leading-[1.1] tracking-tight text-kc-charcoal lg:text-7xl"
           >
-            Para momentos
+            Cada celebración
             <br />
-            <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">que importan</span>
+            <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">merece su sabor perfecto</span>
           </motion.h1>
 
           <motion.p 
@@ -62,9 +62,8 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-kc-mocha"
           >
-            Diseñamos pasteles a la medida de tu celebración: tú eliges
-            el sabor, el diseño y la fecha. Nosotros ponemos la técnica,
-            los ingredientes premium y el compromiso de entregarlo perfecto.
+            El centro de tus mejores recuerdos en Arequipa. Nuestras recetas tradicionales
+            para tus grandes fiestas, junto a una cuidada línea saludable para consentirte sin culpas.
           </motion.p>
 
           <motion.div 
@@ -74,18 +73,18 @@ export default function Hero() {
             className="mt-10 flex flex-wrap gap-4"
           >
             <Link
-              href="/personalizar"
+              href="/productos"
               className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-kc-charcoal px-8 py-4 text-sm font-medium text-kc-cream transition-all duration-300 hover:bg-kc-deep hover:shadow-2xl hover:shadow-kc-charcoal/30"
             >
-              <span className="relative z-10">Personalizar mi pastel</span>
+              <span className="relative z-10">Ver pastelería tradicional</span>
               <div className="absolute inset-0 -z-10 translate-y-full bg-kc-rose-gold transition-transform duration-300 group-hover:translate-y-0" />
             </Link>
 
             <Link
-              href="/"
+              href="/personalizar"
               className="inline-flex items-center justify-center rounded-full border border-kc-rose-gold/40 px-8 py-4 text-sm font-medium text-kc-charcoal transition-all duration-300 hover:border-kc-rose-gold hover:bg-kc-rose-gold/5"
             >
-              Ver catálogo
+              Personalizar mi pastel
             </Link>
           </motion.div>
 

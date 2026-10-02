@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
+import PetPackOrderCard from "./PetPackOrderCard";
 
 const WHATSAPP_PHONE = "51945262379";
 
@@ -271,47 +274,21 @@ export default function AreaPetsContent() {
                 </div>
               </div>
 
-              {/* Lado derecho: Resumen, Entrega y Botón de Pedido Directo */}
-              <div className="lg:col-span-5 flex flex-col justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/70 p-6 sm:p-8 border border-kec-sand/60 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-md text-3xl">
-                  🎁
+              {/* Lado derecho: Formulario de Pedido en Carrito + Opción WhatsApp */}
+              <div className="lg:col-span-5 flex flex-col gap-4">
+                <PetPackOrderCard />
+
+                <div className="text-center">
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-kec-mocha hover:text-emerald-700 font-medium transition"
+                  >
+                    <span>¿Prefieres coordinar directamente?</span>
+                    <span className="text-emerald-600 font-bold underline">Escríbenos por WhatsApp →</span>
+                  </a>
                 </div>
-
-                <h4 className="mt-4 font-[family-name:var(--font-playfair)] text-xl font-bold text-kec-charcoal">
-                  Pídelo Fácil por WhatsApp
-                </h4>
-
-                <p className="mt-2 text-xs leading-relaxed text-kec-mocha">
-                  Indícanos el nombre de tu mascota, la fecha de su festejo y si es perrito o gatito para preparar su kit personalizado.
-                </p>
-
-                <div className="my-5 border-t border-kec-sand/60 pt-4 space-y-2 text-left text-xs text-kec-mocha">
-                  <div className="flex items-center gap-2">
-                    <span className="text-kec-rose-gold font-bold">✓</span>
-                    <span>Anticipación recomendada: <strong>24 a 48 hrs</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-kec-rose-gold font-bold">✓</span>
-                    <span>Entrega a domicilio o recojo en Arequipa</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-kec-rose-gold font-bold">✓</span>
-                    <span>100% fresco, sin congelados ni químicos</span>
-                  </div>
-                </div>
-
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-4 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#20ba5a] hover:shadow-xl hover:scale-[1.02]"
-                >
-                  <span className="text-lg">💬</span> Pedir Pack Fiesta (S/ 69)
-                </a>
-
-                <p className="mt-3 text-[11px] text-gray-500">
-                  Atención directa y confirmación inmediata en WhatsApp
-                </p>
               </div>
             </div>
           </div>
@@ -397,16 +374,23 @@ export default function AreaPetsContent() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a
+              href="#pack-celebracion"
+              className="inline-flex items-center gap-2 rounded-full bg-kec-rose-gold px-8 py-4 text-sm font-semibold text-white shadow-xl transition-all hover:bg-kec-gold hover:scale-[1.02]"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Ordenar Pack en Línea (S/ 69)
+            </a>
+            <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-kec-rose-gold px-8 py-4 text-sm font-semibold text-white shadow-xl transition-all hover:bg-kec-gold hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-8 py-4 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
             >
-              🐾 Pedir Pack Fiesta Pet (S/ 69)
+              <span>💬</span> Consultar por WhatsApp
             </a>
           </div>
           <p className="mt-4 text-xs text-gray-400">
-            Coordinamos la fecha y hora exacta de entrega en Arequipa vía WhatsApp
+            Entrega a domicilio programada en Arequipa · Pago seguro online
           </p>
         </div>
       </section>

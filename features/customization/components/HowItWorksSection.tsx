@@ -12,7 +12,7 @@ export default function HowItWorksSection() {
     <Section>
       <SectionHeader
         title="¿Cómo funciona?"
-        subtitle="Te cuento cómo es el proceso, paso por paso. En total, te toma menos de diez minutos."
+        subtitle="Te cuento cómo es el proceso, paso por paso. En total, te toma menos de tres minutos."
       />
 
       <div className="mt-20 grid gap-10 lg:grid-cols-3">

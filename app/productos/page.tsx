@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, CakeSlice, Sparkles, Truck } from "lucide-react";
@@ -12,6 +13,27 @@ import { getTopperInfo } from "@/features/customization/services/topper-disenos.
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicMarketing } from "@/features/admin/configuracion/queries/public-config.query";
+
+export const metadata: Metadata = {
+  title: "Tienda Online | Catálogo de Tortas y Postres con Delivery en Arequipa",
+  description:
+    "Comprar tortas online en Arequipa. Catálogo artesanal de tortas de cumpleaños, kekes, bocaditos dulces y pastelería fina con entrega a domicilio.",
+  keywords: [
+    "comprar torta online arequipa",
+    "catalogo de tortas arequipa",
+    "tortas delivery arequipa",
+    "tortas de cumpleaños arequipa",
+    "pastelería fina delivery",
+    "bocaditos dulces a domicilio",
+  ],
+  openGraph: {
+    title: "Tienda Online de Tortas y Postres en Arequipa | Kelly's Cake",
+    description:
+      "Explora nuestro catálogo y pide online tus pasteles y bocaditos frescos con entrega puntual en Arequipa.",
+    type: "website",
+    locale: "es_PE",
+  },
+};
 
 export const revalidate = 600;
 

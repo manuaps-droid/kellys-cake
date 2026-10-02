@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import TopperPicker from "@/features/customization/components/TopperPicker";
@@ -7,6 +8,26 @@ import {
 } from "@/features/customization/constants/topper.constants";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+
+export const metadata: Metadata = {
+  title: "Toppers Personalizados en Impresión 3D para Tortas | Kelly's Cake",
+  description:
+    "Diseña y personaliza tu topper en impresión 3D con nombre o mensaje especial para coronar tu pastel. Fabricación de alta precisión en Arequipa.",
+  keywords: [
+    "toppers personalizados 3d arequipa",
+    "topper para torta impresion 3d",
+    "cake topper feliz cumpleaños personalizado",
+    "toppers con nombre para pastel",
+    "toppers tematicos 3d arequipa",
+  ],
+  openGraph: {
+    title: "Toppers Personalizados en Impresión 3D | Kelly's Cake Arequipa",
+    description:
+      "El toque final para tu pastel: toppers personalizados elaborados en impresión 3D de alta definición.",
+    type: "website",
+    locale: "es_PE",
+  },
+};
 
 export const revalidate = 600;
 

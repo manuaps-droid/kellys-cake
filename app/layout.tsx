@@ -117,10 +117,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const seo = await getPublicSeo();
 
   const title =
-    seo?.title ?? "Kelly's Cake | Pastelería de Autor para Momentos que Importan";
+    seo?.title ||
+    "Kelly's Cake | Pastelería Fina, Tortas Personalizadas y Delivery en Arequipa";
   const description =
-    seo?.description ??
-    "Pastelería de autor en Arequipa. Diseñamos pasteles exclusivos para bodas, celebraciones y eventos especiales. Cotización transparente, insumos certificados y entrega puntual.";
+    seo?.description ||
+    "Pastelería artesanal y tortas personalizadas en Arequipa. Diseñamos tortas de autor para cumpleaños y bodas, pastelería pet para mascotas, toppers en impresión 3D y delivery a domicilio.";
+
+  const defaultKeywords = [
+    "tortas personalizadas arequipa",
+    "pastelería fina arequipa",
+    "tortas de autor",
+    "tortas delivery arequipa",
+    "tortas para perros arequipa",
+    "toppers personalizados 3d arequipa",
+    "bocaditos para eventos arequipa",
+    "comprar torta online arequipa",
+  ];
 
   const ogImage = seo?.og_image_url ?? undefined;
   const verification = seo?.google_site_verification
@@ -128,19 +140,28 @@ export async function generateMetadata(): Promise<Metadata> {
     : undefined;
 
   return {
-    title,
+    title: {
+      default: title,
+      template: "%s | Kelly's Cake",
+    },
     description,
-    keywords: seo?.keywords ? seo.keywords.split(",").map((k) => k.trim()) : undefined,
+    keywords: seo?.keywords
+      ? seo.keywords.split(",").map((k) => k.trim())
+      : defaultKeywords,
     openGraph: {
       title,
       description,
       type: "website",
       locale: "es_PE",
+      siteName: "Kelly's Cake",
       ...(ogImage ? { images: [{ url: ogImage }] } : {}),
     },
-    twitter: ogImage
-      ? { card: "summary_large_image", title, description, images: [ogImage] }
-      : undefined,
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
     verification,
   };
 }

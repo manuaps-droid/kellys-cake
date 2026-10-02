@@ -18,9 +18,23 @@ export const revalidate = 600;
 const SLUG_CAJA = "caja-personalizada";
 
 export const metadata = {
-  title: "Arma tu caja de bocaditos | Kelly's Cake",
+  title: "Cajas de Bocaditos Dulces para Regalo y Eventos | Kelly's Cake Arequipa",
   description:
-    "Elige el tipo de caja, su tamaño y distribuye las unidades entre tus bocaditos favoritos.",
+    "Arma tu caja personalizada de bocaditos dulces en Arequipa. Combina alfajores, brownies, trufas y mini postres artesanales con delivery directo.",
+  keywords: [
+    "cajas de bocaditos dulces arequipa",
+    "bocaditos para regalo arequipa",
+    "cajas dulces delivery arequipa",
+    "mini postres artesanales arequipa",
+    "bocaditos para eventos y cumpleaños",
+  ],
+  openGraph: {
+    title: "Arma tu Caja de Bocaditos Dulces en Arequipa | Kelly's Cake",
+    description:
+      "Elige el tamaño y combina tus bocaditos favoritos recién horneados para regalar o compartir.",
+    type: "website",
+    locale: "es_PE",
+  },
 };
 
 function extraerUnidades(nombre: string): number {

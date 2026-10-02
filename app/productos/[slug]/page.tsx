@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,6 +19,56 @@ import { ReviewsList } from "@/features/resenas/components/ReviewsList";
 import { getPublicMarketing } from "@/features/admin/configuracion/queries/public-config.query";
 
 export const revalidate = 600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = createAdminClient();
+
+  const { data: product } = await supabase
+    .from("productos")
+    .select("nombre, descripcion_corta, descripcion, precio, media:imagen_principal_id (url)")
+    .eq("slug", slug)
+    .eq("estado", "publicado")
+    .maybeSingle();
+
+  if (!product) {
+    return {
+      title: "Producto no encontrado | Kelly's Cake",
+    };
+  }
+
+  const media = Array.isArray(product.media)
+    ? (product.media as Array<{ url: string }>)[0]
+    : (product.media as { url: string } | null);
+  const imagenUrl = media?.url ?? undefined;
+
+  const desc =
+    product.descripcion_corta ||
+    product.descripcion ||
+    `Pide ${product.nombre} online en Kelly's Cake Arequipa. Elaborado fresco y artesanalmente con entrega a domicilio.`;
+
+  return {
+    title: `${product.nombre} | Delivery en Arequipa`,
+    description: `${desc} ${product.precio != null ? `Precio: S/ ${Number(product.precio).toFixed(2)}.` : ""} Entrega puntual a domicilio en Arequipa.`,
+    keywords: [
+      product.nombre.toLowerCase(),
+      `comprar ${product.nombre.toLowerCase()} arequipa`,
+      "tortas delivery arequipa",
+      "pasteleria fina online",
+    ],
+    openGraph: {
+      title: `${product.nombre} | Kelly's Cake Arequipa`,
+      description: desc,
+      type: "website",
+      locale: "es_PE",
+      ...(imagenUrl ? { images: [{ url: imagenUrl }] } : {}),
+    },
+  };
+}
 
 type ProductRow = {
   id: string;

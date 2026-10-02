@@ -32,7 +32,7 @@ const reasons = [
 const packItems = [
   {
     icon: "🎂",
-    title: "1x Pastel Cumpleañero Pet de 3 Pisos",
+    title: "1x Pastel Cumpleañero Pet con 2 rellenos",
     desc: "Bizcochuelo natural suave de avena, zanahoria y plátano, con frosting cremoso natural y lluvia de coco sin azúcar.",
   },
   {

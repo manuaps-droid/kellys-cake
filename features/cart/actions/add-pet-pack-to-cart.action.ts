@@ -53,7 +53,7 @@ export async function addPetPackToCartAction(input: AddPetPackInput = {}) {
     detalles.push(`Mascota: ${input.nombreMascota.trim()}`);
   }
   detalles.push(input.esGato ? "Tipo: Gatito" : "Tipo: Perrito");
-  detalles.push("Incluye: Pastel 3 pisos + Topper Happy Birthday + 2 pupcakes + 6 galletitas huesito");
+  detalles.push("Incluye: Pastel con 2 rellenos + Topper Happy Birthday + 2 pupcakes + 6 galletitas huesito");
   if (input.observaciones?.trim()) {
     detalles.push(`Nota: ${input.observaciones.trim()}`);
   }

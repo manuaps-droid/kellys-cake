@@ -38,7 +38,7 @@ const packItems = [
   {
     icon: "✨",
     title: "1x Topper Happy Birthday Huellitas",
-    desc: "Topper temático de madera calada con diseño de huellitas 'Happy Birthday' para la foto perfecta del recuerdo.",
+    desc: "Topper temático con diseño de huellitas 'Happy Birthday' para la foto perfecta del recuerdo.",
   },
   {
     icon: "🧁",

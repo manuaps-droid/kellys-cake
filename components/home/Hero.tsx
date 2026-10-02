@@ -53,7 +53,7 @@ export default function Hero() {
           >
             Cada celebración
             <br />
-            <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">merece su sabor perfecto</span>
+            <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">merece un sabor perfecto</span>
           </motion.h1>
 
           <motion.p 
@@ -74,17 +74,21 @@ export default function Hero() {
           >
             <Link
               href="/productos"
-              className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-kc-charcoal px-8 py-4 text-sm font-medium text-kc-cream transition-all duration-300 hover:bg-kc-deep hover:shadow-2xl hover:shadow-kc-charcoal/30"
+              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-kc-charcoal px-8 py-4 text-sm font-bold text-white shadow-xl shadow-kc-charcoal/25 ring-2 ring-kc-rose-gold/70 transition-all duration-300 hover:scale-105 hover:bg-kc-deep hover:ring-kc-gold hover:shadow-2xl hover:shadow-kc-rose-gold/30 active:scale-95"
             >
-              <span className="relative z-10">Ver pastelería tradicional</span>
-              <div className="absolute inset-0 -z-10 translate-y-full bg-kc-rose-gold transition-transform duration-300 group-hover:translate-y-0" />
+              <span className="relative z-10 flex items-center gap-2">
+                Ver pastelería tradicional
+                <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </span>
+              <div className="absolute inset-0 -z-0 translate-y-full bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold transition-transform duration-300 group-hover:translate-y-0" />
             </Link>
 
             <Link
               href="/personalizar"
-              className="inline-flex items-center justify-center rounded-full border border-kc-rose-gold/40 px-8 py-4 text-sm font-medium text-kc-charcoal transition-all duration-300 hover:border-kc-rose-gold hover:bg-kc-rose-gold/5"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold px-8 py-4 text-sm font-bold text-white shadow-xl shadow-kc-rose-gold/35 ring-2 ring-white/60 transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-2xl hover:shadow-kc-rose-gold/50 active:scale-95"
             >
-              Personalizar mi pastel
+              <Sparkles className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-12" />
+              <span>Personalizar mi pastel</span>
             </Link>
           </motion.div>
 

@@ -27,7 +27,7 @@ const faqs = [
     icon: Truck,
     pregunta: "¿Cómo entregan las tortas y productos?",
     respuesta:
-      "Contamos con servicio de delivery especializado en vehículo acondicionado para asegurar que tu torta viaje estable, refrigerada y llegue impecable a tu domicilio en Arequipa. También puedes coordinar el recojo gratuito en nuestro taller.",
+      "Contamos con servicio de delivery especializado en vehículo acondicionado para asegurar que tu torta viaje estable y llegue impecable a tu domicilio en Arequipa. También puedes coordinar el recojo gratuito en nuestro taller.",
   },
   {
     icon: Thermometer,

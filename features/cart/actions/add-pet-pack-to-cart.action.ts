@@ -11,7 +11,7 @@ export type AddPetPackInput = {
 
 const PET_PACK_PRECIO = 69.0;
 const PET_PACK_NOMBRE = "Pack Celebración Pet (100% Pet-Safe)";
-const PET_PACK_IMAGEN = "/images/pets/scottish-terrier.jpg";
+const PET_PACK_IMAGEN = "/images/pets/pack-celebracion-pet.jpg";
 
 /**
  * Agrega el Pack Celebración para Mascotas directamente al carrito
@@ -53,7 +53,7 @@ export async function addPetPackToCartAction(input: AddPetPackInput = {}) {
     detalles.push(`Mascota: ${input.nombreMascota.trim()}`);
   }
   detalles.push(input.esGato ? "Tipo: Gatito" : "Tipo: Perrito");
-  detalles.push("Incluye: Pastel 10cm + 2 pupcakes + 4 galletas + kit festivo");
+  detalles.push("Incluye: Pastel 3 pisos + Topper Happy Birthday + 2 pupcakes + 6 galletitas huesito");
   if (input.observaciones?.trim()) {
     detalles.push(`Nota: ${input.observaciones.trim()}`);
   }

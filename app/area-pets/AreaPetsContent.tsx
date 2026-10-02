@@ -32,23 +32,23 @@ const reasons = [
 const packItems = [
   {
     icon: "🎂",
-    title: "1x Pastelito Cumpleañero Pet (10 cm)",
-    desc: "Bizcochuelo natural suave de avena, zanahoria y plátano, con frosting cremoso de yogur deslactosado sin azúcar y topper festivo.",
+    title: "1x Pastel Cumpleañero Pet de 3 Pisos",
+    desc: "Bizcochuelo natural suave de avena, zanahoria y plátano, con frosting cremoso natural y lluvia de coco sin azúcar.",
+  },
+  {
+    icon: "✨",
+    title: "1x Topper Happy Birthday Huellitas",
+    desc: "Topper temático de madera calada con diseño de huellitas 'Happy Birthday' para la foto perfecta del recuerdo.",
   },
   {
     icon: "🧁",
-    title: "2x Pupcakes / Cupcakes Decorados",
-    desc: "Porciones individuales ideales para consentirlo o compartir, decorados con toppings pet-friendly y figuras de huellita.",
+    title: "2x Pupcakes Festivos Especiales",
+    desc: "Porciones individuales con copete cremoso natural y decoración festiva pet-safe para compartir.",
   },
   {
     icon: "🦴",
-    title: "4x Galletas Artesanales Crocantes",
-    desc: "Horneadas con harina de avena y puré de manzana en forma de huesitos y huellas, ricas en fibra y textura crocante.",
-  },
-  {
-    icon: "🎉",
-    title: "1x Kit Festivo de Celebración",
-    desc: "Gorrito temático de fiesta ajustable con elástico suave para la foto del recuerdo + velita decorativa.",
+    title: "6x Galletitas Crocantes con Forma de Hueso",
+    desc: "Horneadas con avena y puré natural, glaseadas y listas para premiar a tu mejor amigo.",
   },
 ];
 
@@ -247,6 +247,25 @@ export default function AreaPetsContent() {
                 <p className="mt-3 text-sm text-kec-mocha leading-relaxed">
                   Elaborado artesanalmente el mismo día de tu entrega con ingredientes frescos y 100% tolerados por perros y gatos.
                 </p>
+
+                {/* Fotografía Real del Pack Fiesta */}
+                <div className="mt-6 overflow-hidden rounded-2xl border border-kec-sand/60 bg-white shadow-md">
+                  <div className="relative aspect-[16/10] w-full">
+                    <Image
+                      src="/images/pets/pack-celebracion-pet.jpg"
+                      alt="Pack Celebración Pet Real - Kelly's Cake"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      className="object-contain p-2 hover:scale-105 transition-transform duration-500"
+                      priority
+                    />
+                  </div>
+                  <div className="bg-amber-50/70 px-4 py-2 text-center border-t border-kec-sand/30">
+                    <p className="text-[11px] font-semibold text-kec-charcoal">
+                      📸 Foto Real: Torta Pet + Topper Happy Birthday + 2 Pupcakes + 6 Galletitas artesanales
+                    </p>
+                  </div>
+                </div>
 
                 <div className="mt-8 space-y-4">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-kec-charcoal">

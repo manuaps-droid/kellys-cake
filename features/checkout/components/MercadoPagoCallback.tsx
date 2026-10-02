@@ -36,8 +36,8 @@ export default function MercadoPagoCallback() {
     const isPickup = checkout.deliveryMethod === "pickup";
     const deliveryFee = isPickup ? 0 : (checkout.address.deliveryFee ?? 0);
     const total = cartSubtotal + deliveryFee;
-    const tipoPago = checkout.paymentType === "abono" ? "abono" : "total";
-    const montoPagado = tipoPago === "abono" ? Math.round(total * 0.5 * 100) / 100 : total;
+    const tipoPago = "total" as const;
+    const montoPagado = total;
 
     async function confirm() {
       try {

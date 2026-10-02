@@ -53,7 +53,7 @@ export default function PetPackOrderCard() {
         </h4>
 
         <p className="mt-1.5 text-xs leading-relaxed text-kec-mocha text-center">
-          Agrégalo directamente al carrito y paga con tarjeta, transferencia, Yape o abono del 50%.
+          Agrégalo directamente al carrito y cancela con tarjeta, transferencia bancaria o Yape.
         </p>
 
         {/* Formulario rápido para la tarjeta del festejo */}
@@ -137,7 +137,7 @@ export default function PetPackOrderCard() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-kec-rose-gold font-bold">✓</span>
-          <span>Pagas con Yape, Tarjeta o 50% de abono</span>
+          <span>Cancelación total (Yape, Tarjeta o Transferencia)</span>
         </div>
       </div>
     </div>

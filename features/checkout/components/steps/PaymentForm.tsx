@@ -45,19 +45,6 @@ const paymentOptions: { value: PaymentMethod; label: string; description: string
   },
 ];
 
-const PAYMENT_TYPE_OPTIONS: { value: PaymentType; label: string; description: string }[] = [
-  {
-    value: "total",
-    label: "Pagar todo",
-    description: "Cancela el total del pedido ahora",
-  },
-  {
-    value: "abono",
-    label: "Abonar el 50%",
-    description: "Abona ahora y paga el saldo el día de la entrega",
-  },
-];
-
 export default function PaymentForm() {
   const {
     checkout,
@@ -76,10 +63,6 @@ export default function PaymentForm() {
   const isPickup = checkout.deliveryMethod === "pickup";
   const envio = isPickup ? 0 : (checkout.address.deliveryFee ?? 0);
   const total = subtotal + envio;
-  const montoAbono = Math.round(total * 0.5 * 100) / 100;
-  const montoAPagar = checkout.paymentType === "abono" ? montoAbono : total;
-
-  const paymentType = checkout.paymentType === "abono" ? "abono" : "total";
 
   return (
     <Card className="p-6">
@@ -93,35 +76,24 @@ export default function PaymentForm() {
         </p>
       </div>
 
-      {/* Selector abono / total */}
-      <div className="mb-6 grid gap-3 sm:grid-cols-2">
-        {PAYMENT_TYPE_OPTIONS.map((option) => {
-          const selected = paymentType === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setPaymentType(option.value)}
-              className={`
-                rounded-xl border-2 p-4 text-left transition-all
-                ${selected
-                  ? "border-cake-gold bg-cake-gold/5 shadow-sm"
-                  : "border-gray-200 bg-white hover:border-cake-rose hover:bg-cake-ivory"
-                }
-              `}
-            >
-              <p className={`font-semibold ${selected ? "text-cake-espresso" : "text-gray-800"}`}>
-                {option.label}
-              </p>
-              <p className="mt-1 text-sm text-gray-500">{option.description}</p>
-              <p className="mt-2 text-lg font-bold text-cake-gold">
-                {option.value === "abono"
-                  ? `S/ ${montoAbono.toFixed(2)}`
-                  : `S/ ${total.toFixed(2)}`}
-              </p>
-            </button>
-          );
-        })}
+      {/* Pago Total Garantizado */}
+      <div className="mb-6 rounded-xl border border-kc-sand/60 bg-gradient-to-r from-amber-50/50 to-orange-50/40 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-800">
+              Cancelación total
+            </span>
+            <p className="mt-1 text-xs text-kc-mocha">
+              Para programar el horneado y asegurar tu fecha de entrega, el pedido se cancela al 100%.
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-xs text-kc-mocha font-medium">Total a pagar:</span>
+            <p className="text-xl font-extrabold text-kc-charcoal">
+              S/ {total.toFixed(2)}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -181,7 +153,7 @@ export default function PaymentForm() {
               <span>Monto a pagar ahora:</span>
             </span>
             <span className="text-lg font-bold text-cake-gold">
-              S/ {montoAPagar.toFixed(2)}
+              S/ {total.toFixed(2)}
             </span>
           </div>
           {(checkout.paymentMethod === "culqi" || checkout.paymentMethod === "mercadopago") && (

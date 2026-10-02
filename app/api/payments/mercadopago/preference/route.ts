@@ -31,9 +31,7 @@ export async function POST(request: NextRequest) {
     let finalAmount: number;
     try {
       const orderData = await createOrderService(Math.max(0, Number(deliveryFee) || 0));
-      const serverTotal = orderData.total;
-      const serverAbono = Math.round(serverTotal * 0.5 * 100) / 100;
-      finalAmount = tipoPago === "abono" ? serverAbono : serverTotal;
+      finalAmount = orderData.total;
     } catch (cartErr) {
       return NextResponse.json(
         {

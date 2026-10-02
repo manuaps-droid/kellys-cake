@@ -33,9 +33,8 @@ export default function WizardFooter() {
   const isPickup = checkout.deliveryMethod === "pickup";
   const deliveryFee = isPickup ? 0 : (checkout.address.deliveryFee ?? 0);
   const total = cartSubtotal + deliveryFee;
-  const montoAbono = Math.round(total * 0.5 * 100) / 100;
-  const tipoPago = checkout.paymentType === "abono" ? "abono" : "total";
-  const montoPagado = tipoPago === "abono" ? montoAbono : total;
+  const tipoPago = "total" as const;
+  const montoPagado = total;
 
   function handleNext() {
     if (currentStep === CheckoutStep.DELIVERY && isPickup) {

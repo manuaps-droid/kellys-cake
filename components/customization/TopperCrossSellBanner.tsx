@@ -16,7 +16,7 @@ type Props = {
 
 export default function TopperCrossSellModal({
   topperProductoId,
-  precioBase = 15,
+  precioBase = 16.99,
 }: Props) {
   const { openDrawer } = useCart();
   const [open, setOpen] = useState(false);
@@ -46,7 +46,7 @@ export default function TopperCrossSellModal({
           </h4>
 
           <p className="mt-1 text-xs text-kc-mocha leading-relaxed">
-            Añade el nombre del festejado en acrílico o cartulina glitter especial.
+            Añade el nombre del festejado en impresión 3D personalizada para coronar tu pastel.
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-3">

@@ -24,7 +24,7 @@ export default async function DisenarTopperPage() {
 
   const productoId = producto.id as string;
   const precioBase =
-    producto.precio != null ? Number(producto.precio) : 15;
+    producto.precio != null ? Number(producto.precio) : 16.99;
 
   const { data: rels } = await supabase
     .from("catalogo_imagenes")
@@ -71,14 +71,14 @@ export default async function DisenarTopperPage() {
         <section className="relative overflow-hidden bg-kc-charcoal py-20">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <p className="text-xs font-semibold tracking-[0.3em] text-kc-rose-gold uppercase">
-              Kelly&apos;s Cake · Toppers
+              Kelly&apos;s Cake · Toppers en Impresión 3D
             </p>
             <h1 className="mt-3 font-[family-name:var(--font-playfair)] text-5xl font-semibold text-kc-cream lg:text-6xl">
               Diseña tu topper
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-kc-blush">
-              Escoge el topper que te guste, escribe el nombre y nosotros lo
-              imprimimos listo para coronar tu pastel.
+              Escoge el diseño que más te guste, escribe el nombre y nosotros lo
+              fabricamos en impresión 3D listo para coronar tu pastel.
             </p>
           </div>
         </section>
@@ -90,18 +90,18 @@ export default async function DisenarTopperPage() {
               {[
                 {
                   n: "01",
-                  t: "Elige tu topper",
-                  d: "Escoge el diseño del catálogo que más te guste.",
+                  t: "Elige tu diseño",
+                  d: "Escoge el modelo que más combine con tu temática.",
                 },
                 {
                   n: "02",
                   t: "Escribe el nombre",
-                  d: "En el cuadro de diálogo escribes el nombre que quieras llevar.",
+                  d: "Indica el nombre o frase corta para personalizar la pieza.",
                 },
                 {
                   n: "03",
-                  t: "Pide y listo",
-                  d: "Agrégalo al carrito y nosotros lo imprimimos para tu pastel.",
+                  t: "Fabricación 3D",
+                  d: "Agrégalo al carrito y lo elaboramos en impresión 3D para tu pastel.",
                 },
               ].map((s) => (
                 <div key={s.n} className="flex gap-4">
@@ -137,9 +137,8 @@ export default async function DisenarTopperPage() {
         <section className="bg-kc-ivory pb-16">
           <div className="mx-auto max-w-3xl px-6 text-center">
             <p className="text-sm leading-relaxed text-kc-mocha">
-              ¿Dudas con medidas o materiales? Escríbenos y te resolvemos al toque.
-              El topper se elabora artesanalmente y el diseño final puede
-              variar un poco respecto a la vista previa.
+              ¿Dudas con medidas o colores? Escríbenos y te asesoramos al instante.
+              Cada topper se elabora en impresión 3D con materiales seguros y resistentes para tu celebración.
             </p>
           </div>
         </section>

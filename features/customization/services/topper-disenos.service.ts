@@ -1,4 +1,4 @@
-﻿import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   TOPPER_CATALOGO_ID,
   TOPPER_PRODUCTO_SLUG,
@@ -61,7 +61,7 @@ export async function getTopperInfo(): Promise<TopperInfo | null> {
 
   return {
     productoId: producto.id as string,
-    precioBase: (producto.precio as number | null) ?? 15,
+    precioBase: (producto.precio as number | null) ?? 16.99,
     disenos,
   };
 }

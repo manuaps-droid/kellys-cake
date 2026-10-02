@@ -90,9 +90,9 @@ export default function TopperPicker({
             <Sparkles className="h-6 w-6" />
           </div>
           <p className="text-base leading-relaxed text-kc-charcoal sm:text-lg">
-            <span className="font-semibold">Escoge tu topper</span> y
+            <span className="font-semibold">Escoge tu diseño en impresión 3D</span> y
             personaliza el nombre. Una vez que elijas, te pedimos el nombre y
-            lo agregas directo a tu carrito.
+            lo agregamos directo a tu carrito.
           </p>
         </div>
 
@@ -147,10 +147,10 @@ export default function TopperPicker({
         <DialogContent className="max-w-md bg-kc-cream">
           <DialogHeader>
             <DialogTitle className="font-[family-name:var(--font-playfair)] text-xl font-bold text-kc-charcoal">
-              Personaliza tu topper
+              Personaliza tu topper en impresión 3D
             </DialogTitle>
             <DialogDescription className="text-kc-mocha">
-              Escribe el nombre y lo dejamos listo para tu pastel.
+              Escribe el nombre y lo elaboramos en impresión 3D listo para tu pastel.
             </DialogDescription>
           </DialogHeader>
 

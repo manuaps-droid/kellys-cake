@@ -185,7 +185,7 @@ export default async function ProductoDetallePage({
                             Diseñar mi topper
                           </Link>
                           <p className="text-center text-xs leading-relaxed text-kc-mocha">
-                            Escoge el diseño del topper, escribe tu nombre y
+                            Personalizado en impresión 3D: escoge el diseño, indica tu nombre y
                             agrégalo al carrito.
                           </p>
                         </div>

@@ -262,7 +262,7 @@ export default function AreaPetsContent() {
                   </div>
                   <div className="bg-amber-50/70 px-4 py-2 text-center border-t border-kec-sand/30">
                     <p className="text-[11px] font-semibold text-kec-charcoal">
-                      📸 Foto Real: Torta Pet + Topper Happy Birthday + 2 Pupcakes + 6 Galletitas artesanales
+                      📸 Foto referencial: Torta Pet + Topper Happy Birthday + 2 Pupcakes + 6 Galletitas artesanales
                     </p>
                   </div>
                 </div>

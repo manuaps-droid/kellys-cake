@@ -76,15 +76,15 @@ export default function PaymentForm() {
         </p>
       </div>
 
-      {/* Pago Total Garantizado */}
+      {/* Pago del Pedido */}
       <div className="mb-6 rounded-xl border border-kc-sand/60 bg-gradient-to-r from-amber-50/50 to-orange-50/40 p-4">
         <div className="flex items-center justify-between">
           <div>
             <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-800">
-              Cancelación total
+              Pago del pedido
             </span>
             <p className="mt-1 text-xs text-kc-mocha">
-              Para programar el horneado y asegurar tu fecha de entrega, el pedido se cancela al 100%.
+              Para programar el horneado y asegurar tu fecha de entrega.
             </p>
           </div>
           <div className="text-right">

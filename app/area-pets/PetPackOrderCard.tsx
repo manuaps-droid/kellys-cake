@@ -137,7 +137,7 @@ export default function PetPackOrderCard() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-kec-rose-gold font-bold">✓</span>
-          <span>Cancelación total (Yape, Tarjeta o Transferencia)</span>
+          <span>Pago seguro (Yape, Tarjeta o Transferencia)</span>
         </div>
       </div>
     </div>

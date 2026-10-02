@@ -11,11 +11,11 @@ export async function getCartCount(): Promise<number> {
     return 0;
   }
 
-  const { data: cliente } = await supabase
+  let { data: cliente } = await supabase
     .from("clientes")
     .select("id")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!cliente) {
     return 0;

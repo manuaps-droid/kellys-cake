@@ -1,42 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentClient } from "@/features/auth/services/auth.server";
 
 import { ProjectData } from "../types/project.types";
 
 export async function createProjectRepository(
   data: ProjectData
 ) {
-  const supabase = await createClient();
-
-  // Obtener usuario autenticado
-  const {
-    data: authData,
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !authData.user) {
-    throw new Error(
-      "Usuario no autenticado."
-    );
-  }
-
-  // Buscar cliente
-  const {
-    data: cliente,
-    error: clienteError,
-  } = await supabase
-    .from("clientes")
-    .select("id")
-    .eq(
-      "user_id",
-      authData.user.id
-    )
-    .single();
-
-  if (clienteError || !cliente) {
-    throw new Error(
-      "Cliente no encontrado."
-    );
-  }
+  const { supabase, cliente } = await getCurrentClient();
 
   // Crear proyecto
   const {

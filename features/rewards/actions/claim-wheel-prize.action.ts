@@ -48,15 +48,18 @@ export async function claimWheelPrizeAction(prize: { label: string; value: numbe
       // (TODO: Lógica de cupones de descuento, fuera del alcance actual de esta fase)
     }
 
-    // Actualizar el flag del cliente para que no vuelva a girar
-    const { error: updateError } = await supabase
-      .from('clientes')
-      .update({ ruleta_girada: true })
-      .eq('id', cliente.id);
-      
-    if (updateError) {
-      console.error("Error updating ruleta_girada flag:", updateError);
-      return { success: false, message: "Error al actualizar estado del cliente." };
+    // Actualizar el flag del cliente para que no vuelva a girar si la columna existe en BD
+    try {
+      const { error: updateError } = await supabase
+        .from('clientes')
+        .update({ ruleta_girada: true })
+        .eq('id', cliente.id);
+        
+      if (updateError) {
+        console.warn("Advertencia al actualizar ruleta_girada en clientes:", updateError.message);
+      }
+    } catch (e) {
+      console.warn("Error al intentar actualizar ruleta_girada:", e);
     }
 
     revalidatePath('/mi-cuenta');

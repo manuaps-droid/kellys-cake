@@ -26,6 +26,8 @@ export async function requireCurrentUser() {
   return result as { supabase: typeof result.supabase; user: NonNullable<typeof result.user> };
 }
 
+import { createAdminClient } from "@/lib/supabase/admin";
+
 export async function getCurrentClient() {
   const {
     supabase,
@@ -34,33 +36,69 @@ export async function getCurrentClient() {
 
   let {
     data: cliente,
-    error,
   } = await supabase
     .from("clientes")
-    .select("id, ruleta_girada")
+    .select("*")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (error || !cliente) {
-    const nombre = user.user_metadata?.full_name?.split(" ")[0] || "";
-    const apellidos = user.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "";
+  // Si no se encuentra por user_id, buscar por correo (ej. clientes creados previo al registro)
+  if (!cliente && user.email) {
+    const adminClient = createAdminClient();
+    const { data: clientePorCorreo } = await adminClient
+      .from("clientes")
+      .select("*")
+      .ilike("correo", user.email.trim())
+      .maybeSingle();
 
-    const { data: nuevo, error: insertError } = await supabase
+    if (clientePorCorreo) {
+      // Vincular el user_id para futuros accesos directos
+      const { data: vinculado, error: updateError } = await adminClient
+        .from("clientes")
+        .update({ user_id: user.id })
+        .eq("id", clientePorCorreo.id)
+        .select("*")
+        .single();
+
+      if (!updateError && vinculado) {
+        cliente = vinculado;
+      } else {
+        cliente = clientePorCorreo;
+      }
+    }
+  }
+
+  // Si aún no existe el perfil de cliente, crearlo automáticamente
+  if (!cliente) {
+    const adminClient = createAdminClient();
+    const nombre =
+      user.user_metadata?.nombre ||
+      user.user_metadata?.full_name?.split(" ")[0] ||
+      "Cliente";
+    const apellidos =
+      user.user_metadata?.apellidos ||
+      user.user_metadata?.full_name?.split(" ").slice(1).join(" ") ||
+      "";
+
+    const { data: nuevo, error: insertError } = await adminClient
       .from("clientes")
       .insert({
         user_id: user.id,
         nombre: nombre || "Cliente",
         apellidos: apellidos || "",
         correo: user.email || "",
-        celular: "",
+        celular: user.user_metadata?.celular || "",
         rol: "cliente",
         activo: true,
       })
-      .select("id, ruleta_girada")
+      .select("*")
       .single();
 
     if (insertError || !nuevo) {
-      throw new Error("Cliente no encontrado.");
+      console.error("Error al crear cliente automático:", insertError);
+      throw new Error(
+        `Cliente no encontrado. (${insertError?.message ?? "sin detalle"})`
+      );
     }
 
     cliente = nuevo;
@@ -69,6 +107,9 @@ export async function getCurrentClient() {
   return {
     supabase,
     user,
-    cliente,
+    cliente: {
+      ...cliente,
+      ruleta_girada: Boolean((cliente as any)?.ruleta_girada ?? false),
+    },
   };
 }

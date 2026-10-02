@@ -79,25 +79,29 @@ export default function PetPackOrderCard() {
               <button
                 type="button"
                 onClick={() => setTipoMascota("perro")}
-                className={`flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-semibold transition ${
+                className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition-all ${
                   tipoMascota === "perro"
-                    ? "border-kec-rose-gold bg-kec-rose-gold text-white shadow-sm"
-                    : "border-kec-sand bg-white text-kec-charcoal hover:bg-kec-ivory"
+                    ? "border-amber-500 bg-amber-100/90 text-amber-950 shadow-sm ring-2 ring-amber-400/50"
+                    : "border-kec-sand/80 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <span>🐶</span> Perrito
+                <span>🐶</span>
+                <span className="text-gray-900 font-bold">Perrito</span>
+                {tipoMascota === "perro" && <span className="text-amber-700 text-[10px]">✓</span>}
               </button>
 
               <button
                 type="button"
                 onClick={() => setTipoMascota("gato")}
-                className={`flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-semibold transition ${
+                className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition-all ${
                   tipoMascota === "gato"
-                    ? "border-kec-rose-gold bg-kec-rose-gold text-white shadow-sm"
-                    : "border-kec-sand bg-white text-kec-charcoal hover:bg-kec-ivory"
+                    ? "border-amber-500 bg-amber-100/90 text-amber-950 shadow-sm ring-2 ring-amber-400/50"
+                    : "border-kec-sand/80 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <span>🐱</span> Gatito
+                <span>🐱</span>
+                <span className="text-gray-900 font-bold">Gatito</span>
+                {tipoMascota === "gato" && <span className="text-amber-700 text-[10px]">✓</span>}
               </button>
             </div>
           </div>

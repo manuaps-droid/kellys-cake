@@ -45,7 +45,7 @@ const faqs = [
     icon: HelpCircle,
     pregunta: "¿Hacen tortas para mascotas o dietas especiales?",
     respuesta:
-      "¡Sí! Contamos con nuestra exclusiva Área Pet (tortas y galletas aptas para perritos y gatitos con ingredientes naturales certificados) y opciones de pastelería personalizada donde adaptamos rellenos y decoraciones según tus preferencias.",
+      "¡Sí! Contamos con nuestra exclusiva Área Pet (tortas y galletas aptas para perritos y gatitos con ingredientes naturales certificados)",
   },
 ];
 

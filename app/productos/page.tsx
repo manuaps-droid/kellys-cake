@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft, CakeSlice, Sparkles, Truck } from "lucide-react";
 
 import Navbar from "@/components/layout/Navbar";
@@ -231,41 +232,24 @@ export default async function ProductosPage({
     : undefined;
 
   if (seleccionado) {
-    const esTopper = seleccionado.id === TOPPER_CATALOGO_ID;
-    const topperInfo = esTopper ? await getTopperInfo() : null;
+    const esTopper =
+      seleccionado.id === TOPPER_CATALOGO_ID ||
+      seleccionado.nombre.toLowerCase().includes("topper");
+
+    if (esTopper) {
+      redirect("/personalizar/topper");
+    }
 
     return (
       <>
         <Navbar />
         <main className="flex-1 bg-kc-cream">
-          {esTopper && topperInfo ? (
-            <>
-              <div className="mx-auto max-w-7xl px-6 pt-12 lg:pt-16">
-                <Link
-                  href="/productos"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-kc-mocha transition-colors hover:text-kc-rose-gold"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Ver todos los catálogos
-                </Link>
-                <h1 className="mt-6 font-[family-name:var(--font-playfair)] text-3xl font-semibold text-kc-charcoal sm:text-4xl">
-                  {seleccionado.nombre}
-                </h1>
-              </div>
-              <TopperPicker
-                productoId={topperInfo.productoId}
-                precioBase={topperInfo.precioBase}
-                disenos={topperInfo.disenos}
-              />
-            </>
-          ) : (
-            <div className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
-              <ProductosGrid
-                catalogo={seleccionado}
-                productos={seleccionado.productos}
-              />
-            </div>
-          )}
+          <div className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
+            <ProductosGrid
+              catalogo={seleccionado}
+              productos={seleccionado.productos}
+            />
+          </div>
         </main>
         <Footer />
       </>
@@ -352,7 +336,9 @@ export default async function ProductosPage({
             posicionCaja={(marketingCfg as any)?.posicion_arma_caja ?? 0}
             catalogos={catalogosConProductos.map((c) => {
               const cantidadImagenes = imagenesByCatalog.get(c.id) ?? 0;
-              const esTopper = c.id === TOPPER_CATALOGO_ID;
+              const esTopper =
+                c.id === TOPPER_CATALOGO_ID ||
+                c.nombre.toLowerCase().includes("topper");
               // Para el catálogo de toppers, el "producto" es cada diseño; mostramos su cantidad.
               return {
                 id: c.id,
@@ -360,6 +346,7 @@ export default async function ProductosPage({
                 tipo: c.tipo,
                 portada_url: c.portada_url,
                 cantidad: esTopper && cantidadImagenes > 0 ? cantidadImagenes : c.productos.length,
+                href: esTopper ? "/personalizar/topper" : `/productos?catalogo=${c.id}`,
               };
             })}
           />

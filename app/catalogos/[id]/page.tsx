@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -31,7 +31,13 @@ export default async function CatalogDetailPage({ params }: Props) {
 
   if (!catalog) notFound();
 
-  const esTopper = catalog.id === TOPPER_CATALOGO_ID;
+  const esTopper =
+    catalog.id === TOPPER_CATALOGO_ID ||
+    catalog.nombre.toLowerCase().includes("topper");
+
+  if (esTopper) {
+    redirect("/personalizar/topper");
+  }
 
   // Producto con el que se cobra el topper (se resuelve en el servidor)
   let productoTopper: { id: string; precio: number | null } | null = null;

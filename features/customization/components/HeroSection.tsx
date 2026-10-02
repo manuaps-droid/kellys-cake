@@ -17,7 +17,7 @@ export default function HeroSection() {
           </span>
 
           <h1 className="mt-8 font-playfair text-5xl font-bold leading-tight text-[#0B1423] md:text-6xl">
-            Diseñamos la pieza central de tu celebración
+            Diseñamos la torta, pieza central de tu celebración
           </h1>
 
           <p className="mt-8 max-w-xl text-lg leading-8 text-gray-600">

@@ -119,17 +119,17 @@ export default async function Footer() {
             </h4>
             <ul className="mt-4 space-y-3">
               {[
-                "Preguntas frecuentes",
-                "Política de envío",
-                "Términos y condiciones",
-                "Política de privacidad",
+                { label: "Preguntas frecuentes", href: "/preguntas-frecuentes" },
+                { label: "Política de envío", href: "/politica-de-envio" },
+                { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
+                { label: "Política de privacidad", href: "/politica-de-privacidad" },
               ].map((item) => (
-                <li key={item}>
+                <li key={item.label}>
                   <Link
-                    href="/"
+                    href={item.href}
                     className="text-sm text-kc-blush/60 transition-colors hover:text-kc-rose-gold"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}

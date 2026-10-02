@@ -15,7 +15,7 @@ const faqs = [
     icon: Clock,
     pregunta: "¿Con cuánta anticipación debo hacer mi pedido?",
     respuesta:
-      "Para tortas de catálogo, boxes y postres, recomendamos un mínimo de 24 a 48 horas. Para tortas de autor personalizadas y piezas de celebración de gran tamaño, sugerimos solicitar tu pedido con 3 a 5 días de anticipación para asegurar tu fecha en agenda.",
+      "Para tortas de catálogo, boxes y postres, recomendamos un mínimo de 24 a 48 horas. Para tortas de autor personalizadas y piezas de celebración de gran tamaño, sugerimos solicitar tu pedido con 3 a 5 días de anticipación, esto va a depender de la complejidad de tu proyecto para asegurar tu fecha en agenda.",
   },
   {
     icon: CreditCard,

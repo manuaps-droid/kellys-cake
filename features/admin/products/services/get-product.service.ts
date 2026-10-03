@@ -1,11 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Product } from "../types/product.type";
 
 export async function getProductById(
   id: string
 ): Promise<Product | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("productos")
@@ -14,6 +13,7 @@ export async function getProductById(
     .single();
 
   if (error) {
+    console.error("Error en getProductById:", error);
     return null;
   }
 

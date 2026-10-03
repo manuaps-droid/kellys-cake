@@ -91,6 +91,12 @@ export default function CartItemCard({
           </span>
         )}
 
+        {item.descripcion && (
+          <p className="mt-1 text-xs text-kc-mocha leading-relaxed line-clamp-2">
+            {item.descripcion}
+          </p>
+        )}
+
         <p className="mt-1 text-gray-500">
           S/ {getItemUnitPrice(item).toFixed(2)}
         </p>

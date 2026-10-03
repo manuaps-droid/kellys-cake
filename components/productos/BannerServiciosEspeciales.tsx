@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Plus,
   Minus,
+  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
@@ -86,7 +87,11 @@ async function detectarPaginasEnArchivo(file: File): Promise<number> {
   return 1;
 }
 
-export default function BannerServiciosEspeciales() {
+export default function BannerServiciosEspeciales({
+  children,
+}: {
+  children?: React.ReactNode;
+} = {}) {
   const { refreshCart, openDrawer } = useCart();
 
   // Modales
@@ -300,72 +305,146 @@ export default function BannerServiciosEspeciales() {
 
   return (
     <>
-      {/* Botones Flanqueando la Franja Marrón */}
-      <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row lg:absolute lg:inset-x-0 lg:top-1/2 lg:-translate-y-1/2 lg:mt-0 lg:justify-between lg:px-8 xl:px-12 pointer-events-none">
-        
-        {/* BOTÓN IZQUIERDO: IMPRESIONES COMESTIBLES */}
-        <div className="pointer-events-auto w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setModalImpresionOpen(true)}
-            className="group relative flex w-full sm:w-72 items-center gap-3.5 overflow-hidden rounded-2xl border-2 border-kc-rose-gold/80 bg-gradient-to-br from-[#381f14] via-[#2a170d] to-[#1e0f08] p-3.5 text-left shadow-2xl shadow-black/50 transition-all duration-300 hover:scale-105 hover:border-kc-gold hover:shadow-kc-rose-gold/30 active:scale-95 cursor-pointer ring-1 ring-white/10"
-          >
-            {/* Destello de fondo */}
-            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-kc-rose-gold/20 blur-xl transition-transform group-hover:scale-150" />
+      {children ? (
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12 lg:gap-6 xl:gap-8 w-full">
+          {/* BOTÓN IZQUIERDO: IMPRESIONES COMESTIBLES */}
+          <div className="order-2 lg:order-1 lg:col-span-3 xl:col-span-3 flex justify-center lg:justify-start w-full">
+            <button
+              type="button"
+              onClick={() => setModalImpresionOpen(true)}
+              className="group relative flex w-full max-w-sm lg:max-w-none items-center gap-4 overflow-hidden rounded-2xl border-2 border-amber-400/90 bg-gradient-to-br from-[#442215] via-[#2f170d] to-[#1c0d06] p-4 lg:p-4.5 xl:p-5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_16px_36px_rgba(245,158,11,0.45)] hover:border-amber-300 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer ring-2 ring-amber-400/20"
+            >
+              {/* Brillo de fondo */}
+              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-amber-500/20 blur-2xl transition-transform group-hover:scale-150" />
 
-            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-kc-rose-gold to-kc-gold text-white shadow-md">
-              <Printer className="h-6 w-6 transition-transform group-hover:rotate-6" />
-            </div>
-
-            <div className="relative z-10 flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="rounded-full bg-kc-rose-gold/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-kc-rose-gold uppercase">
-                  S/ 15 · Hoja A4
-                </span>
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="relative flex h-14 w-14 lg:h-16 lg:w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 text-stone-950 shadow-lg shadow-amber-500/30 ring-2 ring-white/30">
+                <Printer className="h-7 w-7 lg:h-8 lg:w-8 transition-transform group-hover:rotate-6" />
               </div>
-              <h3 className="mt-1 font-bold text-sm text-white leading-tight group-hover:text-kc-gold transition-colors">
-                Impresiones Comestibles
-              </h3>
-              <p className="text-[11px] text-kc-cream/80 truncate">
-                Sube tu Word o PDF · Papel de azúcar y arroz
-              </p>
-            </div>
-          </button>
-        </div>
 
-        {/* BOTÓN DERECHO: CORTADORES DE GALLETA Y OTROS */}
-        <div className="pointer-events-auto w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setModalCortadoresOpen(true)}
-            className="group relative flex w-full sm:w-72 items-center gap-3.5 overflow-hidden rounded-2xl border-2 border-kc-rose-gold/80 bg-gradient-to-br from-[#381f14] via-[#2a170d] to-[#1e0f08] p-3.5 text-left shadow-2xl shadow-black/50 transition-all duration-300 hover:scale-105 hover:border-kc-gold hover:shadow-kc-rose-gold/30 active:scale-95 cursor-pointer ring-1 ring-white/10"
-          >
-            {/* Destello de fondo */}
-            <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-kc-gold/20 blur-xl transition-transform group-hover:scale-150" />
-
-            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-kc-gold via-kc-rose-gold to-[#b37748] text-white shadow-md">
-              <Shapes className="h-6 w-6 transition-transform group-hover:-rotate-6" />
-            </div>
-
-            <div className="relative z-10 flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="rounded-full bg-kc-gold/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-kc-gold uppercase">
-                  Impresión 3D
-                </span>
-                <Sparkles className="h-3 w-3 text-kc-gold" />
+              <div className="relative z-10 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] font-black tracking-wider text-stone-950 uppercase shadow-xs">
+                    S/ 15 · Hoja A4
+                  </span>
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <h3 className="mt-1.5 font-extrabold text-base lg:text-lg text-white leading-tight group-hover:text-amber-200 transition-colors">
+                  Impresiones Comestibles
+                </h3>
+                <p className="mt-1 text-xs text-amber-100/90 font-medium leading-snug line-clamp-2">
+                  Sube tu Word o PDF · Papel de azúcar y arroz
+                </p>
+                <div className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-amber-300 group-hover:text-white transition-colors">
+                  <span>Subir archivo aquí</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                </div>
               </div>
-              <h3 className="mt-1 font-bold text-sm text-white leading-tight group-hover:text-kc-gold transition-colors">
-                Cortadores de Galleta y otros
-              </h3>
-              <p className="text-[11px] text-kc-cream/80 truncate">
-                Crea tu molde a medida · Sube tu diseño
-              </p>
-            </div>
-          </button>
-        </div>
+            </button>
+          </div>
 
-      </div>
+          {/* CONTENIDO CENTRAL HERO */}
+          <div className="order-1 lg:order-2 lg:col-span-6 xl:col-span-6 w-full">
+            {children}
+          </div>
+
+          {/* BOTÓN DERECHO: CORTADORES DE GALLETA Y OTROS */}
+          <div className="order-3 lg:col-span-3 xl:col-span-3 flex justify-center lg:justify-end w-full">
+            <button
+              type="button"
+              onClick={() => setModalCortadoresOpen(true)}
+              className="group relative flex w-full max-w-sm lg:max-w-none items-center gap-4 overflow-hidden rounded-2xl border-2 border-amber-400/90 bg-gradient-to-br from-[#442215] via-[#2f170d] to-[#1c0d06] p-4 lg:p-4.5 xl:p-5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_16px_36px_rgba(245,158,11,0.45)] hover:border-amber-300 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer ring-2 ring-amber-400/20"
+            >
+              {/* Brillo de fondo */}
+              <div className="absolute -left-12 -top-12 h-36 w-36 rounded-full bg-amber-400/20 blur-2xl transition-transform group-hover:scale-150" />
+
+              <div className="relative flex h-14 w-14 lg:h-16 lg:w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 via-rose-400 to-amber-200 text-stone-950 shadow-lg shadow-amber-500/30 ring-2 ring-white/30">
+                <Shapes className="h-7 w-7 lg:h-8 lg:w-8 transition-transform group-hover:-rotate-6" />
+              </div>
+
+              <div className="relative z-10 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-gradient-to-r from-amber-400 to-rose-300 px-2.5 py-0.5 text-[11px] font-black tracking-wider text-stone-950 uppercase shadow-xs">
+                    Impresión 3D
+                  </span>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                </div>
+                <h3 className="mt-1.5 font-extrabold text-base lg:text-lg text-white leading-tight group-hover:text-amber-200 transition-colors">
+                  Cortadores de Galleta y más
+                </h3>
+                <p className="mt-1 text-xs text-amber-100/90 font-medium leading-snug line-clamp-2">
+                  Moldes a medida · Diseña o sube tu logo
+                </p>
+                <div className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-amber-300 group-hover:text-white transition-colors">
+                  <span>Personalizar molde aquí</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-8 flex flex-col items-center justify-center gap-5 sm:flex-row w-full max-w-4xl mx-auto">
+          {/* Fallback layout */}
+          <div className="w-full sm:flex-1">
+            <button
+              type="button"
+              onClick={() => setModalImpresionOpen(true)}
+              className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border-2 border-amber-400/90 bg-gradient-to-br from-[#442215] via-[#2f170d] to-[#1c0d06] p-4 sm:p-5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_16px_36px_rgba(245,158,11,0.45)] hover:border-amber-300 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer ring-2 ring-amber-400/20"
+            >
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 text-stone-950 shadow-lg shadow-amber-500/30 ring-2 ring-white/30">
+                <Printer className="h-7 w-7 transition-transform group-hover:rotate-6" />
+              </div>
+              <div className="relative z-10 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] font-black tracking-wider text-stone-950 uppercase shadow-xs">
+                    S/ 15 · Hoja A4
+                  </span>
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <h3 className="mt-1.5 font-extrabold text-base text-white leading-tight group-hover:text-amber-200 transition-colors">
+                  Impresiones Comestibles
+                </h3>
+                <p className="mt-1 text-xs text-amber-100/90 font-medium leading-snug line-clamp-2">
+                  Sube tu Word o PDF · Papel de azúcar y arroz
+                </p>
+                <div className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-amber-300 group-hover:text-white transition-colors">
+                  <span>Subir archivo aquí</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                </div>
+              </div>
+            </button>
+          </div>
+          <div className="w-full sm:flex-1">
+            <button
+              type="button"
+              onClick={() => setModalCortadoresOpen(true)}
+              className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border-2 border-amber-400/90 bg-gradient-to-br from-[#442215] via-[#2f170d] to-[#1c0d06] p-4 sm:p-5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_16px_36px_rgba(245,158,11,0.45)] hover:border-amber-300 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer ring-2 ring-amber-400/20"
+            >
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 via-rose-400 to-amber-200 text-stone-950 shadow-lg shadow-amber-500/30 ring-2 ring-white/30">
+                <Shapes className="h-7 w-7 transition-transform group-hover:-rotate-6" />
+              </div>
+              <div className="relative z-10 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-gradient-to-r from-amber-400 to-rose-300 px-2.5 py-0.5 text-[11px] font-black tracking-wider text-stone-950 uppercase shadow-xs">
+                    Impresión 3D
+                  </span>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                </div>
+                <h3 className="mt-1.5 font-extrabold text-base text-white leading-tight group-hover:text-amber-200 transition-colors">
+                  Cortadores de Galleta y más
+                </h3>
+                <p className="mt-1 text-xs text-amber-100/90 font-medium leading-snug line-clamp-2">
+                  Moldes a medida · Diseña o sube tu logo
+                </p>
+                <div className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-amber-300 group-hover:text-white transition-colors">
+                  <span>Personalizar molde aquí</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* MODAL 1: FORMULARIO IMPRESIONES COMESTIBLES              */}

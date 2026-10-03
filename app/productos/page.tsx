@@ -314,37 +314,36 @@ export default async function ProductosPage({
           className="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-kc-blush/15 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="relative mx-auto max-w-3xl">
-            <p className="text-xs font-semibold tracking-[0.3em] text-kc-rose-gold uppercase">
-              Repostería artesanal
-            </p>
-            <h1 className="mt-3 font-[family-name:var(--font-playfair)] text-4xl font-semibold sm:text-5xl">
-              Tienda Online
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-kc-cream/80 sm:text-base">
-              Pasteles, kekes y bocaditos que preparamos el mismo día, con buenos
-              ingredientes. Elige los tuyos y los recibes frescos en tu puerta.
-            </p>
+          <BannerServiciosEspeciales>
+            <div className="relative mx-auto max-w-2xl">
+              <p className="text-xs font-semibold tracking-[0.3em] text-kc-rose-gold uppercase">
+                Repostería artesanal
+              </p>
+              <h1 className="mt-3 font-[family-name:var(--font-playfair)] text-4xl font-semibold sm:text-5xl">
+                Tienda Online
+              </h1>
+              <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-kc-cream/80 sm:text-base">
+                Pasteles, kekes y bocaditos que preparamos el mismo día, con buenos
+                ingredientes. Elige los tuyos y los recibes frescos en tu puerta.
+              </p>
 
-            {/* Barra de confianza */}
-            <ul className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-kc-cream/90">
-              <li className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-kc-rose-gold" />
-                Delivery en Arequipa
-              </li>
-              <li className="flex items-center gap-2">
-                <CakeSlice className="h-4 w-4 text-kc-rose-gold" />
-                Hecho a mano cada día
-              </li>
-              <li className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-kc-rose-gold" />
-                Ingredientes de calidad
-              </li>
-            </ul>
-          </div>
-
-          {/* Botones de servicios especiales: Impresiones comestibles a la izquierda, Cortadores de galleta a la derecha */}
-          <BannerServiciosEspeciales />
+              {/* Barra de confianza */}
+              <ul className="mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-kc-cream/90">
+                <li className="flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-kc-rose-gold" />
+                  Delivery en Arequipa
+                </li>
+                <li className="flex items-center gap-2">
+                  <CakeSlice className="h-4 w-4 text-kc-rose-gold" />
+                  Hecho a mano cada día
+                </li>
+                <li className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-kc-rose-gold" />
+                  Ingredientes de calidad
+                </li>
+              </ul>
+            </div>
+          </BannerServiciosEspeciales>
         </div>
       </section>
 

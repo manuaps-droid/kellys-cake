@@ -33,3 +33,11 @@ When adding "Add to cart" buttons to product listings (like `ProductosAccordion`
 2. Render conditionally: `{product.precio != null && <AddToCartButton productoId={product.id} />}`
 3. The product type must have `id: string` and `precio: number | null`
 4. Reuses existing cart state and Supabase tables (`carrito`, `carrito_items`)
+
+## Directiva de Ejecución 100% Autónoma (Zero Preguntas Innecesarias)
+- **Modo Resolutivo Total**: Ante cualquier requerimiento del usuario, planifica, implementa, corrige y verifica de principio a fin de forma directa.
+- **Sin Preguntas Intermedias**: No preguntes "¿qué deseas hacer a continuación?", ni pidas permiso para crear archivos, refactorizar código, ajustar componentes o ejecutar comandos de verificación.
+- **Toma de Decisiones Proactiva**: Aplica las mejores prácticas de TypeScript, Next.js App Router, TailwindCSS y la arquitectura del proyecto sin dudar ni solicitar aprobaciones triviales.
+- **Verificación Completa**: Valida siempre que no haya errores de compilación (`npm run build`) y deja el trabajo terminado y confirmado localmente en Git.
+- **Publicación Remota Suspendida**: Mantén los despliegues remotos (`git push origin`) suspendidos hasta que el usuario dé la orden explícita de publicar a producción.
+- **Casos Excepcionales de Consulta**: Solo detente a consultar si existe un riesgo destructivo de pérdida de datos irreversible o una discrepancia de negocio insalvable que impida totalmente proceder.

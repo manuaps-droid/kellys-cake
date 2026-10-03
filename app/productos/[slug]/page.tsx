@@ -212,7 +212,14 @@ export default async function ProductoDetallePage({
 
               {/* Precio + CTA */}
               <div className="mt-8 border-t border-kc-sand/60 pt-8">
-                {product.precio != null ? (
+                {presentaciones.length > 0 ? (
+                  <div className="max-w-xs">
+                    <PrecioCantidadDropdown
+                      productoId={product.id}
+                      presentaciones={presentaciones}
+                    />
+                  </div>
+                ) : product.precio != null ? (
                   <>
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                       <span className="text-xs font-medium tracking-widest text-kc-mocha uppercase">
@@ -248,13 +255,6 @@ export default async function ProductoDetallePage({
                       )}
                     </div>
                   </>
-                ) : presentaciones.length > 0 ? (
-                  <div className="max-w-xs">
-                    <PrecioCantidadDropdown
-                      productoId={product.id}
-                      presentaciones={presentaciones}
-                    />
-                  </div>
                 ) : (
                   <>
                     <p className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-kc-charcoal">

@@ -100,7 +100,48 @@ export async function getCartItems(): Promise<CartItem[]> {
     return [];
   }
 
-  return (data ?? []).map(
+  const itemsList = data ?? [];
+
+  // Corregir automáticamente ítems que no tengan presentacion_id pero cuyo producto tenga presentaciones
+  // (por ejemplo alfajores, macarrones, donas agregados con precio unitario o anteriores)
+  for (const item of itemsList) {
+    if (!item.presentacion_id && item.producto_id) {
+      const { data: presList } = await supabase
+        .from("producto_presentaciones")
+        .select("id, nombre, precio, orden")
+        .eq("producto_id", item.producto_id)
+        .eq("activo", true)
+        .order("precio", { ascending: true });
+
+      if (presList && presList.length > 0) {
+        const pres6 =
+          presList.find(
+            (p) =>
+              p.nombre.trim() === "6" || p.nombre.toLowerCase().includes("6")
+          ) ?? presList[0];
+
+        item.presentacion_id = pres6.id;
+        item.precio_unitario = pres6.precio;
+        item.producto_presentaciones = [
+          {
+            nombre: pres6.nombre,
+            precio: pres6.precio,
+          },
+        ];
+
+        // Guardar corrección en BD
+        void supabase
+          .from("carrito_items")
+          .update({
+            presentacion_id: pres6.id,
+            precio_unitario: pres6.precio,
+          })
+          .eq("id", item.id);
+      }
+    }
+  }
+
+  return itemsList.map(
     (item: any): CartItem => ({
       id: item.id,
 
@@ -117,7 +158,11 @@ export async function getCartItems(): Promise<CartItem[]> {
       ) as CartProduct | null,
 
       precio_unitario:
-        item.precio_unitario,
+        item.precio_unitario ??
+        (Array.isArray(item.producto_presentaciones)
+          ? item.producto_presentaciones[0]?.precio
+          : item.producto_presentaciones?.precio) ??
+        null,
 
       nombre: item.nombre,
 

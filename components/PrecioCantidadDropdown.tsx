@@ -40,12 +40,18 @@ export default function PrecioCantidadDropdown({
   const opciones = useMemo<Opcion[]>(() => {
     const lista: Opcion[] =
       presentaciones && presentaciones.length > 0
-        ? presentaciones.map((p) => ({
-            key: `pres-${p.id}`,
-            presentacionId: p.id,
-            label: p.nombre,
-            precio: p.precio,
-          }))
+        ? presentaciones.map((p) => {
+            const trimmed = p.nombre.trim();
+            const label = /^\d+$/.test(trimmed)
+              ? `${trimmed} unidades`
+              : trimmed;
+            return {
+              key: `pres-${p.id}`,
+              presentacionId: p.id,
+              label,
+              precio: p.precio,
+            };
+          })
         : (tiers ?? []).map((t) => ({
             key: `tier-${t.cantidad_minima}`,
             presentacionId: null,

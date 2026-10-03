@@ -87,7 +87,9 @@ export default function CartItemCard({
 
         {item.presentacion && (
           <span className="mt-1 inline-block rounded-full bg-kc-blush/30 px-2.5 py-0.5 text-xs font-medium text-kc-mocha">
-            {item.presentacion.nombre}
+            {/^\d+$/.test(item.presentacion.nombre.trim())
+              ? `${item.presentacion.nombre.trim()} unidades`
+              : item.presentacion.nombre}
           </span>
         )}
 

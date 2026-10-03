@@ -40,11 +40,25 @@ export interface CartItem {
 }
 
 export function getItemUnitPrice(item: CartItem): number {
-  return item.precio_unitario ?? item.productos?.precio ?? 0;
+  if (item.precio_unitario != null && item.precio_unitario > 0) {
+    return item.precio_unitario;
+  }
+  if (item.presentacion?.precio != null && item.presentacion.precio > 0) {
+    return item.presentacion.precio;
+  }
+  return item.productos?.precio ?? 0;
 }
 
 export function getItemNombre(item: CartItem): string {
-  return item.nombre ?? item.productos?.nombre ?? "Producto";
+  const base = item.nombre ?? item.productos?.nombre ?? "Producto";
+  if (item.presentacion?.nombre) {
+    const presTrimmed = item.presentacion.nombre.trim();
+    const presLabel = /^\d+$/.test(presTrimmed) ? `${presTrimmed} und` : presTrimmed;
+    if (!base.toLowerCase().includes(presLabel.toLowerCase())) {
+      return `${base} (${presLabel})`;
+    }
+  }
+  return base;
 }
 
 export function getItemImagen(item: CartItem): string | null {

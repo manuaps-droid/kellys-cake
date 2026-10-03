@@ -17,6 +17,7 @@ import {
   CakeSlice,
   MessageSquare,
   UtensilsCrossed,
+  Eye,
 } from "lucide-react";
 
 import SidebarGroup from "./SidebarGroup";
@@ -87,6 +88,11 @@ const groups = [
   {
     title: "Marketing",
     items: [
+      {
+        href: "/admin/visitas",
+        label: "Contador de Visitas",
+        icon: Eye,
+      },
       {
         href: "/admin/promociones",
         label: "Promociones",

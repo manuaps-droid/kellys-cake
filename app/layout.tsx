@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { CartProvider } from "@/features/cart/context/CartProvider";
 import AnalyticsScripts from "@/components/analytics/AnalyticsScripts";
+import VisitorTracker from "@/components/analytics/VisitorTracker";
 import SiteBanner from "@/components/marketing/SiteBanner";
 import WhatsAppFloatingButton from "@/components/marketing/WhatsAppFloatingButton";
 import RegistrationPopup from "@/components/marketing/RegistrationPopup";
@@ -210,6 +211,7 @@ export default async function RootLayout({
             />
 
             <AnalyticsScripts />
+            <VisitorTracker />
           </CartProvider>
         </AuthProvider>
       </body>

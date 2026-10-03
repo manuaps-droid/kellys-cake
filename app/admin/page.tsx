@@ -5,18 +5,24 @@ import Price from "@/components/ui/Price";
 import EmptyState from "@/components/common/EmptyState";
 
 import { getDashboardAction } from "@/features/admin/dashboard/actions/get-dashboard.action";
+import { getResumenVisitasAction } from "@/features/admin/visitas/actions/get-visitas.action";
 
 import {
   CakeSlice,
   Clock3,
+  Eye,
   Package,
   ShoppingCart,
   Users,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
-  const result =
-    await getDashboardAction();
+  const [result, visitasResult] = await Promise.all([
+    getDashboardAction(),
+    getResumenVisitasAction(),
+  ]);
 
   if (!result.success || !result.stats) {
     return (
@@ -31,8 +37,17 @@ export default async function AdminDashboardPage() {
   }
 
   const stats = result.stats;
+  const visitas = visitasResult.success ? visitasResult.resumen : null;
 
   const cards = [
+    {
+      title: "Visitas Hoy",
+      value: visitas?.hoy.total ?? 0,
+      subtitle: `${visitas?.hoy.unicos ?? 0} personas únicas`,
+      icon: Eye,
+      href: "/admin/visitas",
+      highlight: true,
+    },
     {
       title: "Pedidos",
       value: stats.pedidos,
@@ -70,33 +85,35 @@ export default async function AdminDashboardPage() {
         description="Resumen general de Kelly's Cake."
       />
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {cards.map((card) => {
           const Icon = card.icon;
 
           return (
             <Link key={card.title} href={card.href}>
               <Card
-                className="p-6 transition-all duration-200 hover:border-cake-gold hover:shadow-md group"
+                className={`p-6 transition-all duration-200 hover:border-cake-gold hover:shadow-md group h-full flex flex-col justify-between ${
+                  card.highlight ? "border-l-4 border-l-cake-gold bg-[#FFFDF8]" : ""
+                }`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                   <div className="transition-colors group-hover:text-cake-gold">
                     <p className="text-sm text-gray-500 group-hover:text-cake-gold/80">
                       {card.title}
                     </p>
 
-                    <h2 className="mt-2 text-4xl font-bold text-cake-espresso group-hover:text-cake-gold">
+                    <h2 className="mt-2 text-3xl font-bold text-cake-espresso group-hover:text-cake-gold">
                       {card.value}
                     </h2>
 
-                    <p className="mt-2 text-sm text-gray-500 group-hover:text-cake-gold/80">
+                    <p className="mt-2 text-xs text-gray-500 group-hover:text-cake-gold/80">
                       {card.subtitle}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-[#FFF5E8] p-4 transition-colors group-hover:bg-cake-gold/20">
+                  <div className="rounded-2xl bg-[#FFF5E8] p-3 transition-colors group-hover:bg-cake-gold/20">
                     <Icon
-                      size={28}
+                      size={24}
                       className="text-cake-gold"
                     />
                   </div>
@@ -168,6 +185,31 @@ export default async function AdminDashboardPage() {
               <strong>
                 {stats.proyectosPendientes}
               </strong>
+            </div>
+
+            <div className="flex justify-between border-t border-gray-100 pt-3">
+              <span>Visitas hoy</span>
+
+              <strong className="text-cake-gold">
+                {visitas?.hoy.total ?? 0} ({visitas?.hoy.unicos ?? 0} únicos)
+              </strong>
+            </div>
+
+            <div className="flex justify-between">
+              <span>Visitas 7 días</span>
+
+              <strong>
+                {visitas?.ultimos7Dias.total ?? 0}
+              </strong>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                href="/admin/visitas"
+                className="text-xs font-semibold text-cake-gold hover:underline inline-flex items-center gap-1"
+              >
+                Ver analítica de visitas &rarr;
+              </Link>
             </div>
           </div>
         </Card>

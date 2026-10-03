@@ -8,6 +8,7 @@ export function useCheckout() {
     updateAddress,
     setDeliveryInfo,
     setDeliveryMethod,
+    setDeliverySchedule,
     setPaymentMethod,
     setPaymentType,
     setNeedsInvoice,
@@ -27,6 +28,8 @@ export function useCheckout() {
     setDeliveryInfo,
 
     setDeliveryMethod,
+
+    setDeliverySchedule,
 
     setPaymentMethod,
 

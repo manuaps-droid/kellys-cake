@@ -15,6 +15,14 @@ export async function updateOrderStatusService(
   // origen (catering/proyecto) para evitar duplicados en sus áreas.
   if (status === "confirmado") {
     const supabase = await createClient();
+
+    // Sincronizar estado_pago a 'pagado' para que se agende en producción
+    await supabase
+      .from("pedidos")
+      .update({ estado_pago: "pagado" })
+      .eq("id", id)
+      .eq("estado_pago", "pendiente");
+
     const { data: pedido } = await supabase
       .from("pedidos")
       .select("cotizacion_id")

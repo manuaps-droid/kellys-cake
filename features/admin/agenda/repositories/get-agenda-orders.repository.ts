@@ -52,8 +52,10 @@ export async function getAgendaOrdersRepository(): Promise<
         cantidad,
         imagen
       )
-    `)
-    .in("estado", ["confirmado", "produccion", "listo"])
+    `
+    )
+    .or("estado.in.(confirmado,produccion,listo),estado_pago.eq.pagado")
+    .neq("estado", "cancelado")
     .not("fecha_entrega", "is", null)
     .order("fecha_entrega", { ascending: true })
     .order("hora_entrega", { ascending: true });
@@ -120,7 +122,8 @@ export async function getAgendaOrdersSinFechaRepository(): Promise<
       )
     `
     )
-    .in("estado", ["confirmado", "produccion", "listo"])
+    .or("estado.in.(confirmado,produccion,listo),estado_pago.eq.pagado")
+    .neq("estado", "cancelado")
     .is("fecha_entrega", null)
     .order("created_at", { ascending: false });
 

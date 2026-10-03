@@ -37,10 +37,18 @@ export default function WizardFooter() {
   const montoPagado = total;
 
   function handleNext() {
-    if (currentStep === CheckoutStep.DELIVERY && isPickup) {
-      goTo(CheckoutStep.PAYMENT);
-      return;
+    if (currentStep === CheckoutStep.DELIVERY) {
+      if (!checkout.deliveryDate) {
+        setError("Por favor selecciona la fecha de entrega o recojo.");
+        return;
+      }
+      setError(null);
+      if (isPickup) {
+        goTo(CheckoutStep.PAYMENT);
+        return;
+      }
     }
+    setError(null);
     next();
   }
 
@@ -162,6 +170,9 @@ export default function WizardFooter() {
         deliveryFee,
         tipoPago,
         montoPagado,
+        fechaEntrega: checkout.deliveryDate || undefined,
+        horaEntrega: checkout.deliveryTime || undefined,
+        tipoEntrega: checkout.deliveryMethod || undefined,
       });
 
       if (!orderResult.success) {

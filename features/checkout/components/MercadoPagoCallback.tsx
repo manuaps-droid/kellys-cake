@@ -47,6 +47,9 @@ export default function MercadoPagoCallback() {
           deliveryFee,
           tipoPago,
           montoPagado,
+          fechaEntrega: checkout.deliveryDate || undefined,
+          horaEntrega: checkout.deliveryTime || undefined,
+          tipoEntrega: checkout.deliveryMethod || undefined,
         });
 
         if (!result.success) {

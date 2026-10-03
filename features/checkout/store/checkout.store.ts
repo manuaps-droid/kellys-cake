@@ -27,6 +27,11 @@ interface CheckoutStore {
     method: CheckoutData["deliveryMethod"]
   ) => void;
 
+  setDeliverySchedule: (
+    date?: string,
+    time?: string
+  ) => void;
+
   setPaymentMethod: (
     method: CheckoutData["paymentMethod"]
   ) => void;
@@ -54,6 +59,8 @@ const initialData: CheckoutData = {
   },
 
   deliveryMethod: "delivery",
+  deliveryDate: "",
+  deliveryTime: "11:00 - 13:00",
 
   address: {
     department: "",
@@ -142,6 +149,15 @@ export const useCheckoutStore = create<CheckoutStore>()(
           data: {
             ...state.data,
             deliveryMethod,
+          },
+        })),
+
+      setDeliverySchedule: (date, time) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            deliveryDate: date !== undefined ? date : state.data.deliveryDate,
+            deliveryTime: time !== undefined ? time : state.data.deliveryTime,
           },
         })),
 

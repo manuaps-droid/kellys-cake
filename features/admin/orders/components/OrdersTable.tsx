@@ -71,9 +71,19 @@ export default function OrdersTable({
             </td>
 
             <td className="px-6 py-4">
-              {new Date(
-                order.created_at
-              ).toLocaleDateString()}
+              <div className="text-sm font-medium text-gray-700">
+                {new Date(order.created_at).toLocaleDateString()}
+              </div>
+              {order.fecha_entrega ? (
+                <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-kc-rose-gold">
+                  <span>📅 {order.fecha_entrega.slice(0, 10)}</span>
+                  {order.hora_entrega && <span>· ⏰ {order.hora_entrega.slice(0, 5)}</span>}
+                </div>
+              ) : (
+                <div className="mt-1 text-[11px] text-gray-400">
+                  Sin fecha asignada
+                </div>
+              )}
             </td>
 
             <td className="px-6 py-4">
@@ -81,6 +91,17 @@ export default function OrdersTable({
                 orderId={order.id}
                 value={order.estado}
               />
+              <div className="mt-1.5">
+                {order.estado_pago === "pagado" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                    ✓ Pagado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                    ⏳ Pago Pendiente
+                  </span>
+                )}
+              </div>
             </td>
 
             <td className="px-6 py-4 text-right">

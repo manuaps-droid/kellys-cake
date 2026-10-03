@@ -42,7 +42,14 @@ export default function StepReview() {
 
         <p>
           <strong>Entrega:</strong>{" "}
-          {isPickup ? "Recojo en tienda" : "Delivery"}
+          {isPickup ? "Recojo en taller" : "Delivery a domicilio"}
+        </p>
+
+        <p>
+          <strong>Fecha y hora agendada:</strong>{" "}
+          <span className="font-semibold text-kc-rose-gold">
+            📅 {checkout.deliveryDate || "Por coordinar"} {checkout.deliveryTime ? `· ⏰ ${checkout.deliveryTime}` : ""}
+          </span>
         </p>
 
         {!isPickup && (

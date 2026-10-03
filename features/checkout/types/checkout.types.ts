@@ -39,6 +39,8 @@ export type PaymentType = "total" | "abono" | "";
 export interface CheckoutData {
   customer: CustomerData;
   deliveryMethod: DeliveryMethod;
+  deliveryDate?: string;
+  deliveryTime?: string;
   address: AddressData;
   paymentMethod: PaymentMethod | "";
   paymentType: PaymentType;

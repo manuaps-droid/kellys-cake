@@ -5,14 +5,19 @@ import { createOrderService } from "@/features/checkout/services/checkout.servic
 import { getItemNombre, getItemUnitPrice } from "@/features/cart/types/cart.types";
 import { revalidatePath } from "next/cache";
 
-export async function createOrder(paymentData?: {
+export type CreateOrderPaymentData = {
   paymentMethod: string;
   paymentToken?: string;
   paymentReference?: string;
   deliveryFee?: number;
   tipoPago?: "total" | "abono";
   montoPagado?: number;
-}) {
+  fechaEntrega?: string;
+  horaEntrega?: string;
+  tipoEntrega?: string;
+};
+
+export async function createOrder(paymentData?: CreateOrderPaymentData) {
   try {
     const {
       clienteId,
@@ -25,9 +30,37 @@ export async function createOrder(paymentData?: {
     const cotizacionId =
       items.find((item) => item.cotizacion_id)?.cotizacion_id ?? null;
 
-    const estadoPago = paymentData?.paymentReference
-      ? "pagado"
-      : "pendiente";
+    // Determinar si el pedido está pagado
+    const isPaid =
+      Boolean(paymentData?.paymentReference) ||
+      paymentData?.paymentMethod === "culqi" ||
+      (paymentData?.paymentMethod === "mercadopago" && Boolean(paymentData?.paymentReference));
+
+    const estadoPago = isPaid ? "pagado" : "pendiente";
+    // REGLA: Todo pedido pagado debe estar confirmado para agendarse en producción de inmediato
+    const estadoPedido = isPaid ? "confirmado" : "pendiente";
+
+    // Extraer fecha y hora de entrega seleccionadas por el cliente
+    let fechaEntrega = paymentData?.fechaEntrega || null;
+    let horaEntrega = paymentData?.horaEntrega || null;
+    const tipoEntrega = paymentData?.tipoEntrega || null;
+
+    // Si no vino fecha explícita, rastrear si algún ítem tiene fecha indicada en su descripción
+    if (!fechaEntrega) {
+      for (const item of items) {
+        if (item.descripcion) {
+          const mDate = item.descripcion.match(/(?:Fecha(?: de entrega| requerida)?:?|Entrega:?)\s*(\d{4}-\d{2}-\d{2})/i);
+          if (mDate?.[1]) {
+            fechaEntrega = mDate[1];
+            if (!horaEntrega) {
+              if (item.descripcion.includes("Mañana")) horaEntrega = "09:00 - 11:00";
+              else if (item.descripcion.includes("Tarde")) horaEntrega = "14:00 - 16:00";
+            }
+            break;
+          }
+        }
+      }
+    }
 
     const idempotencyKey =
       paymentData?.paymentReference ??
@@ -46,9 +79,9 @@ export async function createOrder(paymentData?: {
       tipo_pago: paymentData?.tipoPago ?? null,
       monto_pagado: paymentData?.montoPagado ?? null,
       cotizacion_id: cotizacionId,
-      fecha_entrega: null as string | null,
-      hora_entrega: null as string | null,
-      tipo_entrega: null as string | null,
+      fecha_entrega: fechaEntrega,
+      hora_entrega: horaEntrega,
+      tipo_entrega: tipoEntrega,
       idempotency_key: idempotencyKey,
       items: items.map((item) => ({
         carrito_item_id: item.id,
@@ -85,9 +118,36 @@ export async function createOrder(paymentData?: {
       };
     }
 
-    // Pedido ya existía (idempotente): también lo tratamos como éxito
+    // Asegurar persistencia de estado confirmado, estado de pago y fecha/hora programada
+    if (result.pedido_id) {
+      const updateData: Record<string, any> = {};
+      if (isPaid) {
+        updateData.estado = "confirmado";
+        updateData.estado_pago = "pagado";
+      }
+      if (fechaEntrega) {
+        updateData.fecha_entrega = fechaEntrega;
+      }
+      if (horaEntrega) {
+        updateData.hora_entrega = horaEntrega;
+      }
+      if (tipoEntrega) {
+        updateData.tipo_entrega = tipoEntrega;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await supabase
+          .from("pedidos")
+          .update(updateData)
+          .eq("id", result.pedido_id);
+      }
+    }
+
+    // Revalidar todas las rutas afectadas: tienda, cuenta de cliente y administración de pedidos y agenda
     revalidatePath("/carrito");
     revalidatePath("/mi-cuenta/pedidos");
+    revalidatePath("/admin/pedidos");
+    revalidatePath("/admin/agenda");
 
     return {
       success: true,
@@ -95,14 +155,14 @@ export async function createOrder(paymentData?: {
       alreadyExists: result.already_exists === true,
     };
   } catch (error) {
-    console.error(error);
+    console.error("Error al crear pedido:", error);
 
     const message =
       error instanceof Error
         ? error.message
         : error && typeof error === "object" && "message" in error
           ? String((error as { message?: unknown }).message)
-          : "Error inesperado.";
+          : "Error inesperado al crear el pedido.";
 
     return {
       success: false,

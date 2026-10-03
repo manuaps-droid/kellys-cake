@@ -103,11 +103,11 @@ export async function POST(request: NextRequest) {
         await supabase.from("pago_webhooks").insert(payload);
       }
 
-      // Si existe el pedido y el pago está aprobado, marcar pagado.
-      if (pedido && isApproved && pedido.estado_pago !== "pagado") {
+      // Si existe el pedido y el pago está aprobado, marcar pagado y confirmado para agendar en producción
+      if (pedido && isApproved) {
         await supabase
           .from("pedidos")
-          .update({ estado_pago: "pagado" })
+          .update({ estado_pago: "pagado", estado: "confirmado" })
           .eq("id", pedido.id);
       }
 

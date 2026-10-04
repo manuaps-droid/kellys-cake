@@ -10,9 +10,14 @@ export const REWARD_RULES = {
   PERFIL_COMPLETO: 10,
 } as const;
 
-// Calculate points for a purchase
-export function calcularPuntosPorCompra(total: number): number {
-  return Math.floor(total / 10) * REWARD_RULES.POR_CADA_10_SOLES;
+// Calculate points for a purchase with customizable rates
+export function calcularPuntosPorCompra(
+  total: number,
+  solesBase: number = 10,
+  puntosBase: number = 5
+): number {
+  if (solesBase <= 0 || puntosBase <= 0) return 0;
+  return Math.floor(total / solesBase) * puntosBase;
 }
 
 // Point redemption rate: 100 points = S/ 5

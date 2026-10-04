@@ -54,6 +54,15 @@ export const marketingSchema = z.object({
 
   // 1. Fidelización & Rewards (Kelly's Rewards)
   rewards_activo: z.coerce.boolean().default(true),
+  soles_por_puntos: z.coerce.number().min(1).default(10),
+  puntos_otorgados: z.coerce.number().min(1).default(5),
+  dias_vencimiento_puntos: z.coerce.number().min(1).default(365),
+  descuento_flor_pct: z.coerce.number().default(5),
+  descuento_torta_pct: z.coerce.number().default(8),
+  descuento_corona_pct: z.coerce.number().default(12),
+  delivery_gratis_flor_umbral: z.coerce.number().nullable().default(150),
+  delivery_gratis_torta_umbral: z.coerce.number().nullable().default(100),
+  delivery_gratis_corona_umbral: z.coerce.number().nullable().default(0),
   niveles_activo: z.coerce.boolean().default(true),
   ruleta_activo: z.coerce.boolean().default(true),
   fechas_especiales_activo: z.coerce.boolean().default(true),

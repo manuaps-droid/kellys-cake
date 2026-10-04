@@ -35,8 +35,20 @@ export async function awardPointsForPurchase(
   totalCompra: number,
   pedidoId: string
 ): Promise<{ success: boolean; message?: string }> {
-  const puntos = calcularPuntosPorCompra(totalCompra);
+  let solesBase = 10;
+  let puntosBase = 5;
+
+  try {
+    const { getPublicMarketing } = await import("@/features/admin/configuracion/queries/public-config.query");
+    const marketing = await getPublicMarketing();
+    if (marketing?.soles_por_puntos) solesBase = marketing.soles_por_puntos;
+    if (marketing?.puntos_otorgados) puntosBase = marketing.puntos_otorgados;
+  } catch (e) {
+    // fallback a defaults
+  }
+
+  const puntos = calcularPuntosPorCompra(totalCompra, solesBase, puntosBase);
   if (puntos <= 0) return { success: true }; // No points to award
   
-  return awardPoints(clienteId, puntos, 'Compra de productos', pedidoId, 'pedido');
+  return awardPoints(clienteId, puntos, `Compra de productos (S/ ${totalCompra.toFixed(2)})`, pedidoId, 'pedido');
 }

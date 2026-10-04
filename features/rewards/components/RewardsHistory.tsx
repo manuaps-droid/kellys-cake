@@ -90,6 +90,8 @@ export function RewardsHistory() {
               <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                 item.tipo === 'ganancia' 
                   ? 'bg-green-100 text-green-600' 
+                  : item.tipo === 'vencimiento'
+                  ? 'bg-amber-100 text-amber-700'
                   : 'bg-red-100 text-red-600'
               }`}>
                 {item.tipo === 'ganancia' ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
@@ -108,7 +110,11 @@ export function RewardsHistory() {
             </div>
             <div className="text-right">
               <span className={`font-semibold ${
-                item.tipo === 'ganancia' ? 'text-green-600' : 'text-red-600'
+                item.tipo === 'ganancia' 
+                  ? 'text-green-600' 
+                  : item.tipo === 'vencimiento'
+                  ? 'text-amber-700'
+                  : 'text-red-600'
               }`}>
                 {item.tipo === 'ganancia' ? '+' : '-'}{item.cantidad}
               </span>

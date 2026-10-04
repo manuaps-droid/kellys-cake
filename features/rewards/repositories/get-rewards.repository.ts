@@ -1,10 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import { RewardsResumen, RewardsPuntos, RewardsNivel } from "../types/rewards.types";
+import { procesarVencimientoPuntosCliente } from "../services/expiration.service";
 
 export async function getRewardsRepository(clienteId: string): Promise<RewardsResumen | null> {
   const supabase = await createClient();
 
-  // Obtener puntos y nivel del cliente
+  // 1. Obtener configuración de marketing/fidelización para días de vencimiento
+  let diasVencimiento = 365;
+  try {
+    const { getPublicMarketing } = await import("@/features/admin/configuracion/queries/public-config.query");
+    const m = await getPublicMarketing();
+    if (m?.dias_vencimiento_puntos) diasVencimiento = m.dias_vencimiento_puntos;
+  } catch (e) {
+    // defaults to 365
+  }
+
+  // 2. Procesar y descontar automáticamente puntos con más de 365 días
+  const vencimientoInfo = await procesarVencimientoPuntosCliente(clienteId, diasVencimiento);
+
+  // 3. Obtener puntos y nivel actualizado del cliente
   const { data: puntosData, error: puntosError } = await supabase
     .from('rewards_puntos')
     .select('*, nivel:rewards_niveles(*)')
@@ -16,7 +30,7 @@ export async function getRewardsRepository(clienteId: string): Promise<RewardsRe
     return null;
   }
 
-  // Obtener todos los niveles para calcular progreso
+  // 4. Obtener todos los niveles para calcular progreso
   const { data: nivelesData, error: nivelesError } = await supabase
     .from('rewards_niveles')
     .select('*')
@@ -73,6 +87,7 @@ export async function getRewardsRepository(clienteId: string): Promise<RewardsRe
     puntos,
     nivel_actual: nivelActual,
     siguiente_nivel: siguienteNivel,
-    progreso_pct: Math.min(Math.max(progreso_pct, 0), 100)
+    progreso_pct: Math.min(Math.max(progreso_pct, 0), 100),
+    vencimiento_info: vencimientoInfo,
   };
 }

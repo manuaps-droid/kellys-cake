@@ -3,23 +3,34 @@ import PageHeader from "@/components/common/PageHeader";
 import { RewardsCard } from "@/features/rewards/components/RewardsCard";
 import { RewardsHistory } from "@/features/rewards/components/RewardsHistory";
 import Card from "@/components/common/Card";
-import { Gift, Share2, Star, ShoppingBag, UserPlus, Smile } from "lucide-react";
+import { Gift, Share2, Star, ShoppingBag, UserPlus, Smile, Clock } from "lucide-react";
 import { REWARD_RULES } from "@/features/rewards/constants/reward-rules";
+import { getPublicMarketing } from "@/features/admin/configuracion/queries/public-config.query";
 
 export default async function RewardsPage() {
   // Protección de ruta
   await getCurrentClient();
 
+  const marketing = await getPublicMarketing();
+  const solesBase = marketing?.soles_por_puntos ?? 10;
+  const puntosBase = marketing?.puntos_otorgados ?? 5;
+  const diasVigencia = marketing?.dias_vencimiento_puntos ?? 365;
+
   const rewardRules = [
     {
       title: "Compras",
-      description: `${REWARD_RULES.POR_CADA_10_SOLES} puntos por cada S/ 10 de compra`,
+      description: `${puntosBase} puntos por cada S/ ${solesBase} de compra`,
       icon: ShoppingBag,
     },
     {
       title: "Primera compra",
       description: `${REWARD_RULES.PRIMERA_COMPRA} puntos bonus en tu primer pedido`,
       icon: Star,
+    },
+    {
+      title: "Vigencia de puntos",
+      description: `Tus puntos son válidos por ${diasVigencia} días para canjear en la tienda`,
+      icon: Clock,
     },
     {
       title: "Referidos",

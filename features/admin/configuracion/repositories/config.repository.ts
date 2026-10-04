@@ -94,6 +94,49 @@ export async function updateConfigRepository<T extends SeccionConfig>(
     .from("tienda_config")
     .upsert({ seccion, data: parsed }, { onConflict: "seccion" });
 
+  if (seccion === "marketing") {
+    const m = parsed as Record<string, any>;
+    try {
+      if (typeof m.descuento_flor_pct === "number") {
+        await supabase.from("rewards_niveles").update({
+          descuento_pct: m.descuento_flor_pct,
+          delivery_gratis_umbral: m.delivery_gratis_flor_umbral ?? null,
+          beneficios: [
+            `${m.descuento_flor_pct}% descuento permanente`,
+            `Degustación gratis en pedidos +S/${m.delivery_gratis_flor_umbral ?? 150}`,
+            "Acceso anticipado a nuevos diseños",
+          ],
+        }).eq("slug", "flor");
+      }
+      if (typeof m.descuento_torta_pct === "number") {
+        await supabase.from("rewards_niveles").update({
+          descuento_pct: m.descuento_torta_pct,
+          delivery_gratis_umbral: m.delivery_gratis_torta_umbral ?? null,
+          beneficios: [
+            `${m.descuento_torta_pct}% descuento permanente`,
+            `Delivery gratis en pedidos +S/${m.delivery_gratis_torta_umbral ?? 100}`,
+            "Personalización premium sin cargo",
+            "Atención prioritaria",
+          ],
+        }).eq("slug", "torta");
+      }
+      if (typeof m.descuento_corona_pct === "number") {
+        await supabase.from("rewards_niveles").update({
+          descuento_pct: m.descuento_corona_pct,
+          delivery_gratis_umbral: m.delivery_gratis_corona_umbral ?? 0,
+          beneficios: [
+            `${m.descuento_corona_pct}% descuento permanente`,
+            "Delivery gratis siempre",
+            "Torta sorpresa en tu cumpleaños",
+            "Invitación a eventos exclusivos",
+          ],
+        }).eq("slug", "corona");
+      }
+    } catch (e) {
+      console.warn("No se pudo sincronizar rewards_niveles:", e);
+    }
+  }
+
   if (error) {
     // Mensaje más claro para el caso de tabla inexistente (QUELATION:
     // falta `supabase db push`). Cuando sea así, el mensaje viene

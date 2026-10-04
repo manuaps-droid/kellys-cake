@@ -20,6 +20,9 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Coins,
+  Clock,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -333,6 +336,16 @@ export default function MarketingGrowthTab({ initialConfig }: Props) {
     carrito_abandonado_minutos: initialConfig.carrito_abandonado_minutos ?? 60,
     carrito_abandonado_mensaje: initialConfig.carrito_abandonado_mensaje ?? "",
 
+    soles_por_puntos: initialConfig.soles_por_puntos ?? 10,
+    puntos_otorgados: initialConfig.puntos_otorgados ?? 5,
+    dias_vencimiento_puntos: initialConfig.dias_vencimiento_puntos ?? 365,
+    descuento_flor_pct: initialConfig.descuento_flor_pct ?? 5,
+    descuento_torta_pct: initialConfig.descuento_torta_pct ?? 8,
+    descuento_corona_pct: initialConfig.descuento_corona_pct ?? 12,
+    delivery_gratis_flor_umbral: initialConfig.delivery_gratis_flor_umbral ?? 150,
+    delivery_gratis_torta_umbral: initialConfig.delivery_gratis_torta_umbral ?? 100,
+    delivery_gratis_corona_umbral: initialConfig.delivery_gratis_corona_umbral ?? 0,
+
     rewards_activo: initialConfig.rewards_activo ?? true,
     niveles_activo: initialConfig.niveles_activo ?? true,
     ruleta_activo: initialConfig.ruleta_activo ?? true,
@@ -610,6 +623,317 @@ export default function MarketingGrowthTab({ initialConfig }: Props) {
             >
               Desactivar Todos
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* SECCIÓN ESPECIAL: Reglas de Puntos, Fidelización y Delivery Gratuito */}
+      <div className="rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/20 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-amber-200/60">
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
+              <Gift className="h-6 w-6" />
+            </span>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-bold text-lg text-gray-900">
+                  Reglas de Puntos, Fidelización y Delivery Gratuito
+                </h3>
+                <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                  Transversal a Tienda y Campañas
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Configura la equivalencia de soles a puntos, el vencimiento anual y la escala de beneficios VIP por niveles.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* 1. Equivalencia de Puntos y Vencimiento */}
+          <div className="rounded-xl border border-amber-200 bg-white p-5 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Coins className="h-5 w-5 text-amber-600" />
+                <h4 className="font-semibold text-sm text-gray-900">
+                  Equivalencia de Puntos por Compra
+                </h4>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                Establece cuántos puntos recibe el cliente por cada monto gastado. Aplica a todas las compras y campañas activas.
+              </p>
+
+              <div className="flex items-center gap-3 bg-amber-50/70 border border-amber-200/90 rounded-xl p-3.5">
+                <div className="flex-1">
+                  <span className="text-[11px] font-semibold text-amber-900 block mb-1">Monto en Soles</span>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">S/.</span>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={config.soles_por_puntos ?? 10}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          soles_por_puntos: Math.max(1, Number(e.target.value) || 1),
+                        }))
+                      }
+                      className="pl-9 text-base font-bold text-gray-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-lg font-bold text-amber-600 pt-4">=</div>
+
+                <div className="flex-1">
+                  <span className="text-[11px] font-semibold text-amber-900 block mb-1">Puntos Otorgados</span>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={config.puntos_otorgados ?? 5}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          puntos_otorgados: Math.max(1, Number(e.target.value) || 1),
+                        }))
+                      }
+                      className="pr-12 text-base font-bold text-amber-700 bg-white"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">pts</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-gray-500" /> Vencimiento de Puntos (Días)
+                </label>
+              </div>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min={1}
+                  value={config.dias_vencimiento_puntos ?? 365}
+                  onChange={(e) =>
+                    setConfig((p) => ({
+                      ...p,
+                      dias_vencimiento_puntos: Math.max(1, Number(e.target.value) || 365),
+                    }))
+                  }
+                  className="bg-white font-medium pr-28"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">días (vigencia)</span>
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">
+                Al cumplir {config.dias_vencimiento_puntos ?? 365} días de antigüedad, los puntos no utilizados se descuentan automáticamente del saldo del cliente.
+              </p>
+            </div>
+          </div>
+
+          {/* 2. Escala de Descuento Permanente por Nivel */}
+          <div className="rounded-xl border border-rose-200 bg-white p-5 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Percent className="h-5 w-5 text-rose-600" />
+                <h4 className="font-semibold text-sm text-gray-900">
+                  Descuento Permanente por Nivel
+                </h4>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                Beneficio directo y automático en el checkout para clientes recurrentes según el nivel alcanzado.
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-rose-100 bg-rose-50/40">
+                  <div>
+                    <span className="text-xs font-bold text-gray-800 block">Nivel Flor (200 pts)</span>
+                    <span className="text-[11px] text-gray-500">Cliente activo en crecimiento</span>
+                  </div>
+                  <div className="relative w-24">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={config.descuento_flor_pct ?? 5}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          descuento_flor_pct: Number(e.target.value) || 0,
+                        }))
+                      }
+                      className="pr-7 text-right font-bold text-rose-700 bg-white"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-purple-100 bg-purple-50/40">
+                  <div>
+                    <span className="text-xs font-bold text-gray-800 block">Nivel Torta (600 pts)</span>
+                    <span className="text-[11px] text-gray-500">Cliente fidelizado de repetición</span>
+                  </div>
+                  <div className="relative w-24">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={config.descuento_torta_pct ?? 8}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          descuento_torta_pct: Number(e.target.value) || 0,
+                        }))
+                      }
+                      className="pr-7 text-right font-bold text-purple-700 bg-white"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-amber-200 bg-amber-50/60">
+                  <div>
+                    <span className="text-xs font-bold text-gray-800 block">Nivel Corona (1,500 pts)</span>
+                    <span className="text-[11px] text-gray-500">Membresía VIP exclusiva</span>
+                  </div>
+                  <div className="relative w-24">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={config.descuento_corona_pct ?? 12}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          descuento_corona_pct: Number(e.target.value) || 0,
+                        }))
+                      }
+                      className="pr-7 text-right font-bold text-amber-700 bg-white"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-gray-400 mt-3 pt-3 border-t border-gray-100">
+              Escala oficial: Flor (5%), Torta (8%), Corona (12%).
+            </p>
+          </div>
+
+          {/* 3. Límites de Delivery Gratuito */}
+          <div className="rounded-xl border border-blue-200 bg-white p-5 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Truck className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-sm text-gray-900">
+                  Límites de Delivery Gratuito
+                </h4>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                Umbral mínimo de pedido requerido en cada nivel para acceder a delivery gratis en el checkout.
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2 rounded-lg border border-gray-200 bg-gray-50/60">
+                  <div>
+                    <span className="text-xs font-semibold text-gray-800 block">Tienda General</span>
+                    <span className="text-[11px] text-gray-500">Clientes sin nivel</span>
+                  </div>
+                  <div className="relative w-28">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">S/.</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.envio_gratis_umbral ?? ""}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          envio_gratis_umbral: e.target.value ? Number(e.target.value) : null,
+                        }))
+                      }
+                      placeholder="150"
+                      className="pl-8 text-right font-medium text-gray-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg border border-rose-100 bg-rose-50/30">
+                  <div>
+                    <span className="text-xs font-semibold text-gray-800 block">Nivel Flor (200 pts)</span>
+                    <span className="text-[11px] text-gray-500">Mínimo para envío gratis</span>
+                  </div>
+                  <div className="relative w-28">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">S/.</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.delivery_gratis_flor_umbral ?? ""}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          delivery_gratis_flor_umbral: e.target.value ? Number(e.target.value) : null,
+                        }))
+                      }
+                      placeholder="150"
+                      className="pl-8 text-right font-medium text-gray-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg border border-purple-100 bg-purple-50/30">
+                  <div>
+                    <span className="text-xs font-semibold text-gray-800 block">Nivel Torta (600 pts)</span>
+                    <span className="text-[11px] text-gray-500">Beneficio preferencial</span>
+                  </div>
+                  <div className="relative w-28">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">S/.</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.delivery_gratis_torta_umbral ?? ""}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          delivery_gratis_torta_umbral: e.target.value ? Number(e.target.value) : null,
+                        }))
+                      }
+                      placeholder="100"
+                      className="pl-8 text-right font-medium text-gray-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg border border-amber-200 bg-amber-50/50">
+                  <div>
+                    <span className="text-xs font-semibold text-gray-800 block">Nivel Corona (1,500 pts)</span>
+                    <span className="text-[11px] text-amber-700 font-medium">0 = Siempre Gratis</span>
+                  </div>
+                  <div className="relative w-28">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">S/.</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.delivery_gratis_corona_umbral ?? 0}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          delivery_gratis_corona_umbral: Number(e.target.value) || 0,
+                        }))
+                      }
+                      className="pl-8 text-right font-bold text-amber-800 bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-gray-400 mt-3 pt-3 border-t border-gray-100">
+              El cliente VIP Corona recibe delivery 100% gratis en cualquier compra (umbral S/ 0).
+            </p>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import type {
   TiendaConfig,
   ContactoConfig,
   MarketingConfig,
+  ProductosConfig,
   SeoConfig,
   PixelesConfig,
 } from "@/features/admin/configuracion/validations/config.schema";
@@ -25,6 +26,10 @@ export const getPublicContacto = cache(async () => {
 
 export const getPublicMarketing = cache(async () => {
   return (await getPublicConfigRepository("marketing")) as MarketingConfig | null;
+});
+
+export const getPublicProductos = cache(async () => {
+  return (await getPublicConfigRepository("productos")) as ProductosConfig | null;
 });
 
 export const getPublicSeo = cache(async () => {

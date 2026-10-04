@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import {
   getConfigService,
@@ -44,12 +45,18 @@ export async function updateConfigAction<T extends SeccionConfig>(
     return { success: true };
   } catch (error) {
     console.error(error);
+    let message = "No se pudo guardar la configuración.";
+    if (error instanceof z.ZodError) {
+      message = error.issues
+        .map((i) => (i.message && !i.message.startsWith("Invalid") ? i.message : `${i.path.join(".")}: dato inválido`))
+        .join(". ");
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "No se pudo guardar la configuración.",
+      message,
     };
   }
 }

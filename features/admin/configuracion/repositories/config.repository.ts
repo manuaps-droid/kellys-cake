@@ -14,7 +14,7 @@ import {
  */
 function schemaDefaults<S extends SeccionConfig>(seccion: S): unknown {
   const r = SECCION_SCHEMA[seccion].safeParse({});
-  return r.success ? r.data : null;
+  return r.success ? r.data : {};
 }
 
 /**
@@ -116,11 +116,10 @@ export async function updateConfigRepository<T extends SeccionConfig>(
 export async function getPublicConfigRepository<T extends SeccionConfig>(
   seccion: T
 ): Promise<unknown> {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
-
   let data: unknown = null;
   try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
     const res = await supabase
       .from("tienda_config")
       .select("seccion, data")
@@ -129,6 +128,20 @@ export async function getPublicConfigRepository<T extends SeccionConfig>(
     data = (res.data as { data?: unknown } | null)?.data ?? null;
   } catch {
     data = null;
+  }
+
+  if (!data) {
+    try {
+      const supabaseAdmin = createAdminClient();
+      const res = await supabaseAdmin
+        .from("tienda_config")
+        .select("seccion, data")
+        .eq("seccion", seccion)
+        .maybeSingle();
+      data = (res.data as { data?: unknown } | null)?.data ?? null;
+    } catch {
+      data = null;
+    }
   }
 
   const parsed = SECCION_SCHEMA[seccion].safeParse(data ?? {});

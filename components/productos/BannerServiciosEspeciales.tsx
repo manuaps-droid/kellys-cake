@@ -35,6 +35,7 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import { uploadServicioFileAction } from "@/features/cart/actions/upload-servicio-file.action";
 import { addImpresionToCartAction } from "@/features/cart/actions/add-impresion-to-cart.action";
 import { addCortadorToCartAction } from "@/features/cart/actions/add-cortador-to-cart.action";
+import type { ProductosConfig } from "@/features/admin/configuracion/validations/config.schema";
 
 const PRECIO_HOJA_IMPRESION = 15;
 const PRECIO_BASE_CORTADOR = 18;
@@ -87,12 +88,23 @@ async function detectarPaginasEnArchivo(file: File): Promise<number> {
   return 1;
 }
 
+interface BannerServiciosEspecialesProps {
+  children?: React.ReactNode;
+  productosConfig?: Partial<ProductosConfig> | null;
+}
+
 export default function BannerServiciosEspeciales({
   children,
-}: {
-  children?: React.ReactNode;
-} = {}) {
+  productosConfig,
+}: BannerServiciosEspecialesProps = {}) {
   const { refreshCart, openDrawer } = useCart();
+
+  // Configuración de stock de papeles
+  const papelAzucarActivo = productosConfig?.papel_azucar_activo ?? true;
+  const papelArrozActivo = productosConfig?.papel_arroz_activo ?? true;
+  const papelAzucarAviso = productosConfig?.papel_azucar_aviso || "Papel de Azúcar temporalmente sin stock.";
+  const papelArrozAviso = productosConfig?.papel_arroz_aviso || "Papel de Arroz temporalmente sin stock.";
+  const ambosSinStock = !papelAzucarActivo && !papelArrozActivo;
 
   // Modales
   const [modalImpresionOpen, setModalImpresionOpen] = useState(false);
@@ -101,7 +113,10 @@ export default function BannerServiciosEspeciales({
   // Estados Formulario Impresiones Comestibles
   const [impresionFile, setImpresionFile] = useState<File | null>(null);
   const [impresionHojas, setImpresionHojas] = useState(1);
-  const [impresionTipoPapel, setImpresionTipoPapel] = useState<"azucar" | "arroz">("azucar");
+  const [impresionTipoPapel, setImpresionTipoPapel] = useState<"azucar" | "arroz">(() => {
+    if (!papelAzucarActivo && papelArrozActivo) return "arroz";
+    return "azucar";
+  });
   const [impresionFecha, setImpresionFecha] = useState("");
   const [impresionHora, setImpresionHora] = useState("tarde");
   const [impresionNotas, setImpresionNotas] = useState("");
@@ -159,6 +174,16 @@ export default function BannerServiciosEspeciales({
 
     if (!impresionFecha) {
       toast.error("Por favor selecciona la fecha requerida de entrega.");
+      return;
+    }
+
+    if (impresionTipoPapel === "azucar" && !papelAzucarActivo) {
+      toast.error(`Insumo no disponible: ${papelAzucarAviso}`);
+      return;
+    }
+
+    if (impresionTipoPapel === "arroz" && !papelArrozActivo) {
+      toast.error(`Insumo no disponible: ${papelArrozAviso}`);
       return;
     }
 
@@ -590,46 +615,135 @@ export default function BannerServiciosEspeciales({
               </div>
             </div>
 
+            {/* AVISO SI AMBOS PAPELES ESTÁN SIN STOCK */}
+            {ambosSinStock && (
+              <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-sm text-rose-900">
+                    Insumos de papel temporalmente agotados
+                  </p>
+                  <p className="mt-1 leading-relaxed">
+                    Actualmente no disponemos de stock de papel de azúcar ni de arroz para entrega inmediata. Por favor contáctanos por WhatsApp para consultar la fecha de reposición.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const msg = encodeURIComponent("¡Hola Kelly's Cake! Deseo consultar cuándo tendrán stock de papel para impresiones comestibles.");
+                      window.open(`https://wa.me/51958311234?text=${msg}`, "_blank");
+                    }}
+                    className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 cursor-pointer"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Consultar reposición por WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* TIPO DE PAPEL */}
             <div>
-              <label className="block text-xs font-bold text-kc-charcoal uppercase tracking-wider mb-2">
-                2. Tipo de papel comestible
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-kc-charcoal uppercase tracking-wider">
+                  2. Tipo de papel comestible
+                </label>
+                {(!papelAzucarActivo || !papelArrozActivo) && (
+                  <span className="text-[11px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    ⚠️ Stock limitado de insumos
+                  </span>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
+                {/* Botón Papel de Azúcar */}
                 <button
                   type="button"
-                  onClick={() => setImpresionTipoPapel("azucar")}
+                  onClick={() => {
+                    if (!papelAzucarActivo) {
+                      toast.warning(`⚠️ ${papelAzucarAviso}`);
+                      return;
+                    }
+                    setImpresionTipoPapel("azucar");
+                  }}
                   className={`flex flex-col text-left p-3 rounded-xl border transition-all ${
-                    impresionTipoPapel === "azucar"
+                    !papelAzucarActivo
+                      ? "border-rose-200 bg-rose-50/40 opacity-75 cursor-not-allowed"
+                      : impresionTipoPapel === "azucar"
                       ? "border-kc-rose-gold bg-kc-rose-gold/10 shadow-sm"
-                      : "border-gray-200 hover:border-kc-rose-gold/40"
+                      : "border-gray-200 hover:border-kc-rose-gold/40 cursor-pointer"
                   }`}
                 >
-                  <span className="text-xs font-bold text-kc-charcoal">
-                    Papel de Azúcar A4 ⭐
-                  </span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xs font-bold text-kc-charcoal">
+                      Papel de Azúcar A4 ⭐
+                    </span>
+                    {!papelAzucarActivo && (
+                      <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-700">
+                        Agotado
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[11px] text-kc-mocha mt-0.5 leading-snug">
                     Colores más vivos, flexible, ideal para tortas húmedas.
                   </span>
+                  {!papelAzucarActivo && (
+                    <span className="mt-1.5 text-[10px] font-bold text-rose-600 leading-tight">
+                      ⚠️ {papelAzucarAviso}
+                    </span>
+                  )}
                 </button>
 
+                {/* Botón Papel de Arroz */}
                 <button
                   type="button"
-                  onClick={() => setImpresionTipoPapel("arroz")}
+                  onClick={() => {
+                    if (!papelArrozActivo) {
+                      toast.warning(`⚠️ ${papelArrozAviso}`);
+                      return;
+                    }
+                    setImpresionTipoPapel("arroz");
+                  }}
                   className={`flex flex-col text-left p-3 rounded-xl border transition-all ${
-                    impresionTipoPapel === "arroz"
+                    !papelArrozActivo
+                      ? "border-rose-200 bg-rose-50/40 opacity-75 cursor-not-allowed"
+                      : impresionTipoPapel === "arroz"
                       ? "border-kc-rose-gold bg-kc-rose-gold/10 shadow-sm"
-                      : "border-gray-200 hover:border-kc-rose-gold/40"
+                      : "border-gray-200 hover:border-kc-rose-gold/40 cursor-pointer"
                   }`}
                 >
-                  <span className="text-xs font-bold text-kc-charcoal">
-                    Papel de Arroz / Oblea A4
-                  </span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xs font-bold text-kc-charcoal">
+                      Papel de Arroz / Oblea A4
+                    </span>
+                    {!papelArrozActivo && (
+                      <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-700">
+                        Agotado
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[11px] text-kc-mocha mt-0.5 leading-snug">
                     Textura clásica y ligera, ideal para galletas y figuras.
                   </span>
+                  {!papelArrozActivo && (
+                    <span className="mt-1.5 text-[10px] font-bold text-rose-600 leading-tight">
+                      ⚠️ {papelArrozAviso}
+                    </span>
+                  )}
                 </button>
               </div>
+
+              {/* Aviso si la opción seleccionada no tiene stock */}
+              {((impresionTipoPapel === "azucar" && !papelAzucarActivo) ||
+                (impresionTipoPapel === "arroz" && !papelArrozActivo)) && (
+                <div className="mt-2.5 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <span>
+                    El insumo seleccionado está agotado:{" "}
+                    <strong>{impresionTipoPapel === "azucar" ? papelAzucarAviso : papelArrozAviso}</strong>.
+                    Por favor selecciona la opción disponible.
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* FECHA Y TURNO DE ENTREGA */}
@@ -682,14 +796,25 @@ export default function BannerServiciosEspeciales({
             <DialogFooter className="pt-2">
               <Button
                 type="submit"
-                disabled={subiendoImpresion || !impresionFile}
-                className="w-full rounded-full bg-gradient-to-r from-kc-rose-gold to-kc-gold py-4 text-sm font-bold text-white shadow-xl shadow-kc-rose-gold/30 hover:brightness-110 active:scale-95 transition-all"
+                disabled={
+                  subiendoImpresion ||
+                  !impresionFile ||
+                  ambosSinStock ||
+                  (impresionTipoPapel === "azucar" && !papelAzucarActivo) ||
+                  (impresionTipoPapel === "arroz" && !papelArrozActivo)
+                }
+                className="w-full rounded-full bg-gradient-to-r from-kc-rose-gold to-kc-gold py-4 text-sm font-bold text-white shadow-xl shadow-kc-rose-gold/30 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {subiendoImpresion ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Subiendo archivo y agregando al carrito...
                   </span>
+                ) : ambosSinStock ? (
+                  <span>Insumos temporalmente sin stock</span>
+                ) : (impresionTipoPapel === "azucar" && !papelAzucarActivo) ||
+                  (impresionTipoPapel === "arroz" && !papelArrozActivo) ? (
+                  <span>Selecciona un tipo de papel disponible</span>
                 ) : (
                   <span>
                     Agregar al carrito · S/ {(impresionHojas * PRECIO_HOJA_IMPRESION).toFixed(2)}

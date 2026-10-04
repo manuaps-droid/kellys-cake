@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm, type FieldValues } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
@@ -55,18 +53,48 @@ export default function ConfigSectionForm({
   const [pending, startTransition] = useTransition();
   const [justSaved, setJustSaved] = useState(false);
 
+  // Normalizar defaultValues para evitar inputs con null
+  const initialValues: Record<string, unknown> = {};
+  for (const f of fields) {
+    const val = defaultValues[f.key];
+    if (f.type === "switch") {
+      initialValues[f.key] = Boolean(val);
+    } else if (val === null || val === undefined) {
+      initialValues[f.key] = "";
+    } else {
+      initialValues[f.key] = val;
+    }
+  }
+
   const form = useForm<FieldValues>({
-    resolver: zodResolver(z.object({})) as never,
-    defaultValues,
+    defaultValues: initialValues,
   });
+
+  // Registrar campos tipo switch para que react-hook-form rastree su valor al enviar
+  useEffect(() => {
+    fields.forEach((f) => {
+      if (f.type === "switch") {
+        form.register(f.key);
+      }
+    });
+  }, [fields, form]);
 
   function onSubmit(values: FieldValues) {
     startTransition(async () => {
-      const result = await updateConfigAction(seccion as any, values);
+      // Normalizar valores vacíos si es necesario
+      const payload: Record<string, unknown> = { ...values };
+      for (const [k, v] of Object.entries(payload)) {
+        if (v === "") {
+          // Si el campo original era nullable, puede enviarse null o ""
+          payload[k] = "";
+        }
+      }
+
+      const result = await updateConfigAction(seccion as any, payload);
       if (result.success) {
         toast.success("Configuración actualizada correctamente.");
         setJustSaved(true);
-        setTimeout(() => setJustSaved(false), 1500);
+        setTimeout(() => setJustSaved(false), 2000);
       } else {
         toast.error(result.message ?? "No se pudo guardar la configuración.");
       }
@@ -76,21 +104,22 @@ export default function ConfigSectionForm({
   function renderField(f: FieldDef) {
     const name = f.key;
     const error = form.formState.errors[name];
-    const register = form.register as any;
+    const register = form.register;
     const baseClass =
       "h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
     if (f.type === "switch") {
+      const isChecked = Boolean(form.watch(name));
       return (
-        <div key={f.key} className="flex items-center justify-between gap-4 py-2">
+        <div key={f.key} className="flex items-center justify-between gap-4 py-2 border-b border-gray-100 last:border-b-0">
           <div>
             <label className="text-sm font-medium text-gray-700">{f.label}</label>
             {f.help && <p className="mt-0.5 text-xs text-gray-400">{f.help}</p>}
           </div>
           <Switch
-            checked={Boolean(form.watch(name))}
+            checked={isChecked}
             onCheckedChange={(v: boolean) =>
-              form.setValue(name, v as never, { shouldValidate: false })
+              form.setValue(name, v, { shouldValidate: true, shouldDirty: true })
             }
           />
         </div>
@@ -189,7 +218,7 @@ export default function ConfigSectionForm({
         {fields.map(renderField)}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
         <Button
           type="submit"
           disabled={pending || form.formState.isSubmitting}

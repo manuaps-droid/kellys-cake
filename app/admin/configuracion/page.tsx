@@ -15,12 +15,14 @@ import {
   tiendaSchema,
   contactoSchema,
   marketingSchema,
+  productosSchema,
   seoSchema,
   pixelesSchema,
   notificacionesSchema,
   type TiendaConfig,
   type ContactoConfig,
   type MarketingConfig,
+  type ProductosConfig,
   type SeoConfig,
   type PixelesConfig,
   type NotificacionesConfig,
@@ -28,13 +30,13 @@ import {
 import {
   TIENDA_FIELDS,
   CONTACTO_FIELDS,
-  MARKETING_FIELDS,
   SEO_FIELDS,
   PIXELES_FIELDS,
   NOTIF_FIELDS,
 } from "@/features/admin/configuracion/config/fields.config";
 import OrdenCatalogosTab from "@/features/admin/configuracion/components/OrdenCatalogosTab";
 import MarketingGrowthTab from "@/features/admin/configuracion/components/MarketingGrowthTab";
+import ConfigProductosTab from "@/features/admin/configuracion/components/ConfigProductosTab";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -42,6 +44,7 @@ const SECTIONS = [
   { value: "tienda", label: "Tienda" },
   { value: "contacto", label: "Contacto & Redes" },
   { value: "marketing", label: "Marketing & Growth" },
+  { value: "productos", label: "Productos" },
   { value: "orden_catalogos", label: "Orden de Catálogos" },
   { value: "seo", label: "SEO & Analytics" },
   { value: "pixeles", label: "Píxeles" },
@@ -69,14 +72,17 @@ export default async function AdminConfiguracionPage() {
   const tienda = (data.tienda ?? {}) as Partial<TiendaConfig>;
   const contacto = (data.contacto ?? {}) as Partial<ContactoConfig>;
   const marketing = (data.marketing ?? {}) as Partial<MarketingConfig>;
+  const productos = (data.productos ?? {}) as Partial<ProductosConfig>;
   const seo = (data.seo ?? {}) as Partial<SeoConfig>;
   const pixeles = (data.pixeles ?? {}) as Partial<PixelesConfig>;
   const notif = (data.notificaciones ?? {}) as Partial<NotificacionesConfig>;
 
   function withDefaults(schema: z.ZodType, raw: unknown): Record<string, unknown> {
-    const r = schema.safeParse(raw);
-    if (!r.success) return {};
-    return (r.data as Record<string, unknown>) ?? {};
+    const r = schema.safeParse(raw ?? {});
+    if (r.success) return (r.data as Record<string, unknown>) ?? {};
+    const defaults = schema.safeParse({});
+    const base = defaults.success ? (defaults.data as Record<string, unknown>) : {};
+    return { ...base, ...(typeof raw === "object" && raw !== null ? raw : {}) };
   }
 
   // Catálogos ordenables (se muestran todos, en su orden actual)
@@ -92,7 +98,7 @@ export default async function AdminConfiguracionPage() {
     <>
       <PageHeader
         title="Configuración"
-        description="Administra la información de tu tienda, métodos de contacto, marketing, SEO y de tu equipo de conversión."
+        description="Administra la información de tu tienda, métodos de contacto, productos, marketing, SEO y más."
       />
 
       <Tabs defaultValue="tienda" className="w-full">
@@ -130,6 +136,12 @@ export default async function AdminConfiguracionPage() {
 
         <TabsContent value="marketing">
           <MarketingGrowthTab initialConfig={marketing} />
+        </TabsContent>
+
+        <TabsContent value="productos">
+          <div className="rounded-2xl border bg-white p-6">
+            <ConfigProductosTab initialConfig={withDefaults(productosSchema, productos)} />
+          </div>
         </TabsContent>
 
         <TabsContent value="orden_catalogos">

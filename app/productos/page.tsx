@@ -12,7 +12,7 @@ import { TOPPER_CATALOGO_ID } from "@/features/customization/constants/topper.co
 import { getTopperInfo } from "@/features/customization/services/topper-disenos.service";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getPublicMarketing } from "@/features/admin/configuracion/queries/public-config.query";
+import { getPublicMarketing, getPublicProductos } from "@/features/admin/configuracion/queries/public-config.query";
 import BannerServiciosEspeciales from "@/components/productos/BannerServiciosEspeciales";
 
 export const metadata: Metadata = {
@@ -71,6 +71,7 @@ export default async function ProductosPage({
   const { catalogo: catalogoSeleccionado } = await searchParams;
   const supabase = createAdminClient();
   const marketingCfg = await getPublicMarketing();
+  const productosCfg = await getPublicProductos();
 
   // 1) Catálogos visibles en /productos (incluye categoria_producto y coffee_break)
   const { data: catalogs } = await supabase
@@ -314,7 +315,7 @@ export default async function ProductosPage({
           className="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-kc-blush/15 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <BannerServiciosEspeciales>
+          <BannerServiciosEspeciales productosConfig={productosCfg}>
             <div className="relative mx-auto max-w-2xl">
               <p className="text-xs font-semibold tracking-[0.3em] text-kc-rose-gold uppercase">
                 Repostería artesanal

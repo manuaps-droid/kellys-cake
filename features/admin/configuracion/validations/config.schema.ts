@@ -159,6 +159,32 @@ export const notificacionesSchema = z.object({
 export type NotificacionesConfig = z.infer<typeof notificacionesSchema>;
 
 // -------------------------------------------------------------
+// Seguridad y Control de Dispositivos Autorizados (Máx 3 Equipos)
+// -------------------------------------------------------------
+export const dispositivoItemSchema = z.object({
+  id: z.string(),
+  token: z.string(),
+  nombre: z.string(),
+  tipo: z.enum(["pc", "android", "otro"]).default("pc"),
+  ip: z.string().default(""),
+  userAgent: z.string().default(""),
+  creadoEn: z.string(),
+  ultimoAcceso: z.string(),
+  activo: z.boolean().default(true),
+});
+
+export type DispositivoItem = z.infer<typeof dispositivoItemSchema>;
+
+export const seguridadDispositivosSchema = z.object({
+  restringir_acceso: z.coerce.boolean().default(true),
+  clave_maestra: z.string().min(4).default("KELLY-2026-SEGURA"),
+  max_dispositivos: z.number().default(3),
+  dispositivos: z.array(dispositivoItemSchema).default([]),
+});
+
+export type SeguridadDispositivosConfig = z.infer<typeof seguridadDispositivosSchema>;
+
+// -------------------------------------------------------------
 // Registro de toda sección
 // -------------------------------------------------------------
 export const SECCION_SCHEMA = {
@@ -169,6 +195,7 @@ export const SECCION_SCHEMA = {
   seo: seoSchema,
   pixeles: pixelesSchema,
   notificaciones: notificacionesSchema,
+  seguridad_dispositivos: seguridadDispositivosSchema,
 } as const;
 
 export type SeccionConfig = keyof typeof SECCION_SCHEMA;
@@ -181,4 +208,6 @@ export const SECCIONES: SeccionConfig[] = [
   "seo",
   "pixeles",
   "notificaciones",
+  "seguridad_dispositivos",
 ];
+

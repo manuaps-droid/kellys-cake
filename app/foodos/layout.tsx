@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { getModulosActivos } from "@/lib/foodos/modules";
 import FoodOSMobileNav from "@/components/foodos/FoodOSMobileNav";
+import { getCurrentAdmin } from "@/lib/auth/getCurrentAdmin";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  await getCurrentAdmin();
   const modulos = await getModulosActivos();
   const tieneLogistica = modulos.includes("logistica");
   const tieneVentas = modulos.includes("ventas");

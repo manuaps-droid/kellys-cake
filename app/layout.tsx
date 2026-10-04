@@ -18,6 +18,7 @@ import SiteBanner from "@/components/marketing/SiteBanner";
 import WhatsAppFloatingButton from "@/components/marketing/WhatsAppFloatingButton";
 import RegistrationPopup from "@/components/marketing/RegistrationPopup";
 import EcommerceMobileBottomNav from "@/components/layout/EcommerceMobileBottomNav";
+import PwaRegister from "@/components/pwa/PwaRegister";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import {
@@ -212,6 +213,7 @@ export default async function RootLayout({
 
             <AnalyticsScripts />
             <VisitorTracker />
+            <PwaRegister />
           </CartProvider>
         </AuthProvider>
       </body>

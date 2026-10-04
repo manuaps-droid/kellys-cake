@@ -37,6 +37,8 @@ import {
 import OrdenCatalogosTab from "@/features/admin/configuracion/components/OrdenCatalogosTab";
 import MarketingGrowthTab from "@/features/admin/configuracion/components/MarketingGrowthTab";
 import ConfigProductosTab from "@/features/admin/configuracion/components/ConfigProductosTab";
+import DispositivosSeguridadTab from "@/features/admin/configuracion/components/DispositivosSeguridadTab";
+import type { SeguridadDispositivosConfig } from "@/features/admin/configuracion/validations/config.schema";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -46,6 +48,7 @@ const SECTIONS = [
   { value: "marketing", label: "Marketing & Growth" },
   { value: "productos", label: "Productos" },
   { value: "orden_catalogos", label: "Orden de Catálogos" },
+  { value: "dispositivos", label: "Dispositivos (3 Equipos)" },
   { value: "seo", label: "SEO & Analytics" },
   { value: "pixeles", label: "Píxeles" },
   { value: "notificaciones", label: "Notificaciones" },
@@ -73,6 +76,7 @@ export default async function AdminConfiguracionPage() {
   const contacto = (data.contacto ?? {}) as Partial<ContactoConfig>;
   const marketing = (data.marketing ?? {}) as Partial<MarketingConfig>;
   const productos = (data.productos ?? {}) as Partial<ProductosConfig>;
+  const seguridadDispositivos = (data.seguridad_dispositivos ?? {}) as Partial<SeguridadDispositivosConfig>;
   const seo = (data.seo ?? {}) as Partial<SeoConfig>;
   const pixeles = (data.pixeles ?? {}) as Partial<PixelesConfig>;
   const notif = (data.notificaciones ?? {}) as Partial<NotificacionesConfig>;
@@ -158,6 +162,10 @@ export default async function AdminConfiguracionPage() {
               />
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="dispositivos">
+          <DispositivosSeguridadTab initialConfig={seguridadDispositivos} />
         </TabsContent>
 
         <TabsContent value="seo">

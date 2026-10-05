@@ -1,6 +1,6 @@
-const CACHE_NAME = "kc-admin-v1";
+const CACHE_NAME = "kc-app-v2";
 const STATIC_ASSETS = [
-  "/admin",
+  "/",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
 ];
@@ -27,37 +27,46 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first with cache fallback
+// Fetch: network-first with cache fallback (ignoring Next.js internal calls)
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // Skip non-GET requests
+  // 1. Skip non-GET requests
   if (request.method !== "GET") return;
 
-  // Skip API and auth routes
+  // 2. Skip Server Actions, Next.js internal chunks, HMR, APIs and Auth
   const url = new URL(request.url);
-  if (
+  const isServerAction = request.headers.has("next-action");
+  const isRsc = request.headers.has("rsc") || url.searchParams.has("_rsc");
+  const isNextInternal =
+    url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/auth/")
-  ) {
+    url.pathname.startsWith("/auth/") ||
+    url.pathname.includes("__next");
+
+  if (isServerAction || isRsc || isNextInternal) {
     return;
   }
 
+  // 3. Network-First con fallback seguro
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Cache successful responses
-        if (response.ok) {
+        if (response && response.status === 200 && response.type === "basic") {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          caches.open(CACHE_NAME).then((cache) => {
+            try {
+              cache.put(request, clone);
+            } catch {
+              // Ignore cache errors
+            }
+          });
         }
         return response;
       })
-      .catch(() => {
-        // Fallback to cache when offline
-        return caches.match(request).then((cached) => {
-          return cached || new Response("Offline", { status: 503 });
-        });
+      .catch(async () => {
+        const cached = await caches.match(request);
+        return cached || new Response("Offline", { status: 503 });
       })
   );
 });
@@ -96,11 +105,4 @@ self.addEventListener("notificationclick", (event) => {
         return self.clients.openWindow(url);
       })
   );
-});
-
-// Escuchar mensaje para forzar activación inmediata
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
 });

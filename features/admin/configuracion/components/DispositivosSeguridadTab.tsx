@@ -54,12 +54,17 @@ export default function DispositivosSeguridadTab({ initialConfig }: Props) {
   // Alternar restricción global
   const handleToggleRestriccion = (activo: boolean) => {
     startTransition(async () => {
-      const res = await toggleRestriccionAction(activo);
-      if (res.success) {
-        setConfig((p) => ({ ...p, restringir_acceso: activo }));
-        toast.success(res.message);
-      } else {
-        toast.error(res.message);
+      try {
+        const res = await toggleRestriccionAction(activo);
+        if (res.success) {
+          setConfig((p) => ({ ...p, restringir_acceso: activo }));
+          toast.success(res.message);
+        } else {
+          toast.error(res.message);
+        }
+      } catch (err) {
+        console.error("Error al alternar restriccion:", err);
+        toast.error("Error de conexión al guardar el cambio.");
       }
     });
   };
@@ -71,15 +76,20 @@ export default function DispositivosSeguridadTab({ initialConfig }: Props) {
     }
 
     startTransition(async () => {
-      const res = await revocarDispositivoAction(deviceId);
-      if (res.success) {
-        setConfig((p) => ({
-          ...p,
-          dispositivos: p.dispositivos.filter((d) => d.id !== deviceId),
-        }));
-        toast.success(`Equipo "${nombre}" desvinculado con éxito.`);
-      } else {
-        toast.error(res.message);
+      try {
+        const res = await revocarDispositivoAction(deviceId);
+        if (res.success) {
+          setConfig((p) => ({
+            ...p,
+            dispositivos: p.dispositivos.filter((d) => d.id !== deviceId),
+          }));
+          toast.success(`Equipo "${nombre}" desvinculado con éxito.`);
+        } else {
+          toast.error(res.message);
+        }
+      } catch (err) {
+        console.error("Error al revocar equipo:", err);
+        toast.error("Error de conexión al desvincular el equipo.");
       }
     });
   };
@@ -93,12 +103,17 @@ export default function DispositivosSeguridadTab({ initialConfig }: Props) {
     }
 
     startTransition(async () => {
-      const res = await actualizarClaveMaestraAction(nuevaClave.trim());
-      if (res.success) {
-        setConfig((p) => ({ ...p, clave_maestra: nuevaClave.trim() }));
-        toast.success("¡Clave maestra actualizada correctamente!");
-      } else {
-        toast.error(res.message);
+      try {
+        const res = await actualizarClaveMaestraAction(nuevaClave.trim());
+        if (res.success) {
+          setConfig((p) => ({ ...p, clave_maestra: nuevaClave.trim() }));
+          toast.success("¡Clave maestra actualizada correctamente!");
+        } else {
+          toast.error(res.message);
+        }
+      } catch (err) {
+        console.error("Error al actualizar clave:", err);
+        toast.error("Error de conexión al actualizar la clave.");
       }
     });
   };
@@ -111,20 +126,25 @@ export default function DispositivosSeguridadTab({ initialConfig }: Props) {
     }
 
     startTransition(async () => {
-      const res = await registrarDispositivoAction({
-        nombre: nombreNuevo.trim() || "Este Equipo (PC Admin)",
-        claveMaestra: config.clave_maestra,
-      });
+      try {
+        const res = await registrarDispositivoAction({
+          nombre: nombreNuevo.trim() || "Este Equipo (PC Admin)",
+          claveMaestra: config.clave_maestra,
+        });
 
-      if (res.success && res.device) {
-        setConfig((p) => ({
-          ...p,
-          dispositivos: [...p.dispositivos, res.device!],
-        }));
-        setNombreNuevo("");
-        toast.success("¡Este equipo ha sido vinculado y autorizado con éxito!");
-      } else {
-        toast.error(res.message);
+        if (res.success && res.device) {
+          setConfig((p) => ({
+            ...p,
+            dispositivos: [...p.dispositivos, res.device!],
+          }));
+          setNombreNuevo("");
+          toast.success("¡Este equipo ha sido vinculado y autorizado con éxito!");
+        } else {
+          toast.error(res.message);
+        }
+      } catch (err) {
+        console.error("Error al autorizar este equipo:", err);
+        toast.error("Error de conexión al registrar el dispositivo.");
       }
     });
   };

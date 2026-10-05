@@ -81,21 +81,26 @@ export default function AutorizarDispositivoClient({
     }
 
     startTransition(async () => {
-      const res = await registrarDispositivoAction({
-        nombre: nombre.trim(),
-        claveMaestra: claveMaestra.trim(),
-        tipo: tipoDetectado,
-      });
+      try {
+        const res = await registrarDispositivoAction({
+          nombre: nombre.trim(),
+          claveMaestra: claveMaestra.trim(),
+          tipo: tipoDetectado,
+        });
 
-      if (res.success) {
-        toast.success("¡Dispositivo vinculado con éxito!");
-        // Redirigir a la ruta solicitada
-        setTimeout(() => {
-          router.push(redirectPath);
-          router.refresh();
-        }, 1000);
-      } else {
-        toast.error(res.message);
+        if (res.success) {
+          toast.success("¡Dispositivo vinculado con éxito!");
+          // Redirigir a la ruta solicitada
+          setTimeout(() => {
+            router.push(redirectPath);
+            router.refresh();
+          }, 800);
+        } else {
+          toast.error(res.message);
+        }
+      } catch (error) {
+        console.error("Error de comunicación:", error);
+        toast.error("No se pudo conectar con el servidor. Revisa tu conexión.");
       }
     });
   };

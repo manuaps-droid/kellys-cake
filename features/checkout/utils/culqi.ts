@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://js.culqi.com/v3";
+const SCRIPT_URL = "https://checkout.culqi.com/js/v4";
 
 let scriptPromise: Promise<void> | null = null;
 
@@ -7,7 +7,7 @@ function loadCulqi(): Promise<void> {
     return Promise.reject(new Error("Culqi solo funciona en el navegador."));
   }
 
-  if ((window as any).Culqi?.ready) {
+  if ((window as any).Culqi?.ready || (window as any).Culqi?.token) {
     return Promise.resolve();
   }
 
@@ -16,12 +16,20 @@ function loadCulqi(): Promise<void> {
   }
 
   scriptPromise = new Promise((resolve, reject) => {
+    // Si ya existe la etiqueta de script en el documento
+    const existing = document.querySelector(`script[src="${SCRIPT_URL}"]`);
+    if (existing) {
+      resolve();
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = SCRIPT_URL;
+    script.async = true;
     script.onload = () => resolve();
     script.onerror = () => {
       scriptPromise = null;
-      reject(new Error("No se pudo cargar Culqi. Revisa tu conexión."));
+      reject(new Error("No se pudo cargar la pasarela de Culqi. Por favor verifica tu conexión o intenta con Yape/Plin."));
     };
     document.head.appendChild(script);
   });

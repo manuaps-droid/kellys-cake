@@ -66,9 +66,10 @@ type PresentacionRow = {
 export default async function ProductosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ catalogo?: string }>;
+  searchParams: Promise<{ catalogo?: string; categoria?: string }>;
 }) {
-  const { catalogo: catalogoSeleccionado } = await searchParams;
+  const { catalogo: catalogoParam, categoria: categoriaParam } = await searchParams;
+  const rawParam = (catalogoParam || categoriaParam)?.trim();
   const supabase = createAdminClient();
   const marketingCfg = await getPublicMarketing();
   const productosCfg = await getPublicProductos();
@@ -245,14 +246,23 @@ export default async function ProductosPage({
       id: cat.id,
       nombre: cat.nombre,
       tipo: cat.tipo,
-      portada_url: portadaByCatalog.get(cat.id) ?? null,
+      portada_url: portadaByCatalog.get(cat.id) ?? (productos[0]?.imagen_url || null),
       productos,
     };
   });
 
   // 7) Vista según parámetro: catálogo seleccionado o cuadrícula de catálogos
-  const seleccionado = catalogoSeleccionado
-    ? catalogosParaAccordion.find((c) => c.id === catalogoSeleccionado)
+  const seleccionado = rawParam
+    ? catalogosParaAccordion.find((c) => {
+        const queryNorm = rawParam.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const nombreNorm = c.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return (
+          c.id === rawParam ||
+          nombreNorm === queryNorm ||
+          nombreNorm.includes(queryNorm) ||
+          queryNorm.includes(nombreNorm)
+        );
+      })
     : undefined;
 
   if (seleccionado) {
@@ -280,11 +290,12 @@ export default async function ProductosPage({
     );
   }
 
-  // Sin selección: solo catálogos con al menos un producto publicado (o topper con diseños)
+  // Sin selección: mostrar todos los catálogos con mostrar_en_productos activo (o con productos/diseños)
   const catalogosConProductos = catalogosParaAccordion.filter(
     (c) =>
       c.productos.length > 0 ||
-      (c.id === TOPPER_CATALOGO_ID && (imagenesByCatalog.get(c.id) ?? 0) > 0)
+      (c.id === TOPPER_CATALOGO_ID && (imagenesByCatalog.get(c.id) ?? 0) > 0) ||
+      catalogs.some((cat) => cat.id === c.id)
   );
 
   if (catalogosConProductos.length === 0) {

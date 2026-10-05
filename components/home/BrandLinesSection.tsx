@@ -22,7 +22,7 @@ const LINES = [
     description:
       "Diseñada para consentirte sin culpas. Opciones reducidas en azúcar, endulzadas naturalmente y con harinas integrales de calidad.",
     features: ["Bajas en azúcar / Alulosa", "Harinas de avena y frutos secos", "Sabor ligero sin pesadez"],
-    href: "/productos?categoria=saludable",
+    href: "/productos?catalogo=saludable",
     cta: "Ver Opciones Saludables",
     bgGradient: "from-emerald-50/50 to-teal-50/30",
     borderAccent: "border-emerald-200/60",

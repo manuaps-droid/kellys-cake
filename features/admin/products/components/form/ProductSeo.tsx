@@ -3,7 +3,7 @@ import {
   UseFormRegister,
 } from "react-hook-form";
 
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/Textarea";
 
 import type { ProductSchema } from "../../validations/product.schema";

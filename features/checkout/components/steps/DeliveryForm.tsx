@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/Select";
 
 import { Card } from "@/components/ui/Card";
-import { Label } from "@/components/ui/Label";
+import { Label } from "@/components/ui/label";
 import { Calendar, Clock, Truck, Store, Info } from "lucide-react";
 
 import { useCheckout } from "../../hooks/useCheckout";

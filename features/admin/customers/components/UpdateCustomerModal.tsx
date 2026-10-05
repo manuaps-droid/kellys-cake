@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/Switch";
 
 import { updateCustomerAction } from "../actions/update-customer.action";

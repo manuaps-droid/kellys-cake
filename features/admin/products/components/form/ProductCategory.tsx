@@ -1,6 +1,6 @@
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 
 import type { ProductSchema } from "../../validations/product.schema";
 

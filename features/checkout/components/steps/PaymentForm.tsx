@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import { Card } from "@/components/ui/Card";
-import { Label } from "@/components/ui/Label";
+import { Label } from "@/components/ui/label";
 
 import { useCart } from "@/features/cart/hooks/useCart";
 import { getItemUnitPrice } from "@/features/cart/types/cart.types";

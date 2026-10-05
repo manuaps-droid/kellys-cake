@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 
-import { Label } from "@/components/ui/Label";
+import { Label } from "@/components/ui/label";
 
 type Props = {
   label?: string;

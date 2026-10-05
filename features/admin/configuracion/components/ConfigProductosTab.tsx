@@ -6,7 +6,7 @@ import { Printer, AlertTriangle, CheckCircle2, XCircle, Sparkles, Loader2, Info 
 
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { updateConfigAction } from "@/features/admin/configuracion/actions/config.action";
 import type { ProductosConfig } from "@/features/admin/configuracion/validations/config.schema";
 

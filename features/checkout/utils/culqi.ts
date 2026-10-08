@@ -66,12 +66,27 @@ export async function chargeWithCulqi(
   });
 
   return new Promise((resolve, reject) => {
+    // 1. Manejador para el callback global estándar de Culqi
+    (window as any).culqi = function () {
+      const CulqiInstance = (window as any).Culqi;
+      if (CulqiInstance?.token) {
+        const tokenId = CulqiInstance.token.id;
+        CulqiInstance.close?.();
+        resolve({ token: tokenId });
+      } else if (CulqiInstance?.error) {
+        const errMsg = CulqiInstance.error.user_message || CulqiInstance.error.merchant_message || "Error al procesar la tarjeta.";
+        reject(new Error(errMsg));
+      }
+    };
+
+    // 2. Manejador para eventos de CustomEvent (v4 moderno)
     function handleEvent(event: any) {
-      const detail = event.detail ?? {};
+      const detail = event?.detail ?? {};
       const object = detail.object;
 
-      if (object === "token") {
+      if (object === "token" || detail.id?.startsWith("tkn_")) {
         window.removeEventListener("culqi", handleEvent);
+        (window as any).Culqi?.close?.();
         resolve({ token: detail.id });
       } else if (object === "error") {
         window.removeEventListener("culqi", handleEvent);
@@ -80,6 +95,14 @@ export async function chargeWithCulqi(
     }
 
     window.addEventListener("culqi", handleEvent);
-    Culqi.token();
+
+    // 3. Abrir el modal de checkout de Culqi
+    if (typeof Culqi.open === "function") {
+      Culqi.open();
+    } else if (typeof Culqi.token === "function") {
+      Culqi.token();
+    } else {
+      reject(new Error("No se pudo iniciar el checkout de Culqi."));
+    }
   });
 }

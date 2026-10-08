@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { authClient } from "@/features/auth/services/auth.client";
+import { loginWithRateLimitAction } from "@/features/auth/actions/login.action";
 
 import {
   signInSchema,
@@ -33,14 +33,14 @@ export default function LoginForm() {
   });
 
   async function onSubmit(data: SignInSchema) {
-    const { error } = await authClient.signIn(
-      data.email,
-      data.password
-    );
+    const res = await loginWithRateLimitAction({
+      email: data.email,
+      password: data.password,
+    });
 
-    if (error) {
+    if (!res.success) {
       setError("root", {
-        message: "Correo o contraseña incorrectos.",
+        message: res.message || "Correo o contraseña incorrectos.",
       });
       return;
     }

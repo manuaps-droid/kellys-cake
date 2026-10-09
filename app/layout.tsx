@@ -168,6 +168,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+import ConstructionBanner from "@/components/marketing/ConstructionBanner";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -195,6 +197,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col pb-16 lg:pb-0">
         <AuthProvider>
           <CartProvider>
+            <ConstructionBanner />
             {marketing?.banner_activo && <SiteBanner config={marketing} />}
 
             {children}

@@ -27,12 +27,12 @@ export default function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--kc-blush)_0%,_transparent_50%)] opacity-40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--kc-sand)_0%,_transparent_50%)] opacity-40" />
 
-      <div className="relative mx-auto flex max-w-7xl flex-col-reverse items-center gap-16 px-6 py-24 lg:flex-row lg:py-32">
+      <div className="relative mx-auto flex max-w-7xl flex-col-reverse items-center gap-10 px-4 py-8 sm:px-6 sm:py-16 lg:flex-row lg:gap-16 lg:py-28">
         <motion.div 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex-1"
+          className="flex-1 w-full"
         >
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -113,27 +113,27 @@ export default function Hero() {
           </motion.div>
         </motion.div>
 
-        <div className="flex-1">
+        <div className="flex-1 w-full max-w-lg lg:max-w-none">
           <div className="relative">
-            <div className="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-kc-blush/30 via-kc-rose-gold/20 to-kc-sand/30 blur-3xl transition-all duration-500" />
+            <div className="absolute -inset-4 sm:-inset-8 rounded-[2.5rem] bg-gradient-to-br from-kc-blush/30 via-kc-rose-gold/20 to-kc-sand/30 blur-2xl transition-all duration-500" />
 
-            <div className="relative h-[500px] w-full overflow-hidden rounded-[2rem] shadow-2xl shadow-kc-charcoal/20">
+            <div className="relative h-[320px] sm:h-[420px] lg:h-[500px] w-full overflow-hidden rounded-[2rem] bg-white/40 shadow-2xl shadow-kc-charcoal/20">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentImage}
-                  initial={{ opacity: 0, scale: 1.1 }}
+                  initial={{ opacity: 0, scale: 1.05 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 1.2, ease: "easeInOut" }}
-                  className="absolute inset-0"
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  className="absolute inset-0 flex items-center justify-center"
                 >
                   <Image
                     src={HERO_IMAGES[currentImage]}
                     alt="Pastel personalizado Kelly's Cake"
                     fill
                     priority
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-contain"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"
+                    className="object-cover"
                   />
                 </motion.div>
               </AnimatePresence>
@@ -143,12 +143,12 @@ export default function Hero() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 1.2 }}
-              className="absolute -bottom-6 -left-6 rounded-2xl border border-white/40 bg-white/80 px-6 py-4 shadow-2xl backdrop-blur-md"
+              className="absolute -bottom-4 left-4 sm:-left-6 rounded-2xl border border-white/40 bg-white/90 px-4 py-3 sm:px-6 sm:py-4 shadow-xl backdrop-blur-md"
             >
-              <div className="flex items-center gap-1 text-kc-gold">
+              <div className="flex items-center gap-1 text-kc-gold text-xs sm:text-sm">
                 {"★★★★★"}
               </div>
-              <p className="mt-1 text-sm font-medium text-kc-charcoal">
+              <p className="mt-0.5 text-xs sm:text-sm font-medium text-kc-charcoal">
                 +500 pasteles entregados solo este año
               </p>
             </motion.div>

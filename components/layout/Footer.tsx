@@ -121,6 +121,7 @@ export default async function Footer() {
               {[
                 { label: "Preguntas frecuentes", href: "/preguntas-frecuentes" },
                 { label: "Política de envío", href: "/politica-de-envio" },
+                { label: "Cambios y devoluciones", href: "/politica-de-cambios-y-devoluciones" },
                 { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
                 { label: "Política de privacidad", href: "/politica-de-privacidad" },
               ].map((item) => (

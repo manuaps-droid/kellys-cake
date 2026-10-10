@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 
 import { Card } from "@/components/ui/Card";
 
@@ -304,6 +305,22 @@ export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null
           </div>
         )}
       </div>
+
+      <p className="mt-6 text-[11px] leading-relaxed text-cake-chocolate/70">
+        Al confirmar tu pedido aceptas nuestros{" "}
+        <Link href="/terminos-y-condiciones" className="underline hover:text-cake-gold" target="_blank">
+          Términos y Condiciones
+        </Link>
+        , la{" "}
+        <Link href="/politica-de-cambios-y-devoluciones" className="underline hover:text-cake-gold" target="_blank">
+          Política de Cambios y Devoluciones
+        </Link>{" "}
+        y la{" "}
+        <Link href="/politica-de-privacidad" className="underline hover:text-cake-gold" target="_blank">
+          Política de Privacidad
+        </Link>
+        . Productos perecibles elaborados a pedido: revisa los plazos de cambio antes de pagar.
+      </p>
     </Card>
   );
 }

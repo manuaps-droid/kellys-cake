@@ -95,7 +95,7 @@ export default function TerminosYCondicionesPage() {
                   </h2>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
-                  Cualquier solicitud de cambio de fecha de entrega, diseño básico o sabor debe comunicarse con una anticipación mínima de <strong>48 horas</strong> previas a la fecha inicialmente programada. La reprogramación quedará sujeta a la disponibilidad de agenda para la nueva fecha solicitada. Cancelaciones con menor tiempo no admitirán devolución dineraria debido a la adquisición de insumos perecibles y costos de elaboración ya incurridos.
+                  Cualquier solicitud de cambio de fecha de entrega, diseño básico o sabor debe comunicarse con una anticipación mínima de <strong>48 horas</strong> previas a la fecha inicialmente programada. La reprogramación quedará sujeta a la disponibilidad de agenda para la nueva fecha solicitada. Cancelaciones con menor tiempo no admitirán devolución dineraria debido a la adquisición de insumos perecibles y costos de elaboración ya incurridos. Para conocer en detalle las condiciones, plazos y el proceso de reembolso, consulta nuestra <Link href="/politica-de-cambios-y-devoluciones" className="font-semibold text-kc-rose-gold underline">Política de Cambios y Devoluciones</Link>.
                 </p>
               </section>
 

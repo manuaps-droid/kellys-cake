@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
@@ -18,6 +19,7 @@ import {
 
 import { useCart } from "@/features/cart/hooks/useCart";
 import { addTopperToCartAction } from "@/features/cart/actions/add-topper-to-cart.action";
+import { finalizeTopperAction } from "../actions/finalize-topper.action";
 
 export type DiseñoTopper = {
   id: string;
@@ -40,10 +42,14 @@ export default function TopperPicker({
   disenos,
 }: Props) {
   const { refreshCart, openDrawer } = useCart();
+  const router = useRouter();
 
   const [selected, setSelected] = useState<DiseñoTopper | null>(null);
   const [nombre, setNombre] = useState("");
-  const [pending, startTransition] = useTransition();
+  const [pendingAgregar, startAgregarTransition] = useTransition();
+  const [pendingFinalizar, startFinalizarTransition] = useTransition();
+
+  const pending = pendingAgregar || pendingFinalizar;
 
   function abrirDiseno(d: DiseñoTopper) {
     setNombre("");
@@ -60,7 +66,7 @@ export default function TopperPicker({
       return;
     }
 
-    startTransition(async () => {
+    startAgregarTransition(async () => {
       const result = await addTopperToCartAction({
         productoId,
         nombre: nombreClean,
@@ -78,6 +84,41 @@ export default function TopperPicker({
       setSelected(null);
       openDrawer();
       toast.success("¡Tu topper fue agregado al carrito!");
+    });
+  }
+
+  async function handleFinalizar() {
+    if (!selected) return;
+
+    const nombreClean = nombre.trim();
+
+    if (!nombreClean) {
+      toast.error("Escribe el nombre para tu topper.");
+      return;
+    }
+
+    startFinalizarTransition(async () => {
+      const result = await finalizeTopperAction({
+        productoId,
+        nombre: nombreClean,
+        descripcion: `Topper con el nombre «${nombreClean}» · Diseño «${selected.nombre}»`,
+        imagen: selected.url,
+        catalogoImagenId: selected.id,
+      });
+
+      if (!result.success) {
+        toast.error(
+          result.message ?? "No se pudo finalizar el pedido."
+        );
+        return;
+      }
+
+      setSelected(null);
+      toast.success(
+        `¡Pedido #${result.numero} finalizado! Ya está en la agenda de producción.`,
+        { duration: 6000 }
+      );
+      router.push("/mi-cuenta/pedidos");
     });
   }
 
@@ -224,7 +265,26 @@ export default function TopperPicker({
               disabled={pending || !nombre.trim()}
               className="w-full rounded-full bg-kc-rose-gold px-8 py-3 text-sm font-medium text-white shadow-md shadow-kc-rose-gold/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-kc-rose-gold/90"
             >
-              {pending ? "Agregando..." : "Agregar al carrito"}
+              {pendingAgregar
+                ? "Agregando..."
+                : "Agregar al carrito"}
+            </Button>
+
+            <p className="text-center text-xs text-kc-mocha">
+              ¿Ya decidido? Finaliza tu proyecto ahora y lo enviamos
+              junto al pedido directo a la agenda de producción:
+            </p>
+
+            <Button
+              type="button"
+              variant="rose-gold-outline"
+              onClick={handleFinalizar}
+              disabled={pending || !nombre.trim()}
+              className="w-full rounded-full px-8 py-3 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5"
+            >
+              {pendingFinalizar
+                ? "Finalizando..."
+                : "Finalizar y enviar a producción"}
             </Button>
           </DialogFooter>
         </DialogContent>

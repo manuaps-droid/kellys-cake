@@ -1,8 +1,13 @@
 "use server";
 
 import { getResumenVisitasService } from "../services/visitas.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function getResumenVisitasAction() {
+  if (!(await checkIsAdmin())) {
+    return { success: false, resumen: null, message: "No autorizado." };
+  }
+
   try {
     const resumen = await getResumenVisitasService();
     return {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createBulkCatalogService } from "../services/create-bulk-catalog.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 type CatalogItemData = {
   nombre: string;
@@ -18,6 +19,10 @@ type CreateBulkCatalogData = {
 export async function createBulkCatalogAction(
   data: CreateBulkCatalogData
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     await createBulkCatalogService(data);
 

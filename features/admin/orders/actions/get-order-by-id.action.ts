@@ -1,10 +1,15 @@
 "use server";
 
 import { getOrderByIdService } from "../services/get-order-by-id.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function getOrderByIdAction(
   id: string
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, order: null, message: "No autorizado." };
+  }
+
   try {
     const order =
       await getOrderByIdService(id);

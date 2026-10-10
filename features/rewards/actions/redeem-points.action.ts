@@ -10,11 +10,24 @@ export async function redeemPointsAction(
   try {
     const { cliente } = await getCurrentClient();
 
+    // Validar cantidad: entero positivo y dentro de un rango razonable
+    const cantidadNumerica = Math.floor(Number(cantidad));
+    if (
+      !Number.isInteger(cantidadNumerica) ||
+      cantidadNumerica <= 0 ||
+      cantidadNumerica > 10000
+    ) {
+      return { success: false, message: "Cantidad de puntos inválida." };
+    }
+
+    const motivoLimpio =
+      typeof motivo === "string" ? motivo.trim().slice(0, 200) : "";
+
     const supabase = createAdminClient();
     const { error } = await supabase.rpc('redeem_points', {
       p_cliente_id: cliente.id,
-      p_cantidad: cantidad,
-      p_motivo: motivo
+      p_cantidad: cantidadNumerica,
+      p_motivo: motivoLimpio
     });
 
     if (error) {

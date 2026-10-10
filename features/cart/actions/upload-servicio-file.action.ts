@@ -2,6 +2,7 @@
 
 import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export type UploadServicioResult = {
   success: boolean;
@@ -15,6 +16,16 @@ export async function uploadServicioFileAction(
   formData: FormData
 ): Promise<UploadServicioResult> {
   try {
+    // Solo usuarios autenticados pueden subir archivos
+    const authClient = await createClient();
+    const {
+      data: { user },
+    } = await authClient.auth.getUser();
+
+    if (!user) {
+      return { success: false, message: "Inicia sesión para subir archivos." };
+    }
+
     const file = formData.get("file");
 
     if (!(file instanceof File)) {

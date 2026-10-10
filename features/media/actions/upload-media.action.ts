@@ -1,11 +1,19 @@
 "use server";
 
 import { uploadMediaService } from "../services/media.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function uploadMediaAction(
   formData: FormData
 ) {
   try {
+    if (!(await checkIsAdmin())) {
+      return {
+        success: false,
+        message: "No autorizado.",
+      };
+    }
+
     const file = formData.get(
       "file"
     ) as File | null;

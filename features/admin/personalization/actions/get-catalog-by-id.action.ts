@@ -1,10 +1,15 @@
 "use server";
 
 import { getCatalogByIdService } from "../services/get-catalog-by-id.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function getCatalogByIdAction(
   id: string
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, catalog: null, message: "No autorizado." };
+  }
+
   try {
     const catalog =
       await getCatalogByIdService(id);

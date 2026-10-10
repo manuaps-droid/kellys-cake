@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 type Cambio = { id: string; orden: number };
 
@@ -12,6 +13,10 @@ type Cambio = { id: string; orden: number };
  * escrituras en la base de datos.
  */
 export async function saveCatalogosOrderAction(cambios: Cambio[]) {
+  if (!(await checkIsAdmin())) {
+    return { success: false as const, message: "No autorizado." };
+  }
+
   if (!Array.isArray(cambios)) {
     return { success: false as const, message: "Datos inválidos." };
   }

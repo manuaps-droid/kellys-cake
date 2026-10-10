@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { updateCatalogService } from "../services/update-catalog.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 type UpdateCatalogData = {
   tipo: string;
@@ -19,6 +20,10 @@ export async function updateCatalogAction(
   id: string,
   data: UpdateCatalogData
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     await updateCatalogService(id, data);
 

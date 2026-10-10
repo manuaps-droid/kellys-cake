@@ -3,8 +3,13 @@
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function deleteCateringRequest(id: string) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     const supabase = createAdminClient();
 

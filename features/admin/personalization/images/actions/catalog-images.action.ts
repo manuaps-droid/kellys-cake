@@ -9,11 +9,22 @@ import {
   setProductImageAsPortadaRepository,
   type CatalogImageRow,
 } from "../repositories/catalog-images.repository";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
+
+async function assertAdmin() {
+  if (!(await checkIsAdmin())) {
+    throw new Error("No autorizado.");
+  }
+}
 
 export async function getCatalogImagesAction(
   catalogoId: string
 ): Promise<CatalogImageRow[]> {
   try {
+    if (!(await checkIsAdmin())) {
+      return [];
+    }
+
     const data = await getCatalogImagesRepository(catalogoId);
     console.log("[DEBUG] getCatalogImagesAction:", catalogoId, "->", data.length, "imágenes");
     return data;
@@ -28,6 +39,7 @@ export async function addCatalogImageAction(
   mediaId: string
 ) {
   try {
+    await assertAdmin();
     await addCatalogImageRepository(catalogoId, mediaId);
     console.log("[DEBUG] addCatalogImageAction OK:", catalogoId, mediaId);
     return { success: true };
@@ -45,6 +57,7 @@ export async function updateCatalogImageLabelAction(
   label: string
 ) {
   try {
+    await assertAdmin();
     await updateCatalogImageLabelRepository(imageId, label);
     return { success: true };
   } catch (error) {
@@ -61,6 +74,7 @@ export async function updateCatalogImagePortadaAction(
   esPortada: boolean
 ) {
   try {
+    await assertAdmin();
     await updateCatalogImagePortadaRepository(catalogoId, imageId, esPortada);
     return { success: true };
   } catch (error) {
@@ -73,6 +87,7 @@ export async function updateCatalogImagePortadaAction(
 
 export async function deleteCatalogImageAction(imageId: string) {
   try {
+    await assertAdmin();
     await deleteCatalogImageRepository(imageId);
     return { success: true };
   } catch (error) {
@@ -88,6 +103,7 @@ export async function setProductImageAsPortadaAction(
   mediaId: string
 ) {
   try {
+    await assertAdmin();
     await setProductImageAsPortadaRepository(catalogoId, mediaId);
     return { success: true };
   } catch (error) {

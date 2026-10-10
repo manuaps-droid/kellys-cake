@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createCatalogService } from "../services/create-catalog.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 type CreateCatalogData = {
   tipo: string;
@@ -15,6 +16,10 @@ type CreateCatalogData = {
 export async function createCatalogAction(
   data: CreateCatalogData
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     await createCatalogService(data);
 

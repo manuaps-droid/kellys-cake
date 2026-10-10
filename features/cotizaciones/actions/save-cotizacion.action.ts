@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 import type { CotizacionItem } from "../types/cotizacion.types";
 
@@ -18,6 +19,13 @@ type SaveCotizacionInput = {
 };
 
 export async function saveCotizacionAction(input: SaveCotizacionInput) {
+  if (!(await checkIsAdmin())) {
+    return {
+      success: false,
+      message: "No autorizado.",
+    };
+  }
+
   try {
     const supabase = createAdminClient();
 

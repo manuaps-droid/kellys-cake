@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 type RespondInput = {
   id: string;
@@ -15,6 +16,13 @@ type RespondInput = {
  * de una solicitud del Libro de Reclamaciones.
  */
 export async function respondReclamoAction(input: RespondInput) {
+  if (!(await checkIsAdmin())) {
+    return {
+      success: false as const,
+      message: "No autorizado.",
+    };
+  }
+
   if (!input.respuesta.trim()) {
     return {
       success: false as const,

@@ -3,11 +3,16 @@
 import { updateProjectStatusService } from "../services/update-project-status.service";
 
 import type { AdminProjectStatus } from "../types/project.type";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function updateProjectStatusAction(
   id: string,
   status: AdminProjectStatus
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     await updateProjectStatusService(id, status);
 

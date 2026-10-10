@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { saveProductCatalogOptionsService } from "../services/save-product-catalog-options.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export type ProductCatalogOptionInput = {
   catalogo_id: string;
@@ -14,6 +15,10 @@ export async function saveProductCatalogOptionsAction(
   productId: string,
   options: ProductCatalogOptionInput[]
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     await saveProductCatalogOptionsService(
       productId,

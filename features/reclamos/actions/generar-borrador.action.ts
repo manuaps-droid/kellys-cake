@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export type BorradorInput = {
   id: string;
@@ -124,6 +125,10 @@ async function generarConIA(d: BorradorInput): Promise<string | null> {
 export async function generarBorradorAction(
   input: BorradorInput
 ): Promise<BorradorResult> {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   // Validar que la solicitud exista realmente
   const supabase = createAdminClient();
   const { data: existe } = await supabase

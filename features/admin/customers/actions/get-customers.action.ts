@@ -1,6 +1,7 @@
 "use server";
 
 import { getCustomersService } from "../services/get-customers.service";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 type GetCustomersFilters = {
   search?: string;
@@ -11,6 +12,16 @@ type GetCustomersFilters = {
 export async function getCustomersAction(
   filters?: GetCustomersFilters
 ) {
+  if (!(await checkIsAdmin())) {
+    return {
+      success: false,
+      customers: [],
+      total: 0,
+      perPage: filters?.perPage ?? 25,
+      message: "No autorizado.",
+    };
+  }
+
   try {
     const { customers, total } =
       await getCustomersService(filters);

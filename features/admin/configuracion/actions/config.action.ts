@@ -8,10 +8,15 @@ import {
   updateConfigService,
 } from "../services/config.service";
 import type { SeccionConfig } from "../validations/config.schema";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 export async function getConfigAction<T extends SeccionConfig>(
   seccion?: T
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, data: null, message: "No autorizado." };
+  }
+
   try {
     const data = await getConfigService(seccion);
     return { success: true, data };
@@ -32,6 +37,10 @@ export async function updateConfigAction<T extends SeccionConfig>(
   seccion: T,
   data: unknown
 ) {
+  if (!(await checkIsAdmin())) {
+    return { success: false, message: "No autorizado." };
+  }
+
   try {
     await updateConfigService(seccion, data);
 

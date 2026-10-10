@@ -1,7 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createOrderService } from "@/features/checkout/services/checkout.service";
+import { createOrderService, verifyPayment } from "@/features/checkout/services/checkout.service";
 import { getItemNombre, getItemUnitPrice } from "@/features/cart/types/cart.types";
 import { revalidatePath } from "next/cache";
 
@@ -25,20 +25,21 @@ export async function createOrder(paymentData?: CreateOrderPaymentData) {
       subtotal,
       envio,
       total,
-    } = await createOrderService(paymentData?.deliveryFee ?? 0);
+    } = await createOrderService(Math.max(0, Number(paymentData?.deliveryFee) || 0));
 
     const cotizacionId =
       items.find((item) => item.cotizacion_id)?.cotizacion_id ?? null;
 
-    // Determinar si el pedido está pagado
-    const isPaid =
-      Boolean(paymentData?.paymentReference) ||
-      paymentData?.paymentMethod === "culqi" ||
-      (paymentData?.paymentMethod === "mercadopago" && Boolean(paymentData?.paymentReference));
+    // NUNCA confiar en los flags del cliente: el estado de pago se
+    // confirma consultando la pasarela real (Culqi / Mercado Pago).
+    const isPaid = await verifyPayment(
+      paymentData?.paymentMethod,
+      paymentData?.paymentReference,
+      total
+    );
 
     const estadoPago = isPaid ? "pagado" : "pendiente";
     // REGLA: Todo pedido pagado debe estar confirmado para agendarse en producción de inmediato
-    const estadoPedido = isPaid ? "confirmado" : "pendiente";
 
     // Extraer fecha y hora de entrega seleccionadas por el cliente
     let fechaEntrega = paymentData?.fechaEntrega || null;
@@ -120,7 +121,13 @@ export async function createOrder(paymentData?: CreateOrderPaymentData) {
 
     // Asegurar persistencia de estado confirmado, estado de pago y fecha/hora programada
     if (result.pedido_id) {
-      const updateData: Record<string, any> = {};
+      const updateData: {
+        estado?: string;
+        estado_pago?: string;
+        fecha_entrega?: string;
+        hora_entrega?: string;
+        tipo_entrega?: string;
+      } = {};
       if (isPaid) {
         updateData.estado = "confirmado";
         updateData.estado_pago = "pagado";

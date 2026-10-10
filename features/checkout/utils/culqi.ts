@@ -1,4 +1,5 @@
 const SCRIPT_URL = "https://checkout.culqi.com/js/v4";
+const CUSTOM_SCRIPT_URL = "https://js.culqi.com/checkout-js";
 
 let scriptPromise: Promise<void> | null = null;
 
@@ -125,6 +126,46 @@ export async function chargeWithCulqi(
   });
 }
 
+// ---------- Billeteras móviles (Plin) via Custom Checkout ----------
+
+let customScriptPromise: Promise<void> | null = null;
+
+function loadCulqiCustom(): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Culqi solo funciona en el navegador."));
+  }
+
+  if ((window as any).CulqiCheckout) {
+    return Promise.resolve();
+  }
+
+  if (customScriptPromise) {
+    return customScriptPromise;
+  }
+
+  customScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector(
+      `script[src="${CUSTOM_SCRIPT_URL}"]`
+    );
+    if (existing) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = CUSTOM_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      customScriptPromise = null;
+      reject(new Error("No se pudo cargar el checkout de billeteras de Culqi."));
+    };
+    document.head.appendChild(script);
+  });
+
+  return customScriptPromise;
+}
+
 type CulqiOrderOptions = {
   amount: number;
   email: string;
@@ -133,8 +174,8 @@ type CulqiOrderOptions = {
 };
 
 /**
- * Abre el Checkout de Culqi en modo billeteras móviles (Plin/Yape por QR).
- * Requiere una `orderId` de Culqi creada previamente en el backend.
+ * Abre el Checkout Custom de Culqi en modo billeteras móviles (Plin/Yape
+ * por QR), usando una orden de pago creada previamente en el backend.
  */
 export async function openCulqiBilletera(
   options: CulqiOrderOptions
@@ -144,49 +185,65 @@ export async function openCulqiBilletera(
     throw new Error("Configura NEXT_PUBLIC_CULQI_PUBLIC_KEY en .env.local.");
   }
 
-  await loadCulqi();
+  await loadCulqiCustom();
 
-  const Culqi = (window as any).Culqi;
-  Culqi.publicKey = publicKey;
+  const CulqiCheckout = (window as any).CulqiCheckout;
+  if (typeof CulqiCheckout !== "function") {
+    throw new Error(
+      "No se pudo cargar el checkout de billeteras de Culqi."
+    );
+  }
 
-  Culqi.settings({
-    title: "Kelly's Cake",
-    currency: "PEN",
-    description: options.description || "Pedido Kelly's Cake",
-    amount: Math.round(options.amount * 100),
-    order: options.orderId,
-  });
+  const paymentMethods = {
+    tarjeta: false,
+    yape: false,
+    billetera: true,
+    bancaMovil: false,
+    agente: false,
+    cuotealo: false,
+  };
 
-  Culqi.settings({
-    title: "Kelly's Cake",
-    currency: "PEN",
-    description: options.description || "Pedido Kelly's Cake",
-    amount: Math.round(options.amount * 100),
-    order: options.orderId,
-  });
+  const config = {
+    settings: {
+      title: "Kelly's Cake",
+      currency: "PEN",
+      description: options.description || "Pedido Kelly's Cake",
+      amount: Math.round(options.amount * 100),
+      order: options.orderId,
+    },
+    client: {
+      email: options.email,
+    },
+    options: {
+      lang: "es",
+      installments: false,
+      modal: true,
+      paymentMethods,
+      paymentMethodsSort: Object.keys(paymentMethods),
+    },
+  };
 
-  // Con una orden activa, Culqi muestra los medios de pago que la orden
-  // soporta (billeteras móviles/QR). No forzamos paymentMethods aquí.
   return new Promise((resolve, reject) => {
-    (window as any).culqi = function () {
-      const C = (window as any).Culqi;
-      if (C?.error) {
+    const culqiCheckout = new CulqiCheckout(publicKey, config);
+
+    culqiCheckout.culqi = function () {
+      if (culqiCheckout.error) {
+        const e = culqiCheckout.error;
         reject(
           new Error(
-            C.error.user_message ||
-              C.error.merchant_message ||
-              "No se pudo cargar el pago con billeteras móviles."
+            e.user_message ||
+              e.merchant_message ||
+              `Error de Culqi (${e.code || e.object || "desconocido"}).`
           )
         );
         return;
       }
-      if (C?.order) resolve();
+      if (culqiCheckout.order) {
+        culqiCheckout.close?.();
+        resolve();
+      }
     };
 
-    if (typeof Culqi.open === "function") {
-      Culqi.open();
-    } else {
-      reject(new Error("No se pudo iniciar el checkout de Culqi."));
-    }
+    culqiCheckout.open();
   });
 }

@@ -9,6 +9,7 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import { getItemUnitPrice } from "@/features/cart/types/cart.types";
 
 import { useCheckout } from "../../hooks/useCheckout";
+import { MERCADOPAGO_HABILITADO } from "../../constants/payment-methods.constants";
 
 import type { PaymentMethod, PaymentType } from "../../types/checkout.types";
 
@@ -19,12 +20,16 @@ const paymentOptions: { value: PaymentMethod; label: string; description: string
     description: "Visa, Mastercard, American Express",
     icon: "💳",
   },
-  {
-    value: "mercadopago",
-    label: "Mercado Pago",
-    description: "Paga con tu cuenta de Mercado Pago",
-    icon: "🏦",
-  },
+  ...(MERCADOPAGO_HABILITADO
+    ? [
+        {
+          value: "mercadopago" as PaymentMethod,
+          label: "Mercado Pago",
+          description: "Paga con tu cuenta de Mercado Pago",
+          icon: "🏦",
+        },
+      ]
+    : []),
   {
     value: "yape",
     label: "Yape",

@@ -12,6 +12,7 @@ import { useCheckout } from "../hooks/useCheckout";
 import { CheckoutStep } from "../types/wizard.types";
 import { createOrder } from "../actions/create-order.action";
 import { chargeWithCulqi } from "../utils/culqi";
+import { MERCADOPAGO_HABILITADO } from "../constants/payment-methods.constants";
 
 export default function WizardFooter() {
   const router = useRouter();
@@ -118,7 +119,7 @@ export default function WizardFooter() {
       }
     }
 
-    if (method === "mercadopago") {
+    if (method === "mercadopago" && MERCADOPAGO_HABILITADO) {
       const response = await fetch("/api/payments/mercadopago/preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import { getCurrentClient } from "@/features/auth/services/auth.server";
+import { notifyAdminNewOrderService } from "@/features/notifications/services/notify-new-order.service";
 
 import { resolveTopperPrecioService } from "../services/topper-price.service";
 import { finalizeTopperService } from "../services/finalize-topper.service";
@@ -56,6 +58,13 @@ export async function finalizeTopperAction(input: FinalizeTopperInput) {
     revalidatePath("/admin/pedidos");
     revalidatePath("/admin/agenda");
     revalidatePath("/mi-cuenta/pedidos");
+
+    after(() =>
+      notifyAdminNewOrderService({
+        orderId: pedido.id,
+        origen: "Topper directo",
+      })
+    );
 
     return {
       success: true,

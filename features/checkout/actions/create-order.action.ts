@@ -1,9 +1,12 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrderService, verifyPayment } from "@/features/checkout/services/checkout.service";
 import { getItemNombre, getItemUnitPrice } from "@/features/cart/types/cart.types";
-import { revalidatePath } from "next/cache";
+import { notifyAdminNewOrderService } from "@/features/notifications/services/notify-new-order.service";
 
 export type CreateOrderPaymentData = {
   paymentMethod: string;
@@ -155,6 +158,15 @@ export async function createOrder(paymentData?: CreateOrderPaymentData) {
     revalidatePath("/mi-cuenta/pedidos");
     revalidatePath("/admin/pedidos");
     revalidatePath("/admin/agenda");
+
+    if (result.pedido_id) {
+      after(() =>
+        notifyAdminNewOrderService({
+          orderId: result.pedido_id as string,
+          origen: "Checkout web",
+        })
+      );
+    }
 
     return {
       success: true,

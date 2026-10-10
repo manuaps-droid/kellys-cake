@@ -11,7 +11,7 @@ import { useWizard } from "../hooks/useWizard";
 import { useCheckout } from "../hooks/useCheckout";
 import { CheckoutStep } from "../types/wizard.types";
 import { createOrder } from "../actions/create-order.action";
-import { chargeWithCulqi } from "../utils/culqi";
+import { chargeWithCulqi, openCulqiBilletera } from "../utils/culqi";
 import { MERCADOPAGO_HABILITADO } from "../constants/payment-methods.constants";
 
 export default function WizardFooter() {
@@ -147,10 +147,8 @@ export default function WizardFooter() {
       return { success: true, redirect: true };
     }
 
-    // Pagos manuales: Plin y transferencia bancaria.
-    // Se exige el número de operación y el pedido queda como
-    // "pendiente" hasta que el equipo verifique el pago.
-    if (method === "plin" || method === "transfer") {
+    // Pagos manuales: solo transferencia bancaria.
+    if (method === "transfer") {
       const reference = checkout.paymentReference?.trim();
 
       if (!reference) {
@@ -167,11 +165,71 @@ export default function WizardFooter() {
     return { success: true };
   }
 
+  async function finalizePlin(): Promise<void> {
+    const email = checkout.customer.email;
+    const title = "Pedido Kelly's Cake";
+
+    // 1. Crear la orden de pago en Culqi (billetera móvil)
+    const res = await fetch("/api/payments/culqi/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        description: title,
+        deliveryFee,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.orderId) {
+      setError(data.message || "No se pudo iniciar el pago con Plin.");
+      return;
+    }
+
+    // 2. Crear el pedido como pendiente, vinculado a la orden de Culqi
+    const orderResult = await createOrder({
+      paymentMethod: "plin",
+      paymentReference: data.orderId,
+      deliveryFee,
+      tipoPago,
+      montoPagado,
+      fechaEntrega: checkout.deliveryDate || undefined,
+      horaEntrega: checkout.deliveryTime || undefined,
+      tipoEntrega: checkout.deliveryMethod || undefined,
+    });
+
+    if (!orderResult.success) {
+      setError(orderResult.message || "No se pudo crear el pedido.");
+      return;
+    }
+
+    // 3. Abrir el checkout de Culqi con el QR de billeteras (Plin)
+    try {
+      await openCulqiBilletera({
+        amount: montoPagado,
+        email,
+        description: title,
+        orderId: data.orderId,
+      });
+    } catch {
+      // Si el modal no logra abrirse, el pedido queda pendiente igual
+    }
+
+    await refreshCart();
+    reset();
+    router.replace("/checkout/success");
+  }
+
   async function handleFinalize() {
     setProcessing(true);
     setError(null);
 
     try {
+      if (checkout.paymentMethod === "plin") {
+        await finalizePlin();
+        return;
+      }
+
       const paymentResult = await processPayment();
 
       if (!paymentResult.success) {

@@ -68,26 +68,15 @@ export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null
   const envio = isPickup ? 0 : (checkout.address.deliveryFee ?? 0);
   const total = subtotal + envio;
 
-  const esPagoManual =
-    checkout.paymentMethod === "plin" ||
-    checkout.paymentMethod === "transfer";
+  const esPagoManual = checkout.paymentMethod === "transfer";
 
-  const manualInfo =
-    checkout.paymentMethod === "plin"
-      ? {
-          icon: "📲",
-          title: "Paga con Plin",
-          hint: "Abre tu app Plin y envía el monto total a nuestro número. Luego coloca aquí el código de operación.",
-          label: "Número de operación de Plin",
-          placeholder: "Ej. 87654321",
-        }
-      : {
-          icon: "🏧",
-          title: "Transferencia bancaria",
-          hint: "Realiza la transferencia a nuestra cuenta y coloca aquí el número de operación o referencia.",
-          label: "Número de operación / referencia",
-          placeholder: "Ej. 0012345",
-        };
+  const manualInfo = {
+    icon: "🏧",
+    title: "Transferencia bancaria",
+    hint: "Realiza la transferencia a nuestra cuenta y coloca aquí el número de operación o referencia.",
+    label: "Número de operación / referencia",
+    placeholder: "Ej. 0012345",
+  };
 
   return (
     <Card className="p-6">
@@ -177,6 +166,17 @@ export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null
             Ahí ingresa tu número de celular Yape y tu código de aprobación
             (en tu app Yape: <strong>Menú → Código de aprobación</strong>). Tu
             pago se acredita al instante a nuestra empresa a través de Culqi.
+          </p>
+        </div>
+      )}
+
+      {checkout.paymentMethod === "plin" && (
+        <div className="mt-6 rounded-xl border border-teal-200 bg-teal-50/60 p-4">
+          <p className="text-sm text-teal-900">
+            Al confirmar, se abrirá el checkout seguro de <strong>Culqi</strong>{" "}
+            con un <strong>código QR</strong>. Escanéalo con tu app Plin (u otra
+            billetera) para pagar; el cobro llega a nuestra empresa a través de
+            Culqi.
           </p>
         </div>
       )}

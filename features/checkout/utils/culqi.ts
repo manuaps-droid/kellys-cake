@@ -124,3 +124,64 @@ export async function chargeWithCulqi(
     }
   });
 }
+
+type CulqiOrderOptions = {
+  amount: number;
+  email: string;
+  description?: string;
+  orderId: string;
+};
+
+/**
+ * Abre el Checkout de Culqi en modo billeteras móviles (Plin/Yape por QR).
+ * Requiere una `orderId` de Culqi creada previamente en el backend.
+ */
+export async function openCulqiBilletera(
+  options: CulqiOrderOptions
+): Promise<void> {
+  const publicKey = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY;
+  if (!publicKey) {
+    throw new Error("Configura NEXT_PUBLIC_CULQI_PUBLIC_KEY en .env.local.");
+  }
+
+  await loadCulqi();
+
+  const Culqi = (window as any).Culqi;
+  Culqi.publicKey = publicKey;
+
+  Culqi.settings({
+    title: "Kelly's Cake",
+    currency: "PEN",
+    description: options.description || "Pedido Kelly's Cake",
+    amount: Math.round(options.amount * 100),
+    order: options.orderId,
+  });
+
+  if (typeof Culqi.options === "function") {
+    Culqi.options({
+      lang: "es",
+      installments: false,
+      paymentMethods: {
+        tarjeta: false,
+        yape: false,
+        bancaMovil: false,
+        agente: false,
+        billetera: true,
+        cuotealo: false,
+      },
+    });
+  }
+
+  return new Promise((resolve) => {
+    // El QR se completa fuera; el pago se confirma vía webhook.
+    (window as any).culqi = function () {
+      resolve();
+    };
+
+    if (typeof Culqi.open === "function") {
+      Culqi.open();
+    }
+
+    resolve();
+  });
+}

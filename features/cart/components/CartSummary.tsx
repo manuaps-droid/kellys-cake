@@ -63,25 +63,22 @@ export default function CartSummary({
 
         {/* Cross-selling topper si el cliente aún no tiene uno en el carrito */}
         {!items.some((it) => getItemNombre(it).toLowerCase().includes("topper")) && (
-          <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-3.5 text-xs text-amber-900 transition hover:bg-amber-50">
-            <div className="flex items-center justify-between font-semibold">
-              <span className="flex items-center gap-1.5">
-                <span>✨</span> ¿Falta el Topper de tu festejo?
-              </span>
-              <span className="text-[11px] text-amber-700 font-bold">+ S/ 15.00</span>
-            </div>
-            <p className="mt-1 text-[11px] text-amber-800/80 leading-relaxed">
-              Personalízalo con el nombre del festejado en segundos.
+          <div className="max-h-12 flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-dashed border-amber-300 bg-amber-50/70 px-3 py-2 transition hover:bg-amber-50">
+            <p className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-amber-900">
+              <span aria-hidden>✨</span>
+              <span className="truncate">¿Falta el topper?</span>
+              <span className="shrink-0 font-bold text-amber-700">+ S/ 15.00</span>
             </p>
+
             <button
               type="button"
               onClick={() => {
                 onClose?.();
                 router.push("/personalizar/topper");
               }}
-              className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg bg-amber-700/10 py-1.5 font-medium text-amber-900 transition hover:bg-amber-700 hover:text-white"
+              className="shrink-0 rounded-lg bg-amber-700/10 px-3 py-1.5 text-[11px] font-medium whitespace-nowrap text-amber-900 transition hover:bg-amber-700 hover:text-white"
             >
-              Diseñar mi topper ahora →
+              Diseñar topper →
             </button>
           </div>
         )}

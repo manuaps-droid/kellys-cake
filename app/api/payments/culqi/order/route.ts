@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
       email?: string;
       description?: string;
       deliveryFee?: number;
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
     };
 
     const email = body.email || user.email || "";
@@ -76,7 +79,12 @@ export async function POST(request: NextRequest) {
         currency_code: "PEN",
         description: body.description || "Pedido Kelly's Cake",
         order_number: orderNumber,
-        client_details: { email },
+        client_details: {
+          first_name: body.firstName || undefined,
+          last_name: body.lastName || undefined,
+          email,
+          phone_number: body.phone || undefined,
+        },
         expiration_date: expiration,
         confirm: true,
       }),

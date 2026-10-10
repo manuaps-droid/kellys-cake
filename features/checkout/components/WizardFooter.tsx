@@ -177,6 +177,9 @@ export default function WizardFooter() {
         email,
         description: title,
         deliveryFee,
+        firstName: checkout.customer.firstName,
+        lastName: checkout.customer.lastName,
+        phone: checkout.customer.phone,
       }),
     });
 

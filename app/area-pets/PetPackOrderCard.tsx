@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ShoppingBag, Sparkles, Check, Heart } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { addPetPackToCartAction } from "@/features/cart/actions/add-pet-pack-to-cart.action";
 import { useCart } from "@/features/cart/hooks/useCart";
 
 export default function PetPackOrderCard() {
-  const router = useRouter();
   const { openDrawer, refreshCart } = useCart();
   const [nombreMascota, setNombreMascota] = useState("");
   const [tipoMascota, setTipoMascota] = useState<"perro" | "gato">("perro");
@@ -34,8 +32,12 @@ export default function PetPackOrderCard() {
       await refreshCart();
       toast.success("¡Pack Celebración Pet agregado a tu carrito! 🐾");
       openDrawer();
-    } catch (err: any) {
-      toast.error(err.message || "Error al conectar con el carrito.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Error al conectar con el carrito.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -122,11 +124,18 @@ export default function PetPackOrderCard() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-kec-charcoal px-6 py-3.5 text-sm font-semibold text-kec-cream shadow-md transition-all duration-300 hover:bg-kec-deep hover:shadow-xl hover:scale-[1.01] disabled:opacity-50"
+            className="group relative mt-2 inline-flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-kec-rose-gold px-6 py-4 text-sm font-extrabold uppercase tracking-wide text-white shadow-xl shadow-orange-500/40 ring-2 ring-white/80 transition-all duration-300 hover:scale-[1.02] hover:brightness-110 hover:shadow-2xl hover:shadow-orange-500/50 active:scale-95 disabled:opacity-60"
           >
-            <ShoppingBag className="h-4 w-4 text-kec-rose-gold" />
-            {loading ? "Agregando..." : "Agregar al Carrito (S/ 69)"}
+            <ShoppingBag className="relative z-10 h-5 w-5 text-white" />
+            <span className="relative z-10">
+              {loading ? "Agregando..." : "Agregar al Carrito · S/ 69"}
+            </span>
+            <span className="absolute inset-0 z-0 translate-y-full bg-gradient-to-r from-white/25 to-kec-rose-gold/30 transition-transform duration-300 group-hover:translate-y-0" />
           </button>
+
+          <p className="mt-2 text-center text-[11px] font-semibold text-kec-mocha">
+            🐾 Pack completo de celebración · Pago 100% seguro
+          </p>
         </form>
       </div>
 

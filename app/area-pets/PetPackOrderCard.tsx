@@ -124,13 +124,10 @@ export default function PetPackOrderCard() {
           <button
             type="submit"
             disabled={loading}
-            className="group relative mt-2 inline-flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-kec-rose-gold px-6 py-4 text-sm font-extrabold uppercase tracking-wide text-white shadow-xl shadow-orange-500/40 ring-2 ring-white/80 transition-all duration-300 hover:scale-[1.02] hover:brightness-110 hover:shadow-2xl hover:shadow-orange-500/50 active:scale-95 disabled:opacity-60"
+            className="mt-2 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-orange-500 px-6 py-4 text-sm font-extrabold uppercase tracking-wide text-white shadow-xl shadow-orange-500/40 ring-2 ring-white/80 transition-all duration-300 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/50 active:scale-95 disabled:opacity-60"
           >
-            <ShoppingBag className="relative z-10 h-5 w-5 text-white" />
-            <span className="relative z-10">
-              {loading ? "Agregando..." : "Agregar al Carrito · S/ 69"}
-            </span>
-            <span className="absolute inset-0 z-0 translate-y-full bg-gradient-to-r from-white/25 to-kec-rose-gold/30 transition-transform duration-300 group-hover:translate-y-0" />
+            <ShoppingBag className="h-5 w-5 text-white" />
+            {loading ? "Agregando..." : "Agregar al Carrito · S/ 69"}
           </button>
 
           <p className="mt-2 text-center text-[11px] font-semibold text-kec-mocha">

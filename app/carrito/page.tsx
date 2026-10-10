@@ -13,7 +13,7 @@ export default async function CarritoPage() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-cake-ivory py-12">
+      <main className="min-h-screen bg-cake-ivory pt-6 pb-12">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-10 flex items-center justify-between gap-4">
             <h1 className="text-4xl font-bold text-cake-espresso">

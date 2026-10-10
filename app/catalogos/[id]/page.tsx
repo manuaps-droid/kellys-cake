@@ -194,7 +194,7 @@ export default async function CatalogDetailPage({ params }: Props) {
       <Navbar />
       <main className="flex-1">
         {/* Hero del catálogo */}
-        <section className="relative bg-kc-charcoal py-20">
+        <section className="relative bg-kc-charcoal pt-10 pb-20">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <h1 className="font-[family-name:var(--font-playfair)] text-5xl font-semibold text-kc-cream lg:text-6xl">
               {catalog.nombre}

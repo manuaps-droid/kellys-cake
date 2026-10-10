@@ -14,7 +14,7 @@ export default async function MiCuentaLayout({
     <div className="min-h-screen bg-kc-ivory flex flex-col">
       <Navbar />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8 lg:pt-8 lg:pb-12">
         <div className="flex flex-col lg:flex-row lg:gap-8">
           {/* Sidebar Area */}
           <aside className="w-full lg:w-64 flex-shrink-0">

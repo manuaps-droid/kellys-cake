@@ -247,7 +247,7 @@ export default async function ArmarCajaPage() {
       <Navbar />
 
       {/* Hero compacto */}
-      <section className="relative overflow-hidden bg-kc-charcoal py-12 text-center text-kc-cream lg:py-16">
+      <section className="relative overflow-hidden bg-kc-charcoal pt-6 pb-12 text-center text-kc-cream lg:pt-8 lg:pb-16">
         <div
           aria-hidden
           className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-kc-rose-gold/20 blur-3xl"

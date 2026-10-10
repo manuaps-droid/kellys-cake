@@ -27,7 +27,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--kc-blush)_0%,_transparent_50%)] opacity-40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--kc-sand)_0%,_transparent_50%)] opacity-40" />
 
-      <div className="relative mx-auto flex max-w-7xl flex-col-reverse items-center gap-10 px-4 py-8 sm:px-6 sm:py-16 lg:flex-row lg:gap-16 lg:py-28">
+      <div className="relative mx-auto flex max-w-7xl flex-col-reverse items-center gap-10 px-4 pt-6 pb-8 sm:px-6 sm:pt-8 sm:pb-16 lg:flex-row lg:gap-16 lg:pt-16 lg:pb-28">
         <motion.div 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}

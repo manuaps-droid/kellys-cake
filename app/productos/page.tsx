@@ -316,7 +316,7 @@ export default async function ProductosPage({
     <>
       <Navbar />
       {/* Hero de tienda */}
-      <section className="relative overflow-hidden bg-kc-charcoal py-16 text-center text-kc-cream lg:py-20">
+      <section className="relative overflow-hidden bg-kc-charcoal pt-8 pb-16 text-center text-kc-cream lg:pt-12 lg:pb-20">
         <div
           aria-hidden
           className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-kc-rose-gold/20 blur-3xl"

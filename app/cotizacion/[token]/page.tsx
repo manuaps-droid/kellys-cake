@@ -92,7 +92,7 @@ export default async function CotizacionPublicPage({ params }: Props) {
 
       <Navbar />
 
-      <main className="bg-kc-cream py-12">
+      <main className="bg-kc-cream pt-6 pb-12">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           {/* Acciones (no se imprimen) */}
           <div className="no-print mb-8 flex flex-wrap items-center justify-between gap-4">

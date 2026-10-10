@@ -20,7 +20,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-cake-ivory px-6 py-16">
+      <main className="min-h-screen bg-cake-ivory px-6 pt-8 pb-16">
         <div className="mx-auto max-w-2xl rounded-3xl bg-white p-12 text-center shadow">
           <div className="text-6xl">🎉</div>
 

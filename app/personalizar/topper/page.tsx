@@ -92,7 +92,7 @@ export default async function DisenarTopperPage() {
   return (
     <div className="flex-1 bg-kc-cream">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-kc-charcoal py-20">
+        <section className="relative overflow-hidden bg-kc-charcoal pt-10 pb-20">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <p className="text-xs font-semibold tracking-[0.3em] text-kc-rose-gold uppercase">
               Kelly&apos;s Cake · Toppers en Impresión 3D

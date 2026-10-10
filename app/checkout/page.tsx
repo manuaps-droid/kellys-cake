@@ -14,7 +14,7 @@ export default async function CheckoutPage() {
     <>
       <Navbar />
 
-      <main className="mx-auto max-w-2xl px-6 py-12">
+      <main className="mx-auto max-w-2xl px-6 pt-6 pb-12">
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-bold text-cake-espresso">
             Finalizar compra

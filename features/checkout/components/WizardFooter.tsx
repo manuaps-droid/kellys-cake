@@ -29,7 +29,7 @@ export default function WizardFooter() {
   } = useWizard();
 
   const { checkout, reset } = useCheckout();
-  const { subtotal: cartSubtotal } = useCart();
+  const { subtotal: cartSubtotal, refreshCart } = useCart();
 
   const isPickup = checkout.deliveryMethod === "pickup";
   const deliveryFee = isPickup ? 0 : (checkout.address.deliveryFee ?? 0);
@@ -200,6 +200,7 @@ export default function WizardFooter() {
         return;
       }
 
+      await refreshCart();
       reset();
       router.replace("/checkout/success");
     } catch (err) {

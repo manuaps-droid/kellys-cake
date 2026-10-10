@@ -13,7 +13,7 @@ export default function MercadoPagoCallback() {
   const [state, setState] = useState<"loading" | "ok" | "error" | "ignored">("loading");
   const [message, setMessage] = useState("");
 
-  const { subtotal: cartSubtotal } = useCart();
+  const { subtotal: cartSubtotal, refreshCart } = useCart();
   const { checkout, reset } = useCheckout();
 
   useEffect(() => {
@@ -59,6 +59,7 @@ export default function MercadoPagoCallback() {
         }
 
         reset();
+        await refreshCart();
         setState("ok");
       } catch {
         setState("error");
@@ -67,7 +68,7 @@ export default function MercadoPagoCallback() {
     }
 
     void confirm();
-  }, [searchParams, cartSubtotal, checkout, reset]);
+  }, [searchParams, cartSubtotal, checkout, reset, refreshCart]);
 
   if (state === "loading") {
     return (

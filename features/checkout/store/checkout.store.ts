@@ -40,6 +40,8 @@ interface CheckoutStore {
     paymentType: CheckoutData["paymentType"]
   ) => void;
 
+  setPaymentReference: (reference: string) => void;
+
   setNeedsInvoice: (needsInvoice: boolean) => void;
 
   updateInvoice: (
@@ -76,6 +78,7 @@ const initialData: CheckoutData = {
 
   paymentMethod: "",
   paymentType: "total",
+  paymentReference: "",
   needsInvoice: false,
   invoice: {
     ruc: "",
@@ -177,6 +180,14 @@ export const useCheckoutStore = create<CheckoutStore>()(
           },
         })),
 
+      setPaymentReference: (paymentReference) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            paymentReference,
+          },
+        })),
+
       setNeedsInvoice: (needsInvoice) =>
         set((state) => ({
           data: {
@@ -206,7 +217,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
     }),
     {
       name: "checkout-data",
-      version: 1,
+      version: 2,
       migrate: (persistedState: unknown) => {
         const state = persistedState as { data: Record<string, unknown> } | undefined;
         if (!state?.data || state.data.invoice === undefined) {

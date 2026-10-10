@@ -1,10 +1,14 @@
 import { getClientPrefillData } from "@/features/checkout/actions/get-client-prefill.action";
+import { getPublicContacto } from "@/features/admin/configuracion/queries/public-config.query";
 
 import Navbar from "@/components/layout/Navbar";
 import CheckoutWizard from "@/features/checkout/components/CheckoutWizard";
 
 export default async function CheckoutPage() {
   const clientData = await getClientPrefillData();
+  const contacto = await getPublicContacto();
+
+  const pagoNumero = contacto?.whatsapp || contacto?.telefono || null;
 
   return (
     <>
@@ -21,7 +25,7 @@ export default async function CheckoutPage() {
           </p>
         </div>
 
-        <CheckoutWizard clientData={clientData} />
+        <CheckoutWizard clientData={clientData} pagoNumero={pagoNumero} />
       </main>
     </>
   );

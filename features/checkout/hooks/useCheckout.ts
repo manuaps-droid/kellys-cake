@@ -11,6 +11,7 @@ export function useCheckout() {
     setDeliverySchedule,
     setPaymentMethod,
     setPaymentType,
+    setPaymentReference,
     setNeedsInvoice,
     updateInvoice,
     reset,
@@ -34,6 +35,8 @@ export function useCheckout() {
     setPaymentMethod,
 
     setPaymentType,
+
+    setPaymentReference,
 
     setNeedsInvoice,
 

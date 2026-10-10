@@ -44,6 +44,7 @@ export interface CheckoutData {
   address: AddressData;
   paymentMethod: PaymentMethod | "";
   paymentType: PaymentType;
+  paymentReference: string;
   needsInvoice: boolean;
   invoice: InvoiceData;
 }

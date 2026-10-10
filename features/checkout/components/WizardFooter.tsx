@@ -109,7 +109,7 @@ export default function WizardFooter() {
           return { success: false, message: data.message || "Error al procesar el pago." };
         }
 
-        return { success: true, reference: data.reference ?? data.chargeId };
+        return { success: true, reference: data.chargeId ?? data.reference };
       } catch (err) {
         return {
           success: false,
@@ -142,6 +142,23 @@ export default function WizardFooter() {
 
       window.location.assign(data.init_point);
       return { success: true, redirect: true };
+    }
+
+    // Pagos manuales: Yape, Plin y transferencia bancaria.
+    // Se exige el número de operación y el pedido queda como
+    // "pendiente" hasta que el equipo verifique el pago.
+    if (method === "yape" || method === "plin" || method === "transfer") {
+      const reference = checkout.paymentReference?.trim();
+
+      if (!reference) {
+        return {
+          success: false,
+          message:
+            "Ingresa el número de operación del pago para continuar con tu pedido.",
+        };
+      }
+
+      return { success: true, reference };
     }
 
     return { success: true };

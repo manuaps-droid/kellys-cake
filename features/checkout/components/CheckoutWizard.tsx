@@ -20,9 +20,10 @@ import type { ClientPrefillData } from "../actions/get-client-prefill.action";
 
 type Props = {
   clientData: ClientPrefillData | null;
+  pagoNumero?: string | null;
 };
 
-function renderStep(step: CheckoutStep) {
+function renderStep(step: CheckoutStep, pagoNumero?: string | null) {
   switch (step) {
     case CheckoutStep.CUSTOMER:
       return <StepCustomer />;
@@ -34,7 +35,7 @@ function renderStep(step: CheckoutStep) {
       return <StepAddress />;
 
     case CheckoutStep.PAYMENT:
-      return <StepPayment />;
+      return <StepPayment pagoNumero={pagoNumero} />;
 
     case CheckoutStep.REVIEW:
       return <StepReview />;
@@ -44,7 +45,7 @@ function renderStep(step: CheckoutStep) {
   }
 }
 
-export default function CheckoutWizard({ clientData }: Props) {
+export default function CheckoutWizard({ clientData, pagoNumero }: Props) {
   const { currentStep } = useWizard();
   const { checkout, prefillCustomer } = useCheckout();
 
@@ -78,7 +79,7 @@ export default function CheckoutWizard({ clientData }: Props) {
       />
 
       <div className="min-h-[450px]">
-        {renderStep(currentStep)}
+        {renderStep(currentStep, pagoNumero)}
       </div>
 
       <WizardFooter />

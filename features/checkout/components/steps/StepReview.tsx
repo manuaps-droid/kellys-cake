@@ -81,6 +81,13 @@ export default function StepReview() {
           </span>
         </p>
 
+        {checkout.paymentReference && (
+          <p>
+            <strong>N° de operación:</strong>{" "}
+            {checkout.paymentReference}
+          </p>
+        )}
+
         {checkout.needsInvoice && (
           <div className="rounded-lg border border-cake-gold/20 bg-cake-ivory/30 p-4">
             <p className="font-semibold text-cake-espresso">

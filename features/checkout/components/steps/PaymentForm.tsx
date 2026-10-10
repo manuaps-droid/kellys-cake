@@ -45,11 +45,12 @@ const paymentOptions: { value: PaymentMethod; label: string; description: string
   },
 ];
 
-export default function PaymentForm() {
+export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null }) {
   const {
     checkout,
     setPaymentMethod,
     setPaymentType,
+    setPaymentReference,
     setNeedsInvoice,
     updateInvoice,
   } = useCheckout();
@@ -63,6 +64,36 @@ export default function PaymentForm() {
   const isPickup = checkout.deliveryMethod === "pickup";
   const envio = isPickup ? 0 : (checkout.address.deliveryFee ?? 0);
   const total = subtotal + envio;
+
+  const esPagoManual =
+    checkout.paymentMethod === "yape" ||
+    checkout.paymentMethod === "plin" ||
+    checkout.paymentMethod === "transfer";
+
+  const manualInfo =
+    checkout.paymentMethod === "yape"
+      ? {
+          icon: "📱",
+          title: "Paga con Yape",
+          hint: "Abre tu app Yape y envía el monto total a nuestro número. Luego coloca aquí el código de operación que te dio Yape.",
+          label: "Número de operación de Yape",
+          placeholder: "Ej. 12345678",
+        }
+      : checkout.paymentMethod === "plin"
+        ? {
+            icon: "📲",
+            title: "Paga con Plin",
+            hint: "Abre tu app Plin y envía el monto total a nuestro número. Luego coloca aquí el código de operación.",
+            label: "Número de operación de Plin",
+            placeholder: "Ej. 87654321",
+          }
+        : {
+            icon: "🏧",
+            title: "Transferencia bancaria",
+            hint: "Realiza la transferencia a nuestra cuenta y coloca aquí el número de operación o referencia.",
+            label: "Número de operación / referencia",
+            placeholder: "Ej. 0012345",
+          };
 
   return (
     <Card className="p-6">
@@ -144,6 +175,52 @@ export default function PaymentForm() {
           );
         })}
       </div>
+
+      {esPagoManual && (
+        <div className="mt-6 rounded-xl border-2 border-cake-gold/30 bg-cake-ivory/40 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">{manualInfo.icon}</span>
+
+            <div className="flex-1">
+              <p className="font-semibold text-cake-espresso">
+                {manualInfo.title}
+              </p>
+
+              <p className="mt-1 text-sm text-cake-chocolate/80">
+                {manualInfo.hint}
+              </p>
+
+              {pagoNumero ? (
+                <p className="mt-3 rounded-lg bg-white/80 px-3 py-2 text-sm text-cake-espresso">
+                  <strong>Número de {checkout.paymentMethod}:</strong>{" "}
+                  {pagoNumero}
+                </p>
+              ) : (
+                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Escríbenos por WhatsApp y te compartimos el número para tu pago.
+                </p>
+              )}
+
+              <label className="mt-4 mb-1 block text-sm font-medium text-cake-chocolate">
+                {manualInfo.label}
+              </label>
+
+              <input
+                type="text"
+                value={checkout.paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                placeholder={manualInfo.placeholder}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-cake-gold focus:ring-2 focus:ring-cake-gold/20"
+              />
+
+              <p className="mt-1 text-xs text-cake-chocolate/60">
+                Tu pedido quedará como &quot;pendiente de verificación&quot; hasta
+                que confirmemos el pago.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {checkout.paymentMethod && (
         <div className="mt-6 rounded-lg border border-cake-gold/20 bg-cake-sand/50 p-4">

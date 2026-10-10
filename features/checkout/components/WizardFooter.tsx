@@ -211,8 +211,13 @@ export default function WizardFooter() {
         description: title,
         orderId: data.orderId,
       });
-    } catch {
-      // Si el modal no logra abrirse, el pedido queda pendiente igual
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo abrir el pago con Plin."
+      );
+      return;
     }
 
     await refreshCart();

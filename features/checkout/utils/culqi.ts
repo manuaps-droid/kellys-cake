@@ -157,31 +157,36 @@ export async function openCulqiBilletera(
     order: options.orderId,
   });
 
-  if (typeof Culqi.options === "function") {
-    Culqi.options({
-      lang: "es",
-      installments: false,
-      paymentMethods: {
-        tarjeta: false,
-        yape: false,
-        bancaMovil: false,
-        agente: false,
-        billetera: true,
-        cuotealo: false,
-      },
-    });
-  }
+  Culqi.settings({
+    title: "Kelly's Cake",
+    currency: "PEN",
+    description: options.description || "Pedido Kelly's Cake",
+    amount: Math.round(options.amount * 100),
+    order: options.orderId,
+  });
 
-  return new Promise((resolve) => {
-    // El QR se completa fuera; el pago se confirma vía webhook.
+  // Con una orden activa, Culqi muestra los medios de pago que la orden
+  // soporta (billeteras móviles/QR). No forzamos paymentMethods aquí.
+  return new Promise((resolve, reject) => {
     (window as any).culqi = function () {
-      resolve();
+      const C = (window as any).Culqi;
+      if (C?.error) {
+        reject(
+          new Error(
+            C.error.user_message ||
+              C.error.merchant_message ||
+              "No se pudo cargar el pago con billeteras móviles."
+          )
+        );
+        return;
+      }
+      if (C?.order) resolve();
     };
 
     if (typeof Culqi.open === "function") {
       Culqi.open();
+    } else {
+      reject(new Error("No se pudo iniciar el checkout de Culqi."));
     }
-
-    resolve();
   });
 }

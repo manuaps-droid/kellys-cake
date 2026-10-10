@@ -51,6 +51,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (amountInCents > 50000) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "El pago con Plin (billetera móvil) admite un máximo de S/ 500. Elige tarjeta o transferencia.",
+        },
+        { status: 400 }
+      );
+    }
 
     const orderNumber = `kc-${Date.now()}`;
     const expiration = Math.floor(Date.now() / 1000) + 30 * 60; // 30 minutos de vigencia del QR

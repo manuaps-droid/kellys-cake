@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createAdminClient } from "@/lib/supabase/admin";
-
 import { getCurrentClient } from "@/features/auth/services/auth.server";
+import { resolveTopperPrecioService } from "@/features/customization/services/topper-price.service";
 
 export type AddTopperInput = {
   productoId: string;
@@ -38,36 +37,10 @@ export async function addTopperToCartAction(input: AddTopperInput) {
     };
   }
 
-  const admin = createAdminClient();
-
-  let precio: number | null = null;
-
-  if (input.catalogoImagenId) {
-    const { data: diseno } = await admin
-      .from("catalogo_imagenes")
-      .select("precio")
-      .eq("id", input.catalogoImagenId)
-      .maybeSingle();
-
-    precio = diseno?.precio != null ? Number(diseno.precio) : null;
-  }
-
-  if (precio == null) {
-    const { data: producto } = await admin
-      .from("foodos_productos")
-      .select("precio")
-      .eq("id", input.productoId)
-      .maybeSingle();
-
-    precio = producto?.precio != null ? Number(producto.precio) : null;
-  }
-
-  if (precio == null || precio <= 0) {
-    return {
-      success: false,
-      message: "No se pudo calcular el precio del topper.",
-    };
-  }
+  const precio = await resolveTopperPrecioService({
+    productoId: input.productoId,
+    catalogoImagenId: input.catalogoImagenId,
+  });
 
   const { supabase, cliente } = await getCurrentClient();
 

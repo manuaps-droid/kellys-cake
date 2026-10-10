@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import TopperPicker from "@/features/customization/components/TopperPicker";
 import {
   TOPPER_CATALOGO_ID,
+  TOPPER_PRECIO_BASE,
   TOPPER_PRODUCTO_SLUG,
 } from "@/features/customization/constants/topper.constants";
 
@@ -45,7 +46,9 @@ export default async function DisenarTopperPage() {
 
   const productoId = producto.id as string;
   const precioBase =
-    producto.precio != null ? Number(producto.precio) : 16.99;
+    producto.precio != null
+      ? Number(producto.precio)
+      : TOPPER_PRECIO_BASE;
 
   const { data: rels } = await supabase
     .from("catalogo_imagenes")

@@ -3,10 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export interface FinalizeTopperOrderInput {
   clienteId: string;
   productoId: string;
+  precio: number;
   nombre: string;
   descripcion: string;
   imagen: string;
-  catalogoImagenId?: string;
 }
 
 /**
@@ -20,33 +20,7 @@ export async function finalizeTopperRepository(
 ): Promise<{ id: string; numero: number; total: number }> {
   const admin = createAdminClient();
 
-  let precio: number | null = null;
-
-  if (input.catalogoImagenId) {
-    const { data: diseno } = await admin
-      .from("catalogo_imagenes")
-      .select("precio")
-      .eq("id", input.catalogoImagenId)
-      .maybeSingle();
-
-    precio = diseno?.precio != null ? Number(diseno.precio) : null;
-  }
-
-  if (precio == null) {
-    const { data: producto } = await admin
-      .from("productos")
-      .select("precio")
-      .eq("id", input.productoId)
-      .maybeSingle();
-
-    precio = producto?.precio != null ? Number(producto.precio) : null;
-  }
-
-  if (precio == null || precio <= 0) {
-    throw new Error("No se pudo calcular el precio del topper.");
-  }
-
-  const total = Math.round(precio * 100) / 100;
+  const total = Math.round(input.precio * 100) / 100;
 
   const { data: pedido, error: pedidoError } = await admin
     .from("pedidos")

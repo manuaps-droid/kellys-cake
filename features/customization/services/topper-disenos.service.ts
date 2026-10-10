@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   TOPPER_CATALOGO_ID,
+  TOPPER_PRECIO_BASE,
   TOPPER_PRODUCTO_SLUG,
 } from "../constants/topper.constants";
 
@@ -21,7 +22,7 @@ export async function getTopperInfo(): Promise<TopperInfo | null> {
   const supabase = createAdminClient();
 
   const { data: producto } = await supabase
-    .from("foodos_productos")
+    .from("productos")
     .select("id, precio")
     .eq("slug", TOPPER_PRODUCTO_SLUG)
     .eq("estado", "publicado")
@@ -61,7 +62,8 @@ export async function getTopperInfo(): Promise<TopperInfo | null> {
 
   return {
     productoId: producto.id as string,
-    precioBase: (producto.precio as number | null) ?? 16.99,
+    precioBase:
+      (producto.precio as number | null) ?? TOPPER_PRECIO_BASE,
     disenos,
   };
 }

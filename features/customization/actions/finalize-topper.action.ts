@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentClient } from "@/features/auth/services/auth.server";
 
+import { resolveTopperPrecioService } from "../services/topper-price.service";
 import { finalizeTopperService } from "../services/finalize-topper.service";
 
 export type FinalizeTopperInput = {
@@ -38,13 +39,18 @@ export async function finalizeTopperAction(input: FinalizeTopperInput) {
   try {
     const { cliente } = await getCurrentClient();
 
+    const precio = await resolveTopperPrecioService({
+      productoId: input.productoId,
+      catalogoImagenId: input.catalogoImagenId,
+    });
+
     const pedido = await finalizeTopperService({
       clienteId: cliente.id,
       productoId: input.productoId,
+      precio,
       nombre,
       descripcion: input.descripcion ?? nombre,
       imagen: input.imagen,
-      catalogoImagenId: input.catalogoImagenId,
     });
 
     revalidatePath("/admin/pedidos");

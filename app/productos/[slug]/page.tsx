@@ -210,6 +210,18 @@ export default async function ProductoDetallePage({
                 </p>
               )}
 
+              {/* Descripción larga */}
+              {descripcionLarga && (
+                <div className="mt-8 border-t border-kc-sand/60 pt-8">
+                  <h2 className="text-xs font-semibold tracking-widest text-kc-charcoal uppercase">
+                    Sobre este producto
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed whitespace-pre-line text-kc-mocha">
+                    {descripcionLarga}
+                  </p>
+                </div>
+              )}
+
               {/* Precio + CTA */}
               <div className="mt-8 border-t border-kc-sand/60 pt-8">
                 {presentaciones.length > 0 ? (
@@ -294,18 +306,6 @@ export default async function ProductoDetallePage({
                   </li>
                 ))}
               </ul>
-
-              {/* Descripción larga */}
-              {descripcionLarga && (
-                <div className="mt-8 border-t border-kc-sand/60 pt-8">
-                  <h2 className="text-xs font-semibold tracking-widest text-kc-charcoal uppercase">
-                    Sobre este producto
-                  </h2>
-                  <p className="mt-3 text-sm leading-relaxed whitespace-pre-line text-kc-mocha">
-                    {descripcionLarga}
-                  </p>
-                </div>
-              )}
 
               <p className="mt-6 text-xs text-kc-mocha/80 italic">
                 * El diseño final puede variar ligeramente, cada pastel es

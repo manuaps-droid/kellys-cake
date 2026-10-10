@@ -8,6 +8,7 @@ import DataTableEmpty from "@/components/datatable/DataTableEmpty";
 import DataTableHeader from "@/components/datatable/DataTableHeader";
 
 import OrderStatusSelect from "./OrderStatusSelect";
+import DeleteOrderButton from "./DeleteOrderButton";
 
 import type { AdminOrder } from "../types/order.type";
 
@@ -109,17 +110,24 @@ export default function OrdersTable({
             </td>
 
             <td className="px-6 py-4 text-right">
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-              >
-                <Link
-                  href={`/admin/pedidos/${order.id}`}
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
                 >
-                  Ver detalle
-                </Link>
-              </Button>
+                  <Link
+                    href={`/admin/pedidos/${order.id}`}
+                  >
+                    Ver detalle
+                  </Link>
+                </Button>
+
+                <DeleteOrderButton
+                  orderId={order.id}
+                  orderNumber={order.numero}
+                />
+              </div>
             </td>
           </tr>
         ))}

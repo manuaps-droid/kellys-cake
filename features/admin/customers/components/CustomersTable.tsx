@@ -6,6 +6,8 @@ import DataTable from "@/components/datatable/DataTable";
 import DataTableEmpty from "@/components/datatable/DataTableEmpty";
 import DataTableHeader from "@/components/datatable/DataTableHeader";
 
+import DeleteCustomerButton from "./DeleteCustomerButton";
+
 import type { AdminCustomer } from "../types/customer.type";
 
 type CustomersTableProps = {
@@ -98,17 +100,24 @@ export default function CustomersTable({
             </td>
 
             <td className="px-6 py-4 text-right">
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-              >
-                <Link
-                  href={`/admin/clientes/${customer.id}`}
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
                 >
-                  Ver detalle
-                </Link>
-              </Button>
+                  <Link
+                    href={`/admin/clientes/${customer.id}`}
+                  >
+                    Ver detalle
+                  </Link>
+                </Button>
+
+                <DeleteCustomerButton
+                  customerId={customer.id}
+                  customerName={`${customer.nombre} ${customer.apellidos ?? ""}`}
+                />
+              </div>
             </td>
           </tr>
         ))}

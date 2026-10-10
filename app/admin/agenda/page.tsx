@@ -13,6 +13,7 @@ import { ORDER_STATUS_LABEL } from "@/features/orders/constants/order-status";
 import AlertasReclamosAgenda, {
   type AlertaReclamo,
 } from "@/features/reclamos/components/admin/AlertasReclamosAgenda";
+import DeleteOrderButton from "@/features/admin/orders/components/DeleteOrderButton";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   diasHabilesRestantes,
@@ -201,79 +202,91 @@ export default async function AdminAgendaPage({
               ) : (
                 <div className="flex flex-col gap-2">
                   {orders.map((order) => (
-                    <Link
+                    <div
                       key={order.id}
-                      href={`/admin/pedidos/${order.id}`}
-                      className="group block rounded-lg border border-cake-gold/30 bg-cake-cream p-3 transition hover:border-cake-gold"
+                      className="rounded-lg border border-cake-gold/30 bg-cake-cream transition hover:border-cake-gold"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-gray-700">
-                          {order.hora_entrega
-                            ? `#${order.numero ?? "—"} · ${order.hora_entrega.slice(0, 5)}`
-                            : `#${order.numero ?? "—"}`}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            STATUS_BADGE[order.estado] ??
-                            "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {ORDER_STATUS_LABEL[
-                            order.estado as keyof typeof ORDER_STATUS_LABEL
-                          ] ?? order.estado}
-                        </span>
-                      </div>
+                      <Link
+                        href={`/admin/pedidos/${order.id}`}
+                        className="group block rounded-lg p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-gray-700">
+                            {order.hora_entrega
+                              ? `#${order.numero ?? "—"} · ${order.hora_entrega.slice(0, 5)}`
+                              : `#${order.numero ?? "—"}`}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              STATUS_BADGE[order.estado] ??
+                              "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {ORDER_STATUS_LABEL[
+                              order.estado as keyof typeof ORDER_STATUS_LABEL
+                            ] ?? order.estado}
+                          </span>
+                        </div>
 
-                      <p className="mt-2 text-sm font-medium text-gray-800">
-                        {order.cliente?.nombre ??
-                          "Cliente"}
-                      </p>
-
-                      <div className="mt-2 flex items-center gap-1.5">
-                        {order.items
-                          .slice(0, 4)
-                          .map((item) =>
-                            item.imagen ? (
-                              <div
-                                key={item.id}
-                                className="relative h-10 w-10 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
-                              >
-                                <Image
-                                  src={item.imagen}
-                                  alt={item.nombre}
-                                  fill
-                                  sizes="40px"
-                                  className="object-cover"
-                                />
-                              </div>
-                            ) : null
-                          )}
-
-                        <p className="line-clamp-2 text-xs text-gray-500">
-                          {order.items
-                            .slice(0, 3)
-                            .map(
-                              (item) =>
-                                `${item.cantidad}x ${item.nombre}`
-                            )
-                            .join(", ")}
-                          {order.items.length > 3
-                            ? ` +${order.items.length - 3} más`
-                            : ""}
+                        <p className="mt-2 text-sm font-medium text-gray-800">
+                          {order.cliente?.nombre ??
+                            "Cliente"}
                         </p>
-                      </div>
 
-                      <div className="mt-2 flex items-center justify-between border-t border-cake-gold/20 pt-2">
-                        <span className="text-xs font-medium text-gray-600">
-                          {TIPO_ENTREGA_LABEL[
-                            order.tipo_entrega ?? ""
-                          ] ?? "Entrega"}
-                        </span>
-                        <span className="text-xs font-semibold text-cake-gold">
-                          S/ {Number(order.total).toFixed(2)}
-                        </span>
+                        <div className="mt-2 flex items-center gap-1.5">
+                          {order.items
+                            .slice(0, 4)
+                            .map((item) =>
+                              item.imagen ? (
+                                <div
+                                  key={item.id}
+                                  className="relative h-10 w-10 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
+                                >
+                                  <Image
+                                    src={item.imagen}
+                                    alt={item.nombre}
+                                    fill
+                                    sizes="40px"
+                                    className="object-cover"
+                                  />
+                                </div>
+                              ) : null
+                            )}
+
+                          <p className="line-clamp-2 text-xs text-gray-500">
+                            {order.items
+                              .slice(0, 3)
+                              .map(
+                                (item) =>
+                                  `${item.cantidad}x ${item.nombre}`
+                              )
+                              .join(", ")}
+                            {order.items.length > 3
+                              ? ` +${order.items.length - 3} más`
+                              : ""}
+                          </p>
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between border-t border-cake-gold/20 pt-2">
+                          <span className="text-xs font-medium text-gray-600">
+                            {TIPO_ENTREGA_LABEL[
+                              order.tipo_entrega ?? ""
+                            ] ?? "Entrega"}
+                          </span>
+                          <span className="text-xs font-semibold text-cake-gold">
+                            S/ {Number(order.total).toFixed(2)}
+                          </span>
+                        </div>
+                      </Link>
+
+                      <div className="flex items-center justify-end border-t border-cake-gold/20 px-2 py-1.5">
+                        <DeleteOrderButton
+                          orderId={order.id}
+                          orderNumber={order.numero}
+                          compact
+                        />
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               )}
@@ -294,52 +307,64 @@ export default async function AdminAgendaPage({
 
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {sinFecha.map((order) => (
-              <Link
+              <div
                 key={order.id}
-                href={`/admin/pedidos/${order.id}`}
-                className="rounded-lg border border-amber-200 bg-white p-4 transition hover:border-amber-400"
+                className="rounded-lg border border-amber-200 bg-white transition hover:border-amber-400"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-gray-700">
-                    #{order.numero ?? "—"}
-                  </span>
-                  <span className="text-xs font-semibold text-cake-gold">
-                    S/ {Number(order.total).toFixed(2)}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-medium text-gray-800">
-                  {order.cliente?.nombre ?? "Cliente"}
-                </p>
-                <div className="mt-2 flex items-center gap-1.5">
-                  {order.items
-                    .slice(0, 4)
-                    .map((item) =>
-                      item.imagen ? (
-                        <div
-                          key={item.id}
-                          className="relative h-10 w-10 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
-                        >
-                          <Image
-                            src={item.imagen}
-                            alt={item.nombre}
-                            fill
-                            sizes="40px"
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : null
-                    )}
-                  <p className="text-xs text-gray-500">
-                    {order.items
-                      .slice(0, 3)
-                      .map(
-                        (item) =>
-                          `${item.cantidad}x ${item.nombre}`
-                      )
-                      .join(", ")}
+                <Link
+                  href={`/admin/pedidos/${order.id}`}
+                  className="block rounded-lg p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-gray-700">
+                      #{order.numero ?? "—"}
+                    </span>
+                    <span className="text-xs font-semibold text-cake-gold">
+                      S/ {Number(order.total).toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-gray-800">
+                    {order.cliente?.nombre ?? "Cliente"}
                   </p>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    {order.items
+                      .slice(0, 4)
+                      .map((item) =>
+                        item.imagen ? (
+                          <div
+                            key={item.id}
+                            className="relative h-10 w-10 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
+                          >
+                            <Image
+                              src={item.imagen}
+                              alt={item.nombre}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : null
+                      )}
+                    <p className="text-xs text-gray-500">
+                      {order.items
+                        .slice(0, 3)
+                        .map(
+                          (item) =>
+                            `${item.cantidad}x ${item.nombre}`
+                        )
+                        .join(", ")}
+                    </p>
+                  </div>
+                </Link>
+
+                <div className="flex items-center justify-end border-t border-amber-100 px-2 py-1.5">
+                  <DeleteOrderButton
+                    orderId={order.id}
+                    orderNumber={order.numero}
+                    compact
+                  />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>

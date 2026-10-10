@@ -84,7 +84,9 @@ export default function CartDrawer({
         </div>
 
         {!loading && items.length > 0 && (
-          <CartSummary items={items} onClose={onClose} />
+          <div className="max-h-[48%] shrink-0 overflow-y-auto border-t border-gray-200 bg-cake-ivory">
+            <CartSummary items={items} onClose={onClose} />
+          </div>
         )}
       </aside>
     </>

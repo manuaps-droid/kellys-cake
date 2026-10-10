@@ -20,7 +20,8 @@ export async function verifyPayment(
   if (!method || !reference) return false;
 
   try {
-    if (method === "culqi") {
+    // Culqi cobra tanto tarjetas como Yape con el mismo token+cargo.
+    if (method === "culqi" || method === "yape") {
       const key = process.env.CULQI_SECRET_KEY;
       if (!key) return false;
 
@@ -36,11 +37,15 @@ export async function verifyPayment(
       const charge = (await res.json()) as {
         amount?: number;
         paid?: boolean;
-        state?: string;
+        state?: string | { name?: string };
+        voided?: boolean;
       };
       const amountOk = Math.round(expectedTotal * 100) === Number(charge.amount);
-      const captured = charge.paid === true || charge.state === "captured";
-      return amountOk && captured;
+      const stateName =
+        typeof charge.state === "string" ? charge.state : charge.state?.name;
+      const captured =
+        charge.paid === true || stateName === "captured";
+      return amountOk && captured && charge.voided !== true;
     }
 
     if (method === "mercadopago") {

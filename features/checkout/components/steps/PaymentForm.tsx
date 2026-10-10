@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 
 import { Card } from "@/components/ui/Card";
-import { Label } from "@/components/ui/label";
 
 import { useCart } from "@/features/cart/hooks/useCart";
 import { getItemUnitPrice } from "@/features/cart/types/cart.types";
@@ -11,7 +10,7 @@ import { getItemUnitPrice } from "@/features/cart/types/cart.types";
 import { useCheckout } from "../../hooks/useCheckout";
 import { MERCADOPAGO_HABILITADO } from "../../constants/payment-methods.constants";
 
-import type { PaymentMethod, PaymentType } from "../../types/checkout.types";
+import type { PaymentMethod } from "../../types/checkout.types";
 
 const paymentOptions: { value: PaymentMethod; label: string; description: string; icon: string }[] = [
   {
@@ -54,7 +53,6 @@ export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null
   const {
     checkout,
     setPaymentMethod,
-    setPaymentType,
     setPaymentReference,
     setNeedsInvoice,
     updateInvoice,
@@ -71,34 +69,25 @@ export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null
   const total = subtotal + envio;
 
   const esPagoManual =
-    checkout.paymentMethod === "yape" ||
     checkout.paymentMethod === "plin" ||
     checkout.paymentMethod === "transfer";
 
   const manualInfo =
-    checkout.paymentMethod === "yape"
+    checkout.paymentMethod === "plin"
       ? {
-          icon: "📱",
-          title: "Paga con Yape",
-          hint: "Abre tu app Yape y envía el monto total a nuestro número. Luego coloca aquí el código de operación que te dio Yape.",
-          label: "Número de operación de Yape",
-          placeholder: "Ej. 12345678",
+          icon: "📲",
+          title: "Paga con Plin",
+          hint: "Abre tu app Plin y envía el monto total a nuestro número. Luego coloca aquí el código de operación.",
+          label: "Número de operación de Plin",
+          placeholder: "Ej. 87654321",
         }
-      : checkout.paymentMethod === "plin"
-        ? {
-            icon: "📲",
-            title: "Paga con Plin",
-            hint: "Abre tu app Plin y envía el monto total a nuestro número. Luego coloca aquí el código de operación.",
-            label: "Número de operación de Plin",
-            placeholder: "Ej. 87654321",
-          }
-        : {
-            icon: "🏧",
-            title: "Transferencia bancaria",
-            hint: "Realiza la transferencia a nuestra cuenta y coloca aquí el número de operación o referencia.",
-            label: "Número de operación / referencia",
-            placeholder: "Ej. 0012345",
-          };
+      : {
+          icon: "🏧",
+          title: "Transferencia bancaria",
+          hint: "Realiza la transferencia a nuestra cuenta y coloca aquí el número de operación o referencia.",
+          label: "Número de operación / referencia",
+          placeholder: "Ej. 0012345",
+        };
 
   return (
     <Card className="p-6">
@@ -180,6 +169,17 @@ export default function PaymentForm({ pagoNumero }: { pagoNumero?: string | null
           );
         })}
       </div>
+
+      {checkout.paymentMethod === "yape" && (
+        <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50/60 p-4">
+          <p className="text-sm text-rose-900">
+            Al confirmar, se abrirá el checkout seguro de <strong>Culqi</strong>.
+            Ahí ingresa tu número de celular Yape y tu código de aprobación
+            (en tu app Yape: <strong>Menú → Código de aprobación</strong>). Tu
+            pago se acredita al instante a nuestra empresa a través de Culqi.
+          </p>
+        </div>
+      )}
 
       {esPagoManual && (
         <div className="mt-6 rounded-xl border-2 border-cake-gold/30 bg-cake-ivory/40 p-5">

@@ -75,15 +75,17 @@ export default function WizardFooter() {
       return { success: false, message: "Selecciona un método de pago." };
     }
 
-    if (method === "culqi") {
+    if (method === "culqi" || method === "yape") {
       if (!process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY) {
         return {
           success: false,
-          message: "Configura NEXT_PUBLIC_CULQI_PUBLIC_KEY y CULQI_SECRET_KEY en .env.local para habilitar pagos con tarjeta.",
+          message: "Configura NEXT_PUBLIC_CULQI_PUBLIC_KEY y CULQI_SECRET_KEY en .env.local para habilitar pagos en línea.",
         };
       }
 
       try {
+        // El checkout de Culqi maneja tarjeta y Yape (número Yape + código
+        // de aprobación). El token devuelto se cobra con /v2/charges.
         const { token } = await chargeWithCulqi({
           amount: montoPagado,
           email,
@@ -145,10 +147,10 @@ export default function WizardFooter() {
       return { success: true, redirect: true };
     }
 
-    // Pagos manuales: Yape, Plin y transferencia bancaria.
+    // Pagos manuales: Plin y transferencia bancaria.
     // Se exige el número de operación y el pedido queda como
     // "pendiente" hasta que el equipo verifique el pago.
-    if (method === "yape" || method === "plin" || method === "transfer") {
+    if (method === "plin" || method === "transfer") {
       const reference = checkout.paymentReference?.trim();
 
       if (!reference) {

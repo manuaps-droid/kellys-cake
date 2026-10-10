@@ -65,6 +65,24 @@ export async function chargeWithCulqi(
     amount: Math.round(options.amount * 100),
   });
 
+  // Habilitar medios de pago Culqi Checkout v4: tarjetas y Yape.
+  // El flujo Yape (número de celular + código de aprobación) se
+  // cobra con el mismo endpoint /v2/charges usando el token generado.
+  if (typeof Culqi.options === "function") {
+    Culqi.options({
+      lang: "es",
+      installments: false,
+      paymentMethods: {
+        tarjeta: true,
+        yape: true,
+        bancaMovil: false,
+        agente: false,
+        billetera: false,
+        cuotealo: false,
+      },
+    });
+  }
+
   return new Promise((resolve, reject) => {
     // 1. Manejador para el callback global estándar de Culqi
     (window as any).culqi = function () {

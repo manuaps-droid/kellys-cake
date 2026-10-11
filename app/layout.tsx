@@ -27,6 +27,9 @@ import {
   getPublicContacto,
 } from "@/features/admin/configuracion/queries/public-config.query";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://kellyscake.pe";
+
 export type ProductoSugerido = {
   id: string;
   nombre: string;
@@ -142,10 +145,8 @@ export async function generateMetadata(): Promise<Metadata> {
     : undefined;
 
   return {
-    title: {
-      default: title,
-      template: "%s | Kelly's Cake",
-    },
+    metadataBase: new URL(SITE_URL),
+    title,
     description,
     keywords: seo?.keywords
       ? seo.keywords.split(",").map((k) => k.trim())

@@ -9,31 +9,126 @@ import BestSellers from "@/components/home/BestSellers";
 import HowItWorks from "@/components/home/HowItWorks";
 import Footer from "@/components/layout/Footer";
 
+import type { ContactoConfig } from "@/features/admin/configuracion/validations/config.schema";
+import {
+  getPublicTienda,
+  getPublicContacto,
+} from "@/features/admin/configuracion/queries/public-config.query";
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://kellyscake.pe";
+
 export const metadata: Metadata = {
-  title: "Kelly's Cake | Pastelería Fina, Tortas Personalizadas y Delivery en Arequipa",
+  title: "Tortas Personalizadas en Arequipa | Kelly's Cake",
   description:
-    "Pastelería artesanal de autor en Arequipa. Diseñamos tortas personalizadas para cumpleaños y bodas, pastelería pet para perros y gatos, toppers en impresión 3D y delivery a domicilio.",
+    "Diseña y ordena tortas personalizadas de autor en Arequipa: pasteles para cumpleaños y bodas, toppers 3D con tu nombre, área pet y delivery a domicilio. Paga con Yape o Plin y agenda tu entrega online.",
   keywords: [
+    "tortas personalizadas",
     "tortas personalizadas arequipa",
-    "pastelería fina arequipa",
+    "torta personalizada arequipa",
+    "personalizar torta online",
+    "tortas de autor arequipa",
+    "pastelería de autor arequipa",
+    "tortas para cumpleaños arequipa",
+    "tortas para bodas arequipa",
+    "pasteles personalizados arequipa",
     "tortas delivery arequipa",
     "comprar torta online arequipa",
-    "tortas para perros arequipa",
     "toppers personalizados 3d arequipa",
     "bocaditos para eventos arequipa",
+    "tortas para perros arequipa",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Kelly's Cake | Pastelería Fina, Tortas Personalizadas y Delivery en Arequipa",
+    title: "Tortas Personalizadas en Arequipa | Kelly's Cake",
     description:
-      "Tortas temáticas de autor, bocaditos gourmet, área pet y toppers en impresión 3D con entrega puntual en Arequipa.",
+      "Diseña tu torta personalizada de autor en Arequipa: pasteles para cumpleaños y bodas, toppers 3D, área pet y delivery. Paga con Yape o Plin.",
     type: "website",
     locale: "es_PE",
+    url: "/",
   },
 };
 
-export default function Home() {
+function rangoSchema(
+  valor: string | undefined,
+  dias: string
+): string | null {
+  const m = (valor ?? "").match(
+    /(\d{1,2}:\d{2})\s*(?:a|-|–)\s*(\d{1,2}:\d{2})/
+  );
+
+  if (!m) return null;
+
+  return `${dias} ${m[1]}-${m[2]}`;
+}
+
+export default async function Home() {
+  const [tienda, contacto] = await Promise.all([
+    getPublicTienda(),
+    getPublicContacto(),
+  ]);
+
+  const c: Partial<ContactoConfig> = contacto ?? {};
+
+  const nombre = tienda?.nombre ?? "Kelly's Cake";
+
+  const telefono = (c.whatsapp || c.telefono || "").replace(
+    /[^0-9]/g,
+    ""
+  );
+
+  const socials = [
+    c.instagram,
+    c.facebook,
+    c.tiktok,
+    c.youtube,
+  ].filter((s): s is string => Boolean(s));
+
+  const horarios = [
+    rangoSchema(c.horario_lunes_viernes, "Mo-Fr"),
+    rangoSchema(c.horario_sabado, "Sa"),
+  ].filter((h): h is string => h !== null);
+
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Bakery",
+    name: nombre,
+    url: SITE_URL,
+    image: `${SITE_URL}/images/logos/nuevo-logo.png`,
+    telephone: telefono ? `+${telefono}` : undefined,
+    priceRange: "S/",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Arequipa",
+      addressRegion: "Arequipa",
+      addressCountry: "PE",
+      ...(c.direccion ? { streetAddress: c.direccion } : {}),
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: Number(
+        process.env.NEXT_PUBLIC_BAKERY_LAT ?? "-16.423017084298532"
+      ),
+      longitude: Number(
+        process.env.NEXT_PUBLIC_BAKERY_LNG ?? "-71.51597134574365"
+      ),
+    },
+    ...(horarios.length > 0 ? { openingHours: horarios } : {}),
+    ...(socials.length > 0 ? { sameAs: socials } : {}),
+    servesCuisine: "Pastelería de autor",
+    description:
+      "Pastelería de autor en Arequipa: tortas personalizadas para cumpleaños y bodas, toppers 3D, pastelería pet y delivery a domicilio.",
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <Navbar />
       <main className="flex-1">
         <Hero />

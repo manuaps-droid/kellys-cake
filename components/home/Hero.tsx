@@ -56,14 +56,15 @@ export default function Hero() {
             <span className="bg-gradient-to-r from-kc-rose-gold via-kc-gold to-kc-rose-gold bg-clip-text text-transparent">merece un sabor perfecto</span>
           </motion.h1>
 
-          <motion.p 
+            <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-kc-mocha"
           >
-            El centro de tus mejores recuerdos en Arequipa. Nuestras recetas tradicionales
-            para tus grandes fiestas, junto a una cuidada línea saludable para consentirte sin culpas.
+            Diseñamos tortas personalizadas de autor en Arequipa: el centro de
+            tus mejores recuerdos, con recetas tradicionales para tus grandes
+            fiestas y una cuidada línea saludable para consentirte sin culpas.
           </motion.p>
 
           <motion.div 
@@ -129,7 +130,7 @@ export default function Hero() {
                 >
                   <Image
                     src={HERO_IMAGES[currentImage]}
-                    alt="Pastel personalizado Kelly's Cake"
+                    alt="Torta personalizada de autor de Kelly's Cake en Arequipa"
                     fill
                     priority
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"

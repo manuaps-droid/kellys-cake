@@ -5,7 +5,7 @@ const manifest = {
     "Panel de administración de Kelly's Cake: pedidos, agenda de producción, clientes, catálogos y configuración de la tienda.",
   id: "/admin",
   start_url: "/admin",
-  scope: "/admin/",
+  scope: "/",
   display: "standalone",
   background_color: "#F7F8FA",
   theme_color: "#2C1810",

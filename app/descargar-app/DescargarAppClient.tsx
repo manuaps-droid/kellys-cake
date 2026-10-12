@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   RefreshCw,
   Sparkles,
-  CheckCircle2,
   Share2,
   ExternalLink,
   Lock,
@@ -26,68 +25,86 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function DescargarAppClient() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [currentUrl, setCurrentUrl] = useState("");
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCurrentUrl(window.location.origin);
-      setIsMobile(/android|iphone|ipad|ipod/i.test(navigator.userAgent));
-
-      // Verificar si ya está corriendo en modo standalone (instalada)
-      if (
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as any).standalone === true
-      ) {
-        setIsInstalled(true);
-      }
-
-      // Escuchar el evento oficial PWA beforeinstallprompt
-      const handleBeforeInstall = (e: Event) => {
-        e.preventDefault();
-        setDeferredPrompt(e as BeforeInstallPromptEvent);
-        setIsInstallable(true);
-      };
-
-      window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-
-      return () => {
-        window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-      };
+    if (typeof window === "undefined") {
+      return;
     }
+
+    setCurrentUrl(window.location.origin);
+    setIsMobile(/android|iphone|ipad|ipod/i.test(navigator.userAgent));
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+    };
   }, []);
 
-  const handleInstallClick = async () => {
+  const adminUrl = `${currentUrl || "http://localhost:3000"}/admin`;
+  const tiendaUrl = currentUrl || "http://localhost:3000";
+
+  const qrAdminImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&color=2C1810&bgcolor=FFFFFF&data=${encodeURIComponent(
+    adminUrl
+  )}`;
+  const qrTiendaImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&color=2C1810&bgcolor=FFFFFF&data=${encodeURIComponent(
+    tiendaUrl
+  )}`;
+
+  // Instalación PWA de la TIENDA (botón secundario, para clientes)
+  const handleInstallTienda = async () => {
     if (!deferredPrompt) {
       toast.info(
-        "Para instalar en tu navegador, abre el menú de opciones (⋮) y selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'."
+        "Para instalar la tienda, abre el menú de opciones (⋮) y selecciona «Instalar aplicación»."
       );
       return;
     }
 
     await deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-
-    if (choiceResult.outcome === "accepted") {
-      toast.success("¡Kelly's Cake instalada con éxito!");
-      setIsInstalled(true);
-      setIsInstallable(false);
-    }
+    await deferredPrompt.userChoice;
     setDeferredPrompt(null);
   };
 
-  // Crear archivo de acceso directo de escritorio para Windows
-  const handleDescargarAccesoDirectoWindows = () => {
-    const url = currentUrl || "http://localhost:3000";
+  // Acceso directo de escritorio que abre el ADMIN en ventana de aplicación
+  const handleDescargarAccesoDirectoAdmin = () => {
+    const batchContent = `@echo off
+title Kellys Cake Admin
+echo Iniciando el Panel de Administracion de Kelly's Cake...
+start msedge --app=${adminUrl}
+if %errorlevel% neq 0 (
+  start chrome --app=${adminUrl}
+)
+exit
+`;
+    const blob = new Blob([batchContent], { type: "application/bat" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Iniciar-Kellys-Cake-ADMIN.bat";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(
+      "¡Acceso directo del Admin descargado! Muévelo a tu Escritorio y haz doble clic."
+    );
+  };
+
+  // Acceso directo de escritorio que abre la TIENDA en ventana de aplicación
+  const handleDescargarAccesoDirectoTienda = () => {
     const batchContent = `@echo off
 title Kellys Cake
 echo Iniciando Kellys Cake en modo aplicacion...
-start msedge --app=${url}
+start msedge --app=${tiendaUrl}
 if %errorlevel% neq 0 (
-  start chrome --app=${url}
+  start chrome --app=${tiendaUrl}
 )
 exit
 `;
@@ -101,43 +118,44 @@ exit
     toast.success("¡Acceso directo descargado! Puedes moverlo a tu Escritorio.");
   };
 
-  // URL para el código QR (preferir la IP local o el origen actual)
-  const qrTargetUrl = currentUrl || "http://localhost:3000";
-  const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&color=2C1810&bgcolor=FFFFFF&data=${encodeURIComponent(
-    qrTargetUrl
-  )}`;
-
-  const qrAdminUrl = `${currentUrl || "http://localhost:3000"}/admin`;
-  const qrAdminImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&color=2C1810&bgcolor=FFFFFF&data=${encodeURIComponent(
-    qrAdminUrl
-  )}`;
-
   return (
     <div className="min-h-screen bg-[#FFFCF7] text-[#2C1810] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        {/* Banner Superior Hero */}
+        {/* Hero */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 border border-amber-200 shadow-2xs">
-            <Sparkles className="h-3.5 w-3.5 text-amber-600" /> Instalación Oficial Multidispositivo
+            <Sparkles className="h-3.5 w-3.5 text-amber-600" /> Centro de
+            Instalación · Gestión y Tienda
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
-            Instalar <span className="text-amber-700">Kelly&apos;s Cake</span>
+            Instalar el <span className="text-amber-700">Admin</span> de
+            Kelly's Cake
           </h1>
           <p className="mt-3 text-base text-stone-600 max-w-2xl mx-auto">
-            Aplicación nativa de alta velocidad para esta computadora y tus 2 celulares Android, con{" "}
-            <strong className="text-stone-900">actualizaciones 100% automáticas</strong> ante cualquier cambio.
+            El <strong className="text-stone-900">Admin</strong> es la app de
+            control logístico del proyecto: pedidos, agenda de producción,
+            clientes y configuración. Se instala como aplicación propia y{" "}
+            <strong className="text-stone-900">
+              abre directamente en el panel
+            </strong>
+            , sin pasar por la tienda web. Incluye también el acceso a FoodOS
+            (inventario, producción y compras) dentro de la misma ventana.
           </p>
         </div>
 
-        {/* 3 Beneficios Clave */}
+        {/* Beneficios */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           <div className="p-4 rounded-2xl bg-white border border-stone-200/80 shadow-xs flex items-center gap-3.5">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
               <RefreshCw className="h-5 w-5" />
             </span>
             <div>
-              <h4 className="font-bold text-xs text-stone-900">Auto-actualizable</h4>
-              <p className="text-[11px] text-stone-500">Cualquier cambio se refleja en vivo al instante.</p>
+              <h4 className="font-bold text-xs text-stone-900">
+                Siempre actualizado
+              </h4>
+              <p className="text-[11px] text-stone-500">
+                Pedidos y agenda siempre frescos (network-first).
+              </p>
             </div>
           </div>
 
@@ -146,8 +164,12 @@ exit
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <h4 className="font-bold text-xs text-stone-900">3 Equipos Autorizados</h4>
-              <p className="text-[11px] text-stone-500">Protege Admin y FoodOS de accesos externos.</p>
+              <h4 className="font-bold text-xs text-stone-900">
+                3 Equipos Autorizados
+              </h4>
+              <p className="text-[11px] text-stone-500">
+                Protege el panel con tu control de dispositivos.
+              </p>
             </div>
           </div>
 
@@ -156,192 +178,40 @@ exit
               <Smartphone className="h-5 w-5" />
             </span>
             <div>
-              <h4 className="font-bold text-xs text-stone-900">Pantalla Completa</h4>
-              <p className="text-[11px] text-stone-500">Sin barra de navegación, como app de Google Play.</p>
+              <h4 className="font-bold text-xs text-stone-900">
+                PC y celulares
+              </h4>
+              <p className="text-[11px] text-stone-500">
+                Misma app con su propio ícono en cada equipo.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Bloques de Instalación: PC vs Android */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-          {/* Bloque 1: Celulares Android (Tus 2 equipos) */}
-          <div className="rounded-3xl border-2 border-emerald-300/80 bg-gradient-to-b from-emerald-50/40 via-white to-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200">
-                  <Smartphone className="h-4 w-4" /> Para tus 2 Celulares Android
-                </span>
-                <span className="text-[11px] font-semibold text-stone-400">WebAPK Nativo</span>
-              </div>
-
-              <h3 className="text-xl font-extrabold text-stone-900 mb-2">
-                Instalación en Celular Android
-              </h3>
-              <p className="text-xs text-stone-600 mb-5 leading-relaxed">
-                Escanea el código QR desde la cámara de tu celular Android para abrir e instalar la app de inmediato.
-              </p>
-
-              {/* Contenedor Código QR */}
-              <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs mb-5">
-                <div className="relative h-48 w-48 bg-white p-2 rounded-xl border border-stone-100 shadow-inner flex items-center justify-center">
-                  {currentUrl ? (
-                    <Image
-                      src={qrCodeImageUrl}
-                      alt="Código QR para instalar en Android"
-                      width={180}
-                      height={180}
-                      className="rounded-lg"
-                      unoptimized
-                    />
-                  ) : (
-                    <QrCode className="h-32 w-32 text-stone-300" />
-                  )}
-                </div>
-                <span className="text-[11px] font-semibold text-stone-500 mt-3 text-center">
-                  Apunta con la cámara de tus 2 celulares a este código
-                </span>
-                <span className="text-[10px] text-stone-400 font-mono mt-0.5 truncate max-w-xs">
-                  {qrTargetUrl}
-                </span>
-              </div>
-
-              {/* Pasos en Celular */}
-              <div className="space-y-2.5 text-xs text-stone-700 bg-emerald-50/60 p-4 rounded-xl border border-emerald-200/70">
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">
-                    1
-                  </span>
-                  <span>Abre el enlace en <strong>Google Chrome</strong> o <strong>Samsung Internet</strong> en tu celular.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">
-                    2
-                  </span>
-                  <span>Toca los <strong>3 puntos (⋮)</strong> arriba a la derecha.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">
-                    3
-                  </span>
-                  <span>Selecciona <strong>&quot;Instalar aplicación&quot;</strong> o <strong>&quot;Agregar a la pantalla principal&quot;</strong>.</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-5 border-t border-stone-100">
-              {isMobile ? (
-                <Button
-                  onClick={handleInstallClick}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-md transition"
-                >
-                  <Download className="mr-2 h-4 w-4" /> Instalar en Este Celular Ahora
-                </Button>
-              ) : (
-                <div className="text-center">
-                  <span className="text-xs text-stone-500">
-                    Al instalarla en Android, la app aparecerá en el cajón de aplicaciones con el logo oficial de Kelly&apos;s Cake.
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bloque 2: Esta Computadora (PC Windows) */}
-          <div className="rounded-3xl border-2 border-amber-300/80 bg-gradient-to-b from-amber-50/40 via-white to-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200">
-                  <Laptop className="h-4 w-4" /> Para Esta Computadora (PC)
-                </span>
-                <span className="text-[11px] font-semibold text-stone-400">Windows Desktop</span>
-              </div>
-
-              <h3 className="text-xl font-extrabold text-stone-900 mb-2">
-                Instalación en Esta Máquina
-              </h3>
-              <p className="text-xs text-stone-600 mb-5 leading-relaxed">
-                Ejecuta Kelly&apos;s Cake como una aplicación de escritorio nativa en Windows, sin barras de pestañas ni distracciones.
-              </p>
-
-              {/* Botón PWA Oficial si el navegador lo soporta */}
-              <div className="space-y-4 mb-6">
-                <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-2xs">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-stone-800">Método 1: Aplicación PWA (Edge / Chrome)</span>
-                    <span className="text-[10px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded font-medium">Recomendado</span>
-                  </div>
-                  <p className="text-xs text-stone-500 mb-4 leading-relaxed">
-                    Instala directamente en el sistema operativo Windows mediante el motor de aplicaciones de tu navegador.
-                  </p>
-                  <Button
-                    onClick={handleInstallClick}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl shadow-xs"
-                  >
-                    <Download className="mr-2 h-4 w-4" /> Instalar en Esta PC
-                  </Button>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-2xs">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-stone-800">Método 2: Acceso Directo de Escritorio (.bat)</span>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium">1 Clic</span>
-                  </div>
-                  <p className="text-xs text-stone-500 mb-4 leading-relaxed">
-                    Descarga el iniciador que abre automáticamente Kelly&apos;s Cake en ventana de aplicación independiente.
-                  </p>
-                  <Button
-                    onClick={handleDescargarAccesoDirectoWindows}
-                    variant="outline"
-                    className="w-full border-amber-300 bg-amber-50/50 hover:bg-amber-100 text-amber-900 font-bold py-2.5 rounded-xl"
-                  >
-                    <Laptop className="mr-2 h-4 w-4 text-amber-700" /> Descargar Acceso Directo Windows
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Enlace para Autorizar el Dispositivo */}
-            <div className="mt-6 pt-5 border-t border-stone-100 bg-stone-50/80 -mx-6 -mb-6 p-6 rounded-b-3xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-xs text-stone-900 flex items-center gap-1.5">
-                    <Lock className="h-3.5 w-3.5 text-amber-600" /> ¿Acceso a Admin y FoodOS?
-                  </h4>
-                  <p className="text-[11px] text-stone-500 mt-0.5">
-                    Autoriza este equipo dentro de tus 3 cupos de seguridad.
-                  </p>
-                </div>
-                <Button
-                  asChild
-                  size="sm"
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl"
-                >
-                  <Link href="/autorizar-dispositivo">
-                    Autorizar Equipo <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección Admin: app de gestión instalable */}
-        <div className="rounded-3xl border-2 border-stone-800 bg-gradient-to-b from-stone-900 via-stone-900 to-[#1F140B] p-6 sm:p-8 shadow-sm">
+        {/* SECCIÓN PRINCIPAL: APP DEL ADMIN */}
+        <div className="rounded-3xl border-2 border-stone-800 bg-gradient-to-b from-stone-900 via-stone-900 to-[#1F140B] p-6 sm:p-8 shadow-sm mb-10">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200">
               <Laptop className="h-4 w-4" /> App del Admin
             </span>
-            <span className="text-[11px] font-semibold text-stone-400">Panel de gestión · PC y celulares</span>
+            <span className="text-[11px] font-semibold text-stone-400">
+              Control logístico · Se abre directo en el panel
+            </span>
           </div>
 
           <h3 className="text-xl font-extrabold text-amber-50 mb-2">
-            Instalar el Panel de Administración
+            Instalación del Panel de Administración
           </h3>
           <p className="text-xs text-stone-400 mb-6 leading-relaxed max-w-2xl">
-            El admin se instala como <strong className="text-amber-100">aplicación aparte</strong>, con su propio ícono, para gestionar pedidos, agenda de producción y clientes desde tu computadora y tus celulares. Requiere iniciar sesión con tu cuenta de administrador.
+            Instálala en cada equipo desde la página del admin (
+            <strong className="text-amber-100">{adminUrl}</strong>) con tu
+            sesión iniciada: el navegador instalará{" "}
+            <strong className="text-amber-100">«KC Admin»</strong>, una app con
+            ícono propio que abre directo el panel.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+            {/* QR Admin */}
             <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-white/95 border border-stone-700">
               <Image
                 src={qrAdminImageUrl}
@@ -352,46 +222,166 @@ exit
                 unoptimized
               />
               <span className="text-[11px] font-semibold text-stone-500 mt-3 text-center">
-                Escanea y abre <strong>{qrAdminUrl}</strong>
+                Escanea con tus celulares y abre{" "}
+                <strong>{adminUrl}</strong>
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white/5 border border-stone-700">
+            {/* PC */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-stone-700 flex flex-col">
               <h4 className="text-sm font-bold text-amber-50 mb-3 flex items-center gap-2">
                 <Laptop className="h-4 w-4 text-amber-400" /> En esta PC
               </h4>
-              <div className="space-y-2.5 text-[11px] text-stone-300">
-                <p>1. Ingresa a <strong className="text-amber-100">{qrAdminUrl}</strong> con tu cuenta admin.</p>
-                <p>2. En Chrome o Edge, toca el ícono <strong className="text-amber-100">de instalación</strong> que aparece en la barra de direcciones (o menú ⋮ → «Instalar aplicación»).</p>
-                <p>3. Se abrirá como ventana propia con su ícono separado de la tienda.</p>
+              <div className="space-y-2.5 text-[11px] text-stone-300 flex-1">
+                <p>
+                  <strong className="text-amber-100">Método 1 (1 clic):</strong>{" "}
+                  descarga el acceso directo y ejecútalo: abre el admin en
+                  ventana de aplicación inmediatamente.
+                </p>
+                <p>
+                  <strong className="text-amber-100">Método 2:</strong> entra a{" "}
+                  {adminUrl} en Chrome/Edge y toca el ícono de instalación en
+                  la barra de direcciones.
+                </p>
+              </div>
+              <div className="space-y-2 mt-4">
+                <Button
+                  onClick={handleDescargarAccesoDirectoAdmin}
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Descargar Acceso Directo
+                  Admin
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-stone-600 bg-transparent text-amber-50 hover:bg-white/10 font-bold py-2.5 rounded-xl text-xs"
+                >
+                  <Link href="/admin">
+                    Abrir el Admin <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white/5 border border-stone-700">
+            {/* Celulares */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-stone-700 flex flex-col">
               <h4 className="text-sm font-bold text-amber-50 mb-3 flex items-center gap-2">
-                <Smartphone className="h-4 w-4 text-amber-400" /> En tus celulares
+                <Smartphone className="h-4 w-4 text-amber-400" /> En tus
+                celulares
               </h4>
-              <div className="space-y-2.5 text-[11px] text-stone-300">
-                <p><strong className="text-amber-100">Android:</strong> abre {qrAdminUrl} en Chrome → menú ⋮ → <strong>Instalar aplicación</strong>.</p>
-                <p><strong className="text-amber-100">iPhone:</strong> ábrelo en Safari → botón <strong>Compartir (↑)</strong> → <strong>Agregar a pantalla de inicio</strong>.</p>
-                <p>Se instala con el ícono del admin, independiente de la app de la tienda.</p>
+              <div className="space-y-2.5 text-[11px] text-stone-300 flex-1">
+                <p>
+                  <strong className="text-amber-100">Android:</strong> escanea
+                  el QR, inicia sesión y en Chrome toca{" "}
+                  <strong>⋮ → Instalar aplicación</strong>.
+                </p>
+                <p>
+                  <strong className="text-amber-100">iPhone:</strong> abre el
+                  enlace en Safari, inicia sesión y toca{" "}
+                  <strong>Compartir → Agregar a pantalla de inicio</strong>.
+                </p>
+                <p>
+                  El ícono «KC Admin» abrirá el panel directamente, sin la
+                  tienda.
+                </p>
               </div>
+              {isMobile && (
+                <Button
+                  asChild
+                  className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs"
+                >
+                  <Link href="/admin">
+                    Abrir el Admin en este celular
+                    <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
 
           <div className="pt-5 border-t border-stone-800 flex flex-wrap items-center justify-between gap-3">
             <span className="text-[11px] text-stone-400">
-              Funciona igual offline parcial: los pedidos siempre se sirven frescos desde la red (network-first).
+              <Share2 className="inline h-3.5 w-3.5 mr-1" />
+              Ya instalaste antes la app de la tienda y abre la web:
+              desinstálala y vuelve a instalar desde {adminUrl} — son dos apps
+              distintas.
             </span>
             <Button
               asChild
               size="sm"
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl"
+              variant="outline"
+              className="border-stone-600 bg-transparent text-amber-50 hover:bg-white/10 font-bold rounded-xl"
             >
-              <Link href="/admin">
-                Abrir el Admin <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+              <Link href="/autorizar-dispositivo">
+                <Lock className="mr-1.5 h-3.5 w-3.5" /> Autorizar Equipo
               </Link>
             </Button>
+          </div>
+        </div>
+
+        {/* SECCIÓN SECUNDARIA: APP DE LA TIENDA PARA CLIENTES */}
+        <div className="rounded-3xl border border-stone-200 bg-white p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100 text-stone-700 text-xs font-bold border border-stone-200">
+              <Smartphone className="h-4 w-4" /> App de la Tienda (clientes)
+            </span>
+            <span className="text-[11px] font-semibold text-stone-400">
+              Opcional · catálogo y compras
+            </span>
+          </div>
+
+          <p className="text-xs text-stone-600 mb-6 leading-relaxed max-w-2xl">
+            La tienda también se instala como app para tus clientes: abre el
+            catálogo, no el panel. Solo instálala si la necesitas; tu control
+            logístico vive en la app del Admin.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="p-5 rounded-2xl bg-gradient-to-b from-emerald-50/40 to-white border border-stone-200">
+              <h4 className="text-sm font-bold text-stone-900 mb-3">
+                Celulares (QR de la tienda)
+              </h4>
+              <div className="flex flex-col items-center">
+                {currentUrl ? (
+                  <Image
+                    src={qrTiendaImageUrl}
+                    alt="Código QR para instalar la tienda"
+                    width={120}
+                    height={120}
+                    className="rounded-lg"
+                    unoptimized
+                  />
+                ) : (
+                  <QrCode className="h-24 w-24 text-stone-300" />
+                )}
+                <span className="text-[11px] font-semibold text-stone-500 mt-3 text-center">
+                  Abre {tiendaUrl} en Chrome → ⋮ → Instalar aplicación
+                </span>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-50/40 to-white border border-stone-200 flex flex-col">
+              <h4 className="text-sm font-bold text-stone-900 mb-3">
+                En esta PC
+              </h4>
+              <div className="space-y-2 flex-1">
+                <Button
+                  onClick={handleInstallTienda}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Instalar Tienda (PWA)
+                </Button>
+                <Button
+                  onClick={handleDescargarAccesoDirectoTienda}
+                  variant="outline"
+                  className="w-full border-amber-300 bg-amber-50/50 hover:bg-amber-100 text-amber-900 font-bold py-2.5 rounded-xl text-xs"
+                >
+                  <Laptop className="mr-2 h-4 w-4 text-amber-700" /> Acceso
+                  Directo Windows
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

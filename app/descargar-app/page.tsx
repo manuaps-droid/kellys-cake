@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import DescargarAppClient from "./DescargarAppClient";
 
 export const metadata = {
-  title: "Instalar Aplicación Oficial | Kelly's Cake",
+  title: "Instalar App del Admin | Kelly's Cake",
   description:
-    "Descarga e instala Kelly's Cake en tu PC y celulares, y el panel de administración como app independiente para gestionar pedidos, agenda y clientes.",
+    "Instala el panel de administración de Kelly's Cake como app en tu PC y celulares: abre directo en pedidos, agenda de producción y clientes. La app de la tienda para clientes es opcional.",
 };
 
 export default function DescargarAppPage() {

@@ -119,6 +119,7 @@ export default async function Home() {
     ...(socials.length > 0 ? { sameAs: socials } : {}),
     servesCuisine: "Pastelería de autor",
     description:
+      tienda?.descripcion ??
       "Pastelería de autor en Arequipa: tortas personalizadas para cumpleaños y bodas, toppers 3D, pastelería pet y delivery a domicilio.",
   };
 

@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<
   ] as const;
 
   const estaticas: MetadataRoute.Sitemap = estaticasBase.map(
-    (entrada) => ({ ...entrada, lastModified: ahora })
+    (entrada) => ({ ...entrada, lastModified: undefined })
   );
 
   const { data: productos } = await supabase
@@ -45,9 +45,20 @@ export default async function sitemap(): Promise<
     .order("created_at", { ascending: false })
     .limit(500);
 
-  const productoEntries: MetadataRoute.Sitemap = (
-    productos ?? []
-  ).map((p) => ({
+  const productosUnicos = new Map<
+    string,
+    { slug: string; updated_at: string | null }
+  >();
+
+  for (const p of productos ?? []) {
+    if (!productosUnicos.has(p.slug)) {
+      productosUnicos.set(p.slug, p);
+    }
+  }
+
+  const productoEntries: MetadataRoute.Sitemap = [
+    ...productosUnicos.values(),
+  ].map((p) => ({
     url: `${BASE_URL}/productos/${p.slug}`,
     lastModified: new Date(p.updated_at ?? ahora),
     changeFrequency: "weekly",
@@ -59,9 +70,20 @@ export default async function sitemap(): Promise<
     .select("id, updated_at")
     .neq("id", TOPPER_CATALOGO_ID);
 
-  const catalogoEntries: MetadataRoute.Sitemap = (
-    catalogos ?? []
-  ).map((c) => ({
+  const catalogosUnicos = new Map<
+    string,
+    { id: string; updated_at: string | null }
+  >();
+
+  for (const c of catalogos ?? []) {
+    if (!catalogosUnicos.has(c.id)) {
+      catalogosUnicos.set(c.id, c);
+    }
+  }
+
+  const catalogoEntries: MetadataRoute.Sitemap = [
+    ...catalogosUnicos.values(),
+  ].map((c) => ({
     url: `${BASE_URL}/catalogos/${c.id}`,
     lastModified: new Date(c.updated_at ?? ahora),
     changeFrequency: "monthly",

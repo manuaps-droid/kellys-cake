@@ -107,6 +107,11 @@ exit
     qrTargetUrl
   )}`;
 
+  const qrAdminUrl = `${currentUrl || "http://localhost:3000"}/admin`;
+  const qrAdminImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&color=2C1810&bgcolor=FFFFFF&data=${encodeURIComponent(
+    qrAdminUrl
+  )}`;
+
   return (
     <div className="min-h-screen bg-[#FFFCF7] text-[#2C1810] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -317,6 +322,76 @@ exit
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Sección Admin: app de gestión instalable */}
+        <div className="rounded-3xl border-2 border-stone-800 bg-gradient-to-b from-stone-900 via-stone-900 to-[#1F140B] p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200">
+              <Laptop className="h-4 w-4" /> App del Admin
+            </span>
+            <span className="text-[11px] font-semibold text-stone-400">Panel de gestión · PC y celulares</span>
+          </div>
+
+          <h3 className="text-xl font-extrabold text-amber-50 mb-2">
+            Instalar el Panel de Administración
+          </h3>
+          <p className="text-xs text-stone-400 mb-6 leading-relaxed max-w-2xl">
+            El admin se instala como <strong className="text-amber-100">aplicación aparte</strong>, con su propio ícono, para gestionar pedidos, agenda de producción y clientes desde tu computadora y tus celulares. Requiere iniciar sesión con tu cuenta de administrador.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+            <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-white/95 border border-stone-700">
+              <Image
+                src={qrAdminImageUrl}
+                alt="Código QR para instalar el Admin"
+                width={150}
+                height={150}
+                className="rounded-lg"
+                unoptimized
+              />
+              <span className="text-[11px] font-semibold text-stone-500 mt-3 text-center">
+                Escanea y abre <strong>{qrAdminUrl}</strong>
+              </span>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/5 border border-stone-700">
+              <h4 className="text-sm font-bold text-amber-50 mb-3 flex items-center gap-2">
+                <Laptop className="h-4 w-4 text-amber-400" /> En esta PC
+              </h4>
+              <div className="space-y-2.5 text-[11px] text-stone-300">
+                <p>1. Ingresa a <strong className="text-amber-100">{qrAdminUrl}</strong> con tu cuenta admin.</p>
+                <p>2. En Chrome o Edge, toca el ícono <strong className="text-amber-100">de instalación</strong> que aparece en la barra de direcciones (o menú ⋮ → «Instalar aplicación»).</p>
+                <p>3. Se abrirá como ventana propia con su ícono separado de la tienda.</p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/5 border border-stone-700">
+              <h4 className="text-sm font-bold text-amber-50 mb-3 flex items-center gap-2">
+                <Smartphone className="h-4 w-4 text-amber-400" /> En tus celulares
+              </h4>
+              <div className="space-y-2.5 text-[11px] text-stone-300">
+                <p><strong className="text-amber-100">Android:</strong> abre {qrAdminUrl} en Chrome → menú ⋮ → <strong>Instalar aplicación</strong>.</p>
+                <p><strong className="text-amber-100">iPhone:</strong> ábrelo en Safari → botón <strong>Compartir (↑)</strong> → <strong>Agregar a pantalla de inicio</strong>.</p>
+                <p>Se instala con el ícono del admin, independiente de la app de la tienda.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-5 border-t border-stone-800 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[11px] text-stone-400">
+              Funciona igual offline parcial: los pedidos siempre se sirven frescos desde la red (network-first).
+            </span>
+            <Button
+              asChild
+              size="sm"
+              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl"
+            >
+              <Link href="/admin">
+                Abrir el Admin <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

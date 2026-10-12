@@ -1,3 +1,4 @@
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import AdminHeader from "@/components/admin/AdminHeader";
@@ -7,6 +8,26 @@ import { getCurrentAdmin } from "@/lib/auth/getCurrentAdmin";
 
 type Props = {
   children: ReactNode;
+};
+
+export const metadata: Metadata = {
+  title: "Kelly's Cake Admin",
+  description:
+    "Panel de administración de Kelly's Cake: pedidos, agenda de producción, clientes y configuración.",
+  manifest: "/admin/manifest.webmanifest",
+  icons: {
+    icon: "/icons/icon-admin-192.png",
+    apple: "/icons/icon-admin-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "KC Admin",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2C1810",
 };
 
 export default async function AdminLayout({

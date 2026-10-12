@@ -3,7 +3,8 @@ import DescargarAppClient from "./DescargarAppClient";
 
 export const metadata = {
   title: "Instalar Aplicación Oficial | Kelly's Cake",
-  description: "Descarga e instala Kelly's Cake en tu PC y tus celulares Android con actualizaciones automáticas.",
+  description:
+    "Descarga e instala Kelly's Cake en tu PC y celulares, y el panel de administración como app independiente para gestionar pedidos, agenda y clientes.",
 };
 
 export default function DescargarAppPage() {

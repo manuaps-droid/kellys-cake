@@ -129,7 +129,7 @@ exit
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
             Instalar el <span className="text-amber-700">Admin</span> de
-            Kelly's Cake
+            Kelly&apos;s Cake
           </h1>
           <p className="mt-3 text-base text-stone-600 max-w-2xl mx-auto">
             El <strong className="text-stone-900">Admin</strong> es la app de

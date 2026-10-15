@@ -96,8 +96,9 @@ export default async function Footer() {
               {[
                 { label: "Inicio", href: "/" },
                 { label: "Productos", href: "/productos" },
+                { label: "Área Pets", href: "/area-pets" },
                 { label: "Personaliza", href: "/personalizar" },
-                { label: "Galería", href: "/catalogos" },
+                { label: "Catering", href: "/catering" },
                 { label: "Nosotros", href: "/nosotros" },
                 { label: "Contacto", href: "/contacto" },
               ].map((item) => (

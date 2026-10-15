@@ -9,34 +9,66 @@ import type { DashboardStats } from "../types/dashboard.type";
 export async function getDashboardRepository(): Promise<DashboardStats> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("dashboard_stats");
+  // 1. Obtener métricas agregadas por RPC o consultas seguras
+  const [{ data: rpcData }, { data: pedidosData }] = await Promise.all([
+    supabase.rpc("dashboard_stats"),
+    supabase.from("pedidos").select("total, cliente_id, estado").limit(500),
+  ]);
 
-  if (error || !data) {
-    // Fallback a ceros si algo falla, evitando romper el render.
-    return {
-      pedidos: 0,
-      productos: 0,
-      clientes: 0,
-      proyectos: 0,
-      ventas: 0,
-      pedidosPendientes: 0,
-      productosActivos: 0,
-      clientesActivos: 0,
-      proyectosPendientes: 0,
-    };
+  const r = (rpcData as Record<string, number>) || {};
+
+  const pedidos = r.pedidos_total ?? (pedidosData?.length ?? 0);
+  const productos = r.productos_total ?? 0;
+  const clientes = r.clientes_total ?? 0;
+  const proyectos = r.proyectos_total ?? 0;
+  const ventas = Number(r.ventas_total ?? 0);
+  const pedidosPendientes = r.pedidos_pendientes ?? 0;
+  const productosActivos = r.productos_activos ?? 0;
+  const clientesActivos = r.clientes_activos ?? 0;
+  const proyectosPendientes = r.proyectos_pendientes ?? 0;
+
+  // 2. Cálculo de KPIs Analíticos
+  let ticketPromedio = 0;
+  let tasaRecompra = 0;
+  let clientesRecurrentes = 0;
+
+  if (pedidosData && pedidosData.length > 0) {
+    const totalSuma = pedidosData.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+    ticketPromedio = Math.round((totalSuma / pedidosData.length) * 100) / 100;
+
+    // Frecuencia por cliente para tasa de recompra
+    const clientePedidosCount = new Map<string, number>();
+    for (const p of pedidosData) {
+      if (p.cliente_id) {
+        clientePedidosCount.set(p.cliente_id, (clientePedidosCount.get(p.cliente_id) || 0) + 1);
+      }
+    }
+
+    clientesRecurrentes = Array.from(clientePedidosCount.values()).filter((c) => c > 1).length;
+    if (clientePedidosCount.size > 0) {
+      tasaRecompra = Math.round((clientesRecurrentes / clientePedidosCount.size) * 100);
+    }
   }
 
-  const r = data as Record<string, number>;
+  // Meta mensual sugerida para Kelly's Cake (Meta S/ 10,000 en pastelería de autor)
+  const metaMensualVentas = 10000;
+  const cumplimientoMeta = Math.min(100, Math.round((ventas / metaMensualVentas) * 100));
 
   return {
-    pedidos: r.pedidos_total ?? 0,
-    productos: r.productos_total ?? 0,
-    clientes: r.clientes_total ?? 0,
-    proyectos: r.proyectos_total ?? 0,
-    ventas: Number(r.ventas_total ?? 0),
-    pedidosPendientes: r.pedidos_pendientes ?? 0,
-    productosActivos: r.productos_activos ?? 0,
-    clientesActivos: r.clientes_activos ?? 0,
-    proyectosPendientes: r.proyectos_pendientes ?? 0,
+    pedidos,
+    productos,
+    clientes,
+    proyectos,
+    ventas,
+    pedidosPendientes,
+    productosActivos,
+    clientesActivos,
+    proyectosPendientes,
+    ticketPromedio: ticketPromedio || (ventas && pedidos ? Math.round((ventas / pedidos) * 100) / 100 : 0),
+    tasaConversion: 0, // Calculado en la vista con visitas reales
+    tasaRecompra,
+    clientesRecurrentes,
+    metaMensualVentas,
+    cumplimientoMeta,
   };
 }

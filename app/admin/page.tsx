@@ -124,83 +124,127 @@ export default async function AdminDashboardPage() {
         })}
       </div>
 
+      {/* Tarjeta de Ventas y Cumplimiento de Metas */}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-8 lg:col-span-2">
-          <h2 className="text-xl font-semibold text-cake-espresso">
-            Ventas acumuladas
-          </h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-cake-espresso">
+                Ventas Acumuladas
+              </h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Facturación total registrada en la tienda online.
+              </p>
+            </div>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+              Meta: S/ {stats.metaMensualVentas.toLocaleString("es-PE")}
+            </span>
+          </div>
 
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap items-baseline gap-4">
             <Price
               value={stats.ventas}
-              className="text-5xl"
+              className="text-5xl font-extrabold text-cake-espresso"
+            />
+            <span className="text-sm font-semibold text-cake-gold">
+              {stats.cumplimientoMeta}% de la meta mensual
+            </span>
+          </div>
+
+          {/* Barra de progreso de meta mensual */}
+          <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-500"
+              style={{ width: `${stats.cumplimientoMeta}%` }}
             />
           </div>
 
-          <p className="mt-4 text-gray-500">
-            Total generado por todos los pedidos registrados.
-          </p>
+          {/* Mini-KPIs en cuadrícula */}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-6">
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Ticket Promedio</p>
+              <p className="mt-1 text-xl font-bold text-cake-espresso">
+                S/ {stats.ticketPromedio.toFixed(2)}
+              </p>
+              <p className="text-[11px] text-emerald-600">Meta: &gt; S/ 80.00</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Tasa de Conversión</p>
+              <p className="mt-1 text-xl font-bold text-cake-espresso">
+                {visitas?.totalHistorico
+                  ? ((stats.pedidos / visitas.totalHistorico) * 100).toFixed(1)
+                  : (0).toFixed(1)}%
+              </p>
+              <p className="text-[11px] text-gray-400">Visitas a pedidos</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Tasa de Recompra</p>
+              <p className="mt-1 text-xl font-bold text-cake-espresso">
+                {stats.tasaRecompra}%
+              </p>
+              <p className="text-[11px] text-emerald-600">
+                {stats.clientesRecurrentes} cliente(s) leales
+              </p>
+            </div>
+          </div>
         </Card>
 
+        {/* Resumen Operativo & Tráfico */}
         <Card className="p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <Clock3
-              size={22}
-              className="text-cake-gold"
-            />
-
-            <h2 className="text-xl font-semibold text-cake-espresso">
-              Resumen
-            </h2>
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Clock3 size={20} className="text-cake-gold" />
+              <h2 className="text-lg font-semibold text-cake-espresso">
+                Métricas Clave
+              </h2>
+            </div>
+            <Link
+              href="/admin/configuracion"
+              className="text-xs text-cake-gold hover:underline"
+            >
+              Configurar &rarr;
+            </Link>
           </div>
 
           <div className="space-y-4 text-sm">
-            <div className="flex justify-between">
-              <span>Pedidos pendientes</span>
-
-              <strong>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Pedidos por atender</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                stats.pedidosPendientes > 0
+                  ? "bg-amber-100 text-amber-800"
+                  : "bg-gray-100 text-gray-600"
+              }`}>
                 {stats.pedidosPendientes}
-              </strong>
+              </span>
             </div>
 
-            <div className="flex justify-between">
-              <span>Productos activos</span>
-
-              <strong>
-                {stats.productosActivos}
-              </strong>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Catálogo activo</span>
+              <strong>{stats.productosActivos} tortas / postres</strong>
             </div>
 
-            <div className="flex justify-between">
-              <span>Clientes activos</span>
-
-              <strong>
-                {stats.clientesActivos}
-              </strong>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Clientes registrados</span>
+              <strong>{stats.clientesActivos} activos</strong>
             </div>
 
-            <div className="flex justify-between">
-              <span>Proyectos pendientes</span>
-
-              <strong>
-                {stats.proyectosPendientes}
-              </strong>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Cotizaciones pendientes</span>
+              <strong>{stats.proyectosPendientes}</strong>
             </div>
 
-            <div className="flex justify-between border-t border-gray-100 pt-3">
-              <span>Visitas hoy</span>
-
+            <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
+              <span className="text-gray-600">Tráfico hoy</span>
               <strong className="text-cake-gold">
                 {visitas?.hoy.total ?? 0} ({visitas?.hoy.unicos ?? 0} únicos)
               </strong>
             </div>
 
-            <div className="flex justify-between">
-              <span>Visitas 7 días</span>
-
-              <strong>
-                {visitas?.ultimos7Dias.total ?? 0}
-              </strong>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Tráfico últimos 7 días</span>
+              <strong>{visitas?.ultimos7Dias.total ?? 0} visitas</strong>
             </div>
 
             <div className="pt-2">
@@ -208,7 +252,7 @@ export default async function AdminDashboardPage() {
                 href="/admin/visitas"
                 className="text-xs font-semibold text-cake-gold hover:underline inline-flex items-center gap-1"
               >
-                Ver analítica de visitas &rarr;
+                Ver analítica de visitas completa &rarr;
               </Link>
             </div>
           </div>

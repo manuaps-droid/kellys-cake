@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { CheckoutStep } from "../types/wizard.types";
 
 import { useWizard } from "../hooks/useWizard";
 import { useCheckout } from "../hooks/useCheckout";
+import { useWizardStore } from "../store/wizard.store";
 
 import StepIndicator from "./StepIndicator";
 import WizardFooter from "./WizardFooter";
@@ -47,13 +48,32 @@ function renderStep(step: CheckoutStep, pagoNumero?: string | null) {
 
 export default function CheckoutWizard({ clientData, pagoNumero }: Props) {
   const { currentStep } = useWizard();
-  const { checkout, prefillCustomer } = useCheckout();
+  const { checkout, reset, updateCustomer } = useCheckout();
+  const resetWizard = useWizardStore((s) => s.reset);
+
+  // Ref para ejecutar el reset solo en el primer montaje del componente.
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    // Siempre resetear al entrar al checkout para evitar que datos de
+    // otro usuario persistan desde el localStorage.
+    reset();
+    resetWizard();
+
+    // Si el servidor devolvió datos del cliente actual, pre-llenar con ellos.
     if (clientData) {
-      prefillCustomer(clientData);
+      updateCustomer({
+        firstName: clientData.firstName,
+        lastName: clientData.lastName,
+        email: clientData.email,
+        phone: clientData.phone,
+      });
     }
-  }, [clientData, prefillCustomer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const steps =
     checkout.deliveryMethod === "pickup"

@@ -19,6 +19,7 @@ import {
   Settings,
   Store,
   ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 
 type Props = {
@@ -255,7 +256,19 @@ export default function FoodOSMobileNav({
                       className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-yellow-300 hover:bg-slate-800"
                     >
                       <DollarSign className="h-4 w-4" />
-                      <span>Eventos & Rentabilidad</span>
+                      <span>Eventos & Costeo</span>
+                    </Link>
+                    <Link
+                      href="/foodos/rentabilidad"
+                      className="flex items-center justify-between rounded-lg px-2.5 py-2 text-emerald-400 font-semibold hover:bg-slate-800"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Simulador Rentabilidad</span>
+                      </div>
+                      <span className="rounded bg-emerald-600/80 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        PRO
+                      </span>
                     </Link>
                     <Link
                       href="/foodos/copilot"

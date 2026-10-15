@@ -8,6 +8,8 @@ import {
   useState,
 } from "react";
 
+import { useAuthContext } from "@/providers/AuthProvider";
+
 import { getCartItemsAction } from "../actions/get-cart-items.action";
 
 import {
@@ -24,6 +26,9 @@ export function CartProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading: authLoading } =
+    useAuthContext();
+
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] =
@@ -49,9 +54,20 @@ export function CartProvider({
     }
   }, []);
 
+  // El carrito sigue el estado de sesión: al cerrar sesión se
+  // vacía la vista (el carrito guardado en la base se conserva
+  // y vuelve a aparecer al iniciar sesión de nuevo).
   useEffect(() => {
-    void refreshCart();
-  }, [refreshCart]);
+    if (authLoading) return;
+
+    if (user) {
+      void refreshCart();
+    } else {
+      setItems([]);
+      setDrawerOpen(false);
+      setLoading(false);
+    }
+  }, [user, authLoading, refreshCart]);
 
   const totalItems = useMemo(() => {
     return items.reduce(

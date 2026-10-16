@@ -20,6 +20,7 @@ import {
   Store,
   ChevronRight,
   TrendingUp,
+  Calculator,
 } from "lucide-react";
 
 type Props = {
@@ -268,6 +269,18 @@ export default function FoodOSMobileNav({
                       </div>
                       <span className="rounded bg-emerald-600/80 px-1.5 py-0.5 text-[9px] font-bold text-white">
                         PRO
+                      </span>
+                    </Link>
+                    <Link
+                      href="/foodos/contapro"
+                      className="flex items-center justify-between rounded-lg px-2.5 py-2 text-cyan-300 font-semibold hover:bg-slate-800"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Calculator className="h-4 w-4" />
+                        <span>Importar Contapro</span>
+                      </div>
+                      <span className="rounded bg-cyan-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        CONTABLE
                       </span>
                     </Link>
                     <Link

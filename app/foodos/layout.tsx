@@ -32,6 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/foodos/compras/nueva" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-slate-300">🛒 Ingresar Compra</Link>
             <Link href="/foodos/eventos" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-yellow-300 font-medium">💰 Eventos & Rentabilidad</Link>
             <Link href="/foodos/rentabilidad" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-emerald-400 font-medium flex items-center justify-between"><span>📈 Rentabilidad & Costos</span> <span className="bg-emerald-600/80 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">PRO</span></Link>
+            <Link href="/foodos/contapro" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-cyan-300 font-medium flex items-center justify-between"><span>🧮 Importar Contapro</span> <span className="bg-cyan-600 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">CONTABLE</span></Link>
             <Link href="/foodos/copilot" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors border border-blue-500/30 text-blue-300 flex items-center justify-between text-xs"><span>✨ AI Copilot</span> <span className="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">BETA</span></Link>
 
             {/* SECCIÓN LOGÍSTICA & ALMACENES */}

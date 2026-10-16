@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CheckoutStep } from "../types/wizard.types";
 
@@ -54,12 +54,19 @@ export default function CheckoutWizard({ clientData, pagoNumero }: Props) {
   // Ref para ejecutar el reset solo en el primer montaje del componente.
   const initializedRef = useRef(false);
 
+  // Los pasos solo se montan cuando el store ya quedó inicializado
+  // (limpio + pre-llenado con los datos del perfil). Así el paso 1
+  // (Datos del cliente) captura los valores del registro como
+  // valores iniciales del formulario, sin carreras de montaje,
+  // y el cliente puede modificar cualquier dato con normalidad.
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
     // Siempre resetear al entrar al checkout para evitar que datos de
-    // otro usuario persistan desde el localStorage.
+    // otro usuario persisten desde el localStorage.
     reset();
     resetWizard();
 
@@ -72,6 +79,8 @@ export default function CheckoutWizard({ clientData, pagoNumero }: Props) {
         phone: clientData.phone,
       });
     }
+
+    setReady(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -98,11 +107,17 @@ export default function CheckoutWizard({ clientData, pagoNumero }: Props) {
         steps={steps}
       />
 
-      <div className="min-h-[450px]">
-        {renderStep(currentStep, pagoNumero)}
-      </div>
+      {ready ? (
+        <>
+          <div className="min-h-[450px]">
+            {renderStep(currentStep, pagoNumero)}
+          </div>
 
-      <WizardFooter />
+          <WizardFooter />
+        </>
+      ) : (
+        <div className="min-h-[450px]" />
+      )}
     </div>
   );
 }

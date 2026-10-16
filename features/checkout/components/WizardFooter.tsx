@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
 import { useCart } from "@/features/cart/hooks/useCart";
+import { getCartItemsAction } from "@/features/cart/actions/get-cart-items.action";
+import { getItemUnitPrice } from "@/features/cart/types/cart.types";
 
 import { useWizard } from "../hooks/useWizard";
 import { useCheckout } from "../hooks/useCheckout";
@@ -233,6 +235,31 @@ export default function WizardFooter() {
     setError(null);
 
     try {
+      // Anti-sorpresas: verificar que lo que el cliente ve coincide
+      // con la base antes de cobrar. Si cambió (p. ej. productos
+      // guardados de su cuenta), se sincroniza la vista y confirma
+      // de nuevo: nunca se cobra algo que no se mostró.
+      const sync = await getCartItemsAction();
+
+      if (sync.success) {
+        const freshSubtotal = sync.items.reduce(
+          (total, item) =>
+            total + getItemUnitPrice(item) * item.cantidad,
+          0
+        );
+
+        if (
+          Math.round(freshSubtotal * 100) !==
+          Math.round(cartSubtotal * 100)
+        ) {
+          await refreshCart();
+          setError(
+            "Tu carrito se actualizó con productos guardados de tu cuenta. Revisa el resumen y confirma tu pedido nuevamente."
+          );
+          return;
+        }
+      }
+
       if (checkout.paymentMethod === "plin") {
         await finalizePlin();
         return;

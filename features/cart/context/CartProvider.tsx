@@ -5,8 +5,12 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+
+import { toast } from "sonner";
+import { ShoppingCart } from "lucide-react";
 
 import { useAuthContext } from "@/providers/AuthProvider";
 
@@ -34,40 +38,97 @@ export function CartProvider({
   const [drawerOpen, setDrawerOpen] =
     useState(false);
 
-  const refreshCart = useCallback(async () => {
+  // Ref para abrir el drawer desde la notificación sin causar dependencias circulares.
+  const openDrawerRef = useRef<() => void>(() => setDrawerOpen(true));
+  useEffect(() => {
+    openDrawerRef.current = () => setDrawerOpen(true);
+  });
+
+  // Ref para saber si es la primera carga de un usuario (login reciente).
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+
+  // Control de carreras: solo el último refresco puede actualizar
+  // el estado (evita que una petición lenta pise datos más nuevos).
+  const fetchSeq = useRef(0);
+
+  // Función interna que retorna los items (usada para la notificación de login).
+  const fetchCart = useCallback(async (): Promise<CartItem[]> => {
+    const seq = ++fetchSeq.current;
     setLoading(true);
 
     try {
-      const result =
-        await getCartItemsAction();
+      const result = await getCartItemsAction();
+
+      if (seq !== fetchSeq.current) return [];
 
       if (result.success) {
         setItems(result.items);
+        return result.items;
       } else {
         setItems([]);
+        return [];
       }
     } catch (error) {
       console.error(error);
-      setItems([]);
+
+      if (seq === fetchSeq.current) {
+        setItems([]);
+      }
+
+      return [];
     } finally {
-      setLoading(false);
+      if (seq === fetchSeq.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
-  // El carrito sigue el estado de sesión: al cerrar sesión se
-  // vacía la vista (el carrito guardado en la base se conserva
-  // y vuelve a aparecer al iniciar sesión de nuevo).
+  // Función pública del contexto (retorna void según CartContextType).
+  const refreshCart = useCallback(async (): Promise<void> => {
+    await fetchCart();
+  }, [fetchCart]);
+
+  // El carrito sigue el estado de sesión (anclado al id del
+  // usuario para ignorar renovaciones de token): al cerrar
+  // sesión se vacía la vista; al iniciar sesión se carga el
+  // carrito guardado en la base desde el principio.
+  const userId = user?.id ?? null;
+
   useEffect(() => {
     if (authLoading) return;
 
-    if (user) {
-      void refreshCart();
+    if (userId) {
+      const isNewLogin = prevUserIdRef.current !== userId;
+      prevUserIdRef.current = userId;
+
+      fetchCart().then((loadedItems) => {
+        // Solo notificar si es un login nuevo y hay productos previos en el carrito.
+        if (isNewLogin && loadedItems.length > 0) {
+          const totalUnidades = loadedItems.reduce(
+            (sum, item) => sum + item.cantidad,
+            0
+          );
+          toast(
+            `Tienes ${totalUnidades} ${totalUnidades === 1 ? "producto" : "productos"} en tu carrito`,
+            {
+              icon: <ShoppingCart className="w-4 h-4 text-pink-500" />,
+              description: "Quedaron de tu sesión anterior.",
+              action: {
+                label: "Ver carrito",
+                onClick: () => openDrawerRef.current(),
+              },
+              duration: 6000,
+            }
+          );
+        }
+      });
     } else {
+      prevUserIdRef.current = null;
       setItems([]);
       setDrawerOpen(false);
       setLoading(false);
     }
-  }, [user, authLoading, refreshCart]);
+  }, [userId, authLoading, fetchCart]);
 
   const totalItems = useMemo(() => {
     return items.reduce(
@@ -115,4 +176,4 @@ export function CartProvider({
       {children}
     </CartContext.Provider>
   );
-}
+}

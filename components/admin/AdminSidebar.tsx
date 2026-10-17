@@ -125,7 +125,7 @@ const groups = [
 
 export default function AdminSidebar() {
   return (
-    <aside className="flex h-screen w-72 flex-col bg-cake-espresso text-white">
+    <aside className="hidden h-screen w-72 flex-col bg-cake-espresso text-white md:flex">
       <div className="border-b border-white/10 p-8">
         <Link href="/admin">
           <h1 className="text-2xl font-bold">
@@ -150,7 +150,7 @@ export default function AdminSidebar() {
       <div className="border-t border-white/10 p-6">
         <div className="rounded-xl bg-white/5 p-4">
           <p className="font-semibold">
-            Kelly's Cake CMS
+            Kelly&apos;s Cake CMS
           </p>
 
           <p className="text-sm text-gray-400">

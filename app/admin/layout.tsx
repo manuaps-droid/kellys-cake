@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminMobileNav from "@/components/admin/AdminMobileNav";
 
 import { getCurrentAdmin } from "@/lib/auth/getCurrentAdmin";
 
@@ -39,10 +40,12 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <AdminSidebar />
 
+      <AdminMobileNav />
+
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader />
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 pb-28 sm:p-6 md:p-8 md:pb-8">
           <div className="mx-auto w-full max-w-7xl">
             {children}
           </div>

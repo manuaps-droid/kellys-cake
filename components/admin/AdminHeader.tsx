@@ -8,19 +8,19 @@ export default async function AdminHeader() {
     await getCurrentAdmin();
 
   return (
-    <header className="flex items-center justify-between border-b bg-white px-8 py-6">
+    <header className="flex items-center justify-between gap-3 border-b bg-white px-4 py-4 sm:px-8 sm:py-6">
       <div>
-        <h2 className="text-2xl font-bold text-cake-espresso">
+        <h2 className="text-xl font-bold text-cake-espresso sm:text-2xl">
           Administración
         </h2>
 
-        <p className="text-sm text-gray-500">
+        <p className="hidden text-sm text-gray-500 sm:block">
           Kelly&apos;s Cake CMS
         </p>
       </div>
 
-      <div className="flex items-center gap-6">
-        <div className="text-right">
+      <div className="flex items-center gap-3 sm:gap-6">
+        <div className="hidden text-right sm:block">
           <p className="font-semibold">
             {admin.cliente.nombre}
           </p>
@@ -34,7 +34,7 @@ export default async function AdminHeader() {
 
         <Link
           href="/"
-          className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-100"
+          className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium transition hover:bg-gray-100 sm:px-4 sm:text-sm"
         >
           Ver tienda
         </Link>

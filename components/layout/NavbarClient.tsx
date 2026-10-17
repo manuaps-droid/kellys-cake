@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, ShieldCheck } from "lucide-react";
 
 import type { User } from "@supabase/supabase-js";
 
@@ -16,17 +16,29 @@ import MobileMenuDrawer from "./MobileMenuDrawer";
 
 type NavbarClientProps = {
   user: User | null;
+  isAdmin?: boolean;
 };
 
-export default function NavbarClient({ user: serverUser }: NavbarClientProps) {
+export default function NavbarClient({
+  user: serverUser,
+  isAdmin = false,
+}: NavbarClientProps) {
   const { user: contextUser } = useAuthContext();
   const router = useRouter();
   const user = contextUser ?? serverUser;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Referencias estables: si onClose cambia en cada render, el
+  // efecto del drawer que cierra al navegar se dispara solo y
+  // el menú se cierra inmediatamente al abrirlo.
+  const closeMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
   async function handleLogout() {
     try {
       await authClient.signOut();
+      closeMenu();
       router.refresh();
       router.push("/");
     } catch (error) {
@@ -67,6 +79,16 @@ export default function NavbarClient({ user: serverUser }: NavbarClientProps) {
               {link.label}
             </Link>
           ))}
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 rounded-full border border-kc-rose-gold/40 bg-kc-rose-gold/10 px-3 py-1 text-sm font-semibold text-kc-rose-gold transition-colors hover:bg-kc-rose-gold/20"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-3 sm:gap-5">
@@ -118,8 +140,9 @@ export default function NavbarClient({ user: serverUser }: NavbarClientProps) {
 
     <MobileMenuDrawer
       isOpen={mobileMenuOpen}
-      onClose={() => setMobileMenuOpen(false)}
+      onClose={closeMenu}
       user={user}
+      isAdmin={isAdmin}
     />
   </>
   );

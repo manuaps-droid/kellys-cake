@@ -23,6 +23,7 @@ import {
   X,
   Eye,
   Smartphone,
+  ChefHat,
 } from "lucide-react";
 
 const groups = [
@@ -210,6 +211,14 @@ export default function AdminMobileNav() {
                 >
                   <Smartphone className="h-4 w-4" />
                   <span>Autorizar este equipo</span>
+                </Link>
+                <Link
+                  href="/foodos"
+                  onClick={cerrarDrawer}
+                  className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-white/80 transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  <ChefHat className="h-4 w-4" />
+                  <span>FoodOS · Producción</span>
                 </Link>
                 <Link
                   href="/"

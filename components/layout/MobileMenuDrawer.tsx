@@ -17,6 +17,9 @@ import {
   LogOut,
   FileText,
   ChevronRight,
+  ShieldCheck,
+  LayoutDashboard,
+  ChefHat,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { authClient } from "@/features/auth/services/auth.client";
@@ -26,6 +29,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
+  isAdmin?: boolean;
 };
 
 const navLinks = [
@@ -39,7 +43,12 @@ const navLinks = [
   { label: "Libro de Reclamaciones", href: "/libro-de-reclamaciones", icon: FileText },
 ];
 
-export default function MobileMenuDrawer({ isOpen, onClose, user }: Props) {
+export default function MobileMenuDrawer({
+  isOpen,
+  onClose,
+  user,
+  isAdmin = false,
+}: Props) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -167,6 +176,40 @@ export default function MobileMenuDrawer({ isOpen, onClose, user }: Props) {
               </div>
             )}
           </div>
+
+          {/* Gestión: alternar a modo administrador (Panel Admin / FoodOS) */}
+          {isAdmin && (
+            <div className="px-3 pt-1 pb-2">
+              <div className="flex items-center gap-2 px-3.5 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-wider text-kc-rose-gold">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Gestión · Administrador
+              </div>
+              <div className="space-y-1">
+                <Link
+                  href="/admin"
+                  onClick={onClose}
+                  className="flex items-center gap-3.5 rounded-xl bg-kc-charcoal px-3.5 py-3 text-sm font-semibold text-kc-cream transition-colors hover:bg-kc-deep"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-kc-rose-gold/20 text-kc-rose-gold">
+                    <LayoutDashboard className="h-4 w-4" />
+                  </span>
+                  <span className="flex-1">Panel Admin</span>
+                  <ChevronRight className="h-4 w-4 opacity-60" />
+                </Link>
+                <Link
+                  href="/foodos"
+                  onClick={onClose}
+                  className="flex items-center gap-3.5 rounded-xl border border-kc-sand/60 bg-white/80 px-3.5 py-3 text-sm font-semibold text-kc-charcoal transition-colors hover:border-kc-rose-gold/50 hover:text-kc-rose-gold"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-kc-sand/40 text-kc-mocha">
+                    <ChefHat className="h-4 w-4" />
+                  </span>
+                  <span className="flex-1">FoodOS · Producción</span>
+                  <ChevronRight className="h-4 w-4 opacity-40" />
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Enlaces de Navegación */}
           <nav className="px-3 py-2 space-y-1">

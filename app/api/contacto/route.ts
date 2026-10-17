@@ -1,5 +1,8 @@
+import { after } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -80,6 +83,14 @@ export async function POST(request: Request) {
     if (error) {
       throw error;
     }
+
+    after(() =>
+      notificarAdminsPush(
+        "Nuevo mensaje de contacto",
+        `${nombre.trim()}: ${asunto.trim().slice(0, 80)}`,
+        "/admin/contactos"
+      )
+    );
 
     return NextResponse.json({
       success: true,

@@ -5,6 +5,7 @@ import { after } from "next/server";
 
 import { getCurrentClient } from "@/features/auth/services/auth.server";
 import { notifyAdminNewOrderService } from "@/features/notifications/services/notify-new-order.service";
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 
 import { resolveTopperPrecioService } from "../services/topper-price.service";
 import { finalizeTopperService } from "../services/finalize-topper.service";
@@ -60,10 +61,17 @@ export async function finalizeTopperAction(input: FinalizeTopperInput) {
     revalidatePath("/mi-cuenta/pedidos");
 
     after(() =>
-      notifyAdminNewOrderService({
-        orderId: pedido.id,
-        origen: "Topper directo",
-      })
+      Promise.all([
+        notifyAdminNewOrderService({
+          orderId: pedido.id,
+          origen: "Topper directo",
+        }),
+        notificarAdminsPush(
+          "Nuevo pedido de topper",
+          "Un cliente finalizó un topper directo desde el diseñador.",
+          "/admin/pedidos"
+        ),
+      ])
     );
 
     return {

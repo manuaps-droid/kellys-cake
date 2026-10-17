@@ -1,6 +1,9 @@
 "use server";
 
+import { after } from "next/server";
+
 import { createProjectService } from "../services/create-project.service";
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 import { ProjectData } from "../types/project.types";
 
 export async function createProjectAction(
@@ -15,6 +18,14 @@ export async function createProjectAction(
     console.log(
       "✅ Proyecto creado:",
       project
+    );
+
+    after(() =>
+      notificarAdminsPush(
+        "Nueva solicitud de diseño",
+        "Un cliente pidió una cotización de pastel personalizado.",
+        "/admin/proyectos"
+      )
     );
 
     return {

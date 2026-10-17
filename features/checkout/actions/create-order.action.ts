@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrderService, verifyPayment } from "@/features/checkout/services/checkout.service";
 import { getItemNombre, getItemUnitPrice } from "@/features/cart/types/cart.types";
 import { notifyAdminNewOrderService } from "@/features/notifications/services/notify-new-order.service";
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 
 export type CreateOrderPaymentData = {
   paymentMethod: string;
@@ -161,10 +162,17 @@ export async function createOrder(paymentData?: CreateOrderPaymentData) {
 
     if (result.pedido_id) {
       after(() =>
-        notifyAdminNewOrderService({
-          orderId: result.pedido_id as string,
-          origen: "Checkout web",
-        })
+        Promise.all([
+          notifyAdminNewOrderService({
+            orderId: result.pedido_id as string,
+            origen: "Checkout web",
+          }),
+          notificarAdminsPush(
+            "Nuevo pedido recibido",
+            "Un cliente confirmó un pedido desde la web. Revísalo y agénalo.",
+            "/admin/pedidos"
+          ),
+        ])
       );
     }
 

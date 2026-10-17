@@ -1,41 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    // Validar autenticación de administrador
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    // Solo administradores en equipos autorizados (máx. 3)
+    // pueden registrar notificaciones.
+    if (!(await checkIsAdmin())) {
       return NextResponse.json(
         { success: false, message: "No autorizado." },
-        { status: 401 }
+        { status: 403 }
       );
     }
 
-    const body = await request.json();
-    const { subscription } = body;
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!subscription) {
+    const body = await request.json();
+    const subscription = body?.subscription;
+    const dispositivoNombre =
+      typeof body?.dispositivoNombre === "string"
+        ? body.dispositivoNombre.slice(0, 120)
+        : null;
+
+    const endpoint = subscription?.endpoint;
+    const p256dh = subscription?.keys?.p256dh;
+    const auth = subscription?.keys?.auth;
+
+    if (!endpoint || !p256dh || !auth) {
       return NextResponse.json(
-        { success: false, message: "Suscripción faltante." },
+        { success: false, message: "Suscripción inválida." },
         { status: 400 }
       );
     }
 
-    // Aquí almacenaríamos la suscripción de push en una tabla de la base de datos asociada al usuario.
-    // Por ejemplo: supabase.from("dispositivos_admin").upsert({ user_id: user.id, subscription })
-    // Como es una estructura extensible, guardamos un log y retornamos éxito.
-    console.log("Nueva suscripción push registrada para el usuario:", user.id, subscription);
+    const admin = createAdminClient();
+
+    const { error } = await admin
+      .from("push_subscriptions")
+      .upsert(
+        {
+          endpoint,
+          p256dh,
+          auth,
+          user_id: user?.id ?? null,
+          dispositivo_nombre: dispositivoNombre,
+        },
+        { onConflict: "endpoint" }
+      );
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Suscripción registrada correctamente.",
+      message: "Notificaciones activadas en este equipo.",
     });
   } catch (error) {
     console.error("Error en suscripción de push:", error);

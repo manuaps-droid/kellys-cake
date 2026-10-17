@@ -26,6 +26,8 @@ import {
   ChefHat,
 } from "lucide-react";
 
+import ActivarNotificaciones from "./ActivarNotificaciones";
+
 const groups = [
   {
     title: "Contenido",
@@ -204,6 +206,7 @@ export default function AdminMobileNav() {
                 <div className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/40">
                   Equipo
                 </div>
+                <ActivarNotificaciones compacto />
                 <Link
                   href="/autorizar-dispositivo"
                   onClick={cerrarDrawer}

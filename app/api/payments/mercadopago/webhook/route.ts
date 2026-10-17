@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 
 /**
  * Webhook de Mercado Pago.
@@ -109,6 +110,14 @@ export async function POST(request: NextRequest) {
           .from("pedidos")
           .update({ estado_pago: "pagado", estado: "confirmado" })
           .eq("id", pedido.id);
+
+        after(() =>
+          notificarAdminsPush(
+            "Pago confirmado",
+            "Un pedido quedó pagado y agendado en producción. Revisa la agenda.",
+            "/admin/agenda"
+          )
+        );
       }
 
       return NextResponse.json({ ok: true, approved: isApproved });

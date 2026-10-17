@@ -1,6 +1,9 @@
 "use server";
 
+import { after } from "next/server";
+
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 
 import type { LibroReclamacionesSchema } from "@/features/reclamos/validations/libro-reclamaciones.schema";
 
@@ -55,6 +58,14 @@ export async function createReclamoAction(values: LibroReclamacionesSchema) {
         "No se pudo registrar la solicitud. Por favor inténtalo nuevamente.",
     };
   }
+
+  after(() =>
+    notificarAdminsPush(
+      "Libro de Reclamaciones",
+      `Nueva solicitud ${numero} recibida de ${values.nombres.trim()}.`,
+      "/admin/reclamos"
+    )
+  );
 
   return { success: true as const, numero: data.numero };
 }

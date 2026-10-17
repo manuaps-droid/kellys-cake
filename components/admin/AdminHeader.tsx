@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getCurrentAdmin } from "@/lib/auth/getCurrentAdmin";
 import ExportButton from "./ExportButton";
+import ActivarNotificaciones from "./ActivarNotificaciones";
 
 export default async function AdminHeader() {
   const admin =
@@ -31,6 +32,8 @@ export default async function AdminHeader() {
         </div>
 
         <ExportButton />
+
+        <ActivarNotificaciones />
 
         <Link
           href="/"

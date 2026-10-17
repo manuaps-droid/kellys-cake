@@ -1,6 +1,9 @@
 "use server";
 
+import { after } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
+import { notificarAdminsPush } from "@/features/notifications/services/push.service";
 
 interface CateringRequest {
   tipo_evento: string;
@@ -47,6 +50,14 @@ export async function submitCateringRequest(data: CateringRequest) {
         message: error.message,
       };
     }
+
+    after(() =>
+      notificarAdminsPush(
+        "Nueva solicitud de catering",
+        `${data.nombre.trim()} pidió cotización para un evento (${data.tipo_evento}) el ${data.fecha_evento}.`,
+        "/admin/catering"
+      )
+    );
 
     return { success: true, id: inserted?.id };
   } catch (error) {

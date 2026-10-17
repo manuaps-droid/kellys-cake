@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
+
 const ALLOWED_OCR_TYPES = [
   "image/jpeg",
   "image/png",
@@ -24,6 +26,17 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "No autorizado. Inicia sesión en FoodOS para usar el escáner." },
         { status: 401 }
+      );
+    }
+
+    // Solo administradores en equipos autorizados pueden usar el escáner IA
+    if (!(await checkIsAdmin())) {
+      return NextResponse.json(
+        {
+          error:
+            "Acceso denegado. Solo administradores en equipos autorizados pueden usar el escáner.",
+        },
+        { status: 403 }
       );
     }
 

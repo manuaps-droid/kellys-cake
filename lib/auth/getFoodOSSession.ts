@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
+import { isCurrentDeviceAuthorized } from "./authorized-devices";
+
 /**
  * Valida que el usuario tenga una sesión activa y retorna el cliente y tenant_id de FoodOS.
  * Lanza un error si no está autenticado o la cuenta no está activa.
@@ -28,6 +30,15 @@ export async function getFoodOSSession() {
 
   if (cliente.rol !== "admin") {
     throw new Error("Acceso denegado. Solo administradores pueden acceder a FoodOS.");
+  }
+
+  // Solo los equipos autorizados (máx. 3 dispositivos) tienen control total
+  const deviceCheck = await isCurrentDeviceAuthorized();
+
+  if (!deviceCheck.authorized) {
+    throw new Error(
+      "Equipo no autorizado. Autoriza este dispositivo desde /autorizar-dispositivo para usar FoodOS."
+    );
   }
 
   // Obtener el tenant configurado para FoodOS

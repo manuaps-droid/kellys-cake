@@ -1,26 +1,13 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import { checkIsAdmin } from "@/lib/auth/isAdmin";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
 const archiver = require("archiver") as any;
 
 async function isAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { data: cliente } = await supabase
-    .from("clientes")
-    .select("rol, activo")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  return Boolean(
-    cliente?.activo && cliente.rol === "admin"
-  );
+  // Incluye verificación de dispositivo autorizado (máx. 3 equipos)
+  return checkIsAdmin();
 }
 
 function esc(v: unknown): string {

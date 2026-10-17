@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import { isCurrentDeviceAuthorized } from "@/lib/auth/authorized-devices";
+
 export async function POST(req: Request) {
   try {
     const { message } = await req.json();
@@ -22,6 +24,15 @@ export async function POST(req: Request) {
 
     if (cliente?.rol !== 'admin') {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    // Solo los equipos autorizados (máx. 3) tienen control total
+    const deviceCheck = await isCurrentDeviceAuthorized();
+    if (!deviceCheck.authorized) {
+      return NextResponse.json(
+        { error: "Equipo no autorizado. Autoriza este dispositivo para usar el copiloto." },
+        { status: 403 }
+      );
     }
 
     const { data: tenant } = await supabase

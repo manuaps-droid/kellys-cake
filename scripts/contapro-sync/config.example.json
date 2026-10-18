@@ -1,0 +1,6 @@
+{
+  "endpoint": "https://kellyscake.pe/api/contapro/sync",
+  "secret": "PEGA_AQUI_EL_CONTAPRO_SYNC_SECRET",
+  "carpeta": "C:\\Contapro\\exportaciones",
+  "meses_atras": 3
+}

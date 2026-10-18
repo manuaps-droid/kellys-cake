@@ -1,0 +1,13 @@
+{
+  "name": "contapro-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente que sincroniza los reportes de Contapro con FoodOS (kellyscake.pe)",
+  "main": "sincronizar.cjs",
+  "scripts": {
+    "sync": "node sincronizar.cjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

@@ -1,38 +1,22 @@
-﻿import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+﻿import { createAdminClient } from "@/lib/supabase/admin";
 
-async function getSupabaseClient() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-}
-
+/**
+ * Lee todos los ingredientes del tenant de FoodOS.
+ * Usa el cliente admin (service_role) para no depender de RLS
+ * ni de la sesión del usuario en las páginas del servidor.
+ */
 export async function getIngredientes() {
-  const supabase = await getSupabaseClient();
-  
-  // RLS (Row Level Security) asegura que esto solo retorne 
-  // los ingredientes del tenant del usuario actual automáticamente
+  const supabase = createAdminClient();
+
   const { data, error } = await supabase
     .from('ingredientes')
     .select('*')
     .order('nombre', { ascending: true });
 
   if (error) {
-    console.error("💥 ERROR SUPABASE EXACTO:", String(error), " | Nombre:", error?.name, " | Mensaje:", error?.message, " | Stack:", error?.stack);
+    console.error("Error leyendo ingredientes:", error.message);
     return [];
   }
-  
-  return data || [];
+
+  return data ?? [];
 }
-
-
-

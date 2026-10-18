@@ -22,10 +22,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <p className="text-xs text-slate-400 mt-1">Sistema Operativo Gastronómico</p>
           </div>
 
-          <nav className="mt-2 flex flex-col gap-1 px-4 text-sm">
+            <nav className="mt-2 flex flex-col gap-1 px-4 text-sm">
             {/* SECCIÓN CORE (SIEMPRE ACTIVA) */}
             <div className="text-[10px] font-bold text-slate-500 uppercase px-3 pt-2 pb-1">MÓDULO 1: CORE</div>
             <Link href="/foodos" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">📊 Dashboard</Link>
+            <Link href="/foodos/pulso" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-rose-300 font-medium flex items-center justify-between"><span>❤️ Pulso del Negocio</span> <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">NUEVO</span></Link>
             <Link href="/foodos/ingredientes" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">🥑 Ingredientes</Link>
             <Link href="/foodos/productos" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">🍰 Productos & Recetas</Link>
             <Link href="/foodos/compras/escanear" className="px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-emerald-400 flex items-center justify-between font-medium"><span>📷 Escanear Factura</span> <span className="bg-emerald-600 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">IA</span></Link>

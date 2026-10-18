@@ -21,6 +21,7 @@ import {
   ChevronRight,
   TrendingUp,
   Calculator,
+  HeartPulse,
 } from "lucide-react";
 
 type Props = {
@@ -218,6 +219,18 @@ export default function FoodOSMobileNav({
                     >
                       <LayoutDashboard className="h-4 w-4 text-blue-400" />
                       <span>Dashboard & Rentabilidad</span>
+                    </Link>
+                    <Link
+                      href="/foodos/pulso"
+                      className="flex items-center justify-between rounded-lg px-2.5 py-2 text-rose-300 font-semibold hover:bg-slate-800"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <HeartPulse className="h-4 w-4" />
+                        <span>Pulso del Negocio</span>
+                      </div>
+                      <span className="rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        NUEVO
+                      </span>
                     </Link>
                     <Link
                       href="/foodos/ingredientes"

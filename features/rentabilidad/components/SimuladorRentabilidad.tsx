@@ -37,6 +37,7 @@ import {
 const STORAGE_KEY_FIJOS = "kellys_foodos_costos_fijos_v1";
 const STORAGE_KEY_VARIABLES = "kellys_foodos_costos_variables_v1";
 const STORAGE_KEY_MARGEN = "kellys_foodos_margen_v1";
+const STORAGE_KEY_MULTIPLICADOR = "kellys_foodos_multiplicador_v1";
 
 type Props = {
   productosExistentes?: ProductoPreset[];
@@ -73,6 +74,10 @@ export function SimuladorRentabilidad({ productosExistentes = [] }: Props) {
   const [unidadesMensuales, setUnidadesMensuales] = useState<number>(45);
   const [patrimonioInvertido, setPatrimonioInvertido] = useState<number>(20000);
 
+  // Multiplicador de gastos generales (1.0 = sin overhead, 1.4 = típico)
+  const [multiplicadorGastos, setMultiplicadorGastos] = useState<number>(1.0);
+  const idMultiplicador = useId();
+
   // Cargar preferencias guardadas en localStorage si existen
   useEffect(() => {
     try {
@@ -88,6 +93,14 @@ export function SimuladorRentabilidad({ productosExistentes = [] }: Props) {
         if (parsed.usarPersonalizado !== undefined) setUsarMargenPersonalizado(parsed.usarPersonalizado);
         if (parsed.valor !== undefined) setMargenPersonalizadoValor(parsed.valor);
         if (parsed.categoriaId) setCategoriaSeleccionadaId(parsed.categoriaId);
+      }
+
+      const savedMultiplicador = localStorage.getItem(STORAGE_KEY_MULTIPLICADOR);
+      if (savedMultiplicador) {
+        const val = parseFloat(savedMultiplicador);
+        if (Number.isFinite(val) && val >= 1 && val <= 5) {
+          setMultiplicadorGastos(val);
+        }
       }
     } catch {
       // Ignorar errores de localStorage en entornos restringidos
@@ -124,6 +137,34 @@ export function SimuladorRentabilidad({ productosExistentes = [] }: Props) {
     unidadesMensuales,
     patrimonioInvertido,
   ]);
+
+  // Costo REAL con multiplicador de gastos generales
+  const costoReal = useMemo(() => {
+    const costoBase = resultado.costoVariableTotal;
+    const real = costoBase * multiplicadorGastos;
+    const gananciaReal = resultado.precioVentaSugerido - real;
+    const margenRealPct =
+      resultado.precioVentaSugerido > 0
+        ? (gananciaReal / resultado.precioVentaSugerido) * 100
+        : 0;
+
+    return {
+      costoBase,
+      costoReal: Math.round(real * 100) / 100,
+      gananciaReal: Math.round(gananciaReal * 100) / 100,
+      margenRealPct: Math.round(margenRealPct * 10) / 10,
+      overheadPorUnidad: Math.round((real - costoBase) * 100) / 100,
+    };
+  }, [resultado.costoVariableTotal, resultado.precioVentaSugerido, multiplicadorGastos]);
+
+  // Guardar multiplicador en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_MULTIPLICADOR, String(multiplicadorGastos));
+    } catch {
+      // Silenciar errores
+    }
+  }, [multiplicadorGastos]);
 
   // Manejar selección de producto del catálogo FoodOS
   const handleSelectProductoExistente = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -618,6 +659,115 @@ INDICADORES COMERCIALES:
                   ))}
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* TARJETA 2.5: MULTIPLICADOR DE GASTOS GENERALES */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-2xl p-6 shadow-sm border-2 border-amber-200/60 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-amber-900 flex items-center gap-2">
+                  <Scale className="w-5 h-5 text-amber-600" />
+                  <span>Multiplicador de Gastos Generales</span>
+                </h2>
+                <p className="text-xs text-amber-700/80">
+                  (Fijos + Planilla) ÷ Insumos del mes. Carga overhead en todos tus productos sin contabilidad.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label htmlFor={idMultiplicador} className="mb-1 block text-xs font-bold text-amber-800">
+                  Tu multiplicador
+                </label>
+                <input
+                  id={idMultiplicador}
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  max="5"
+                  value={multiplicadorGastos}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (Number.isFinite(val) && val >= 1 && val <= 5) {
+                      setMultiplicadorGastos(val);
+                    }
+                  }}
+                  className="w-full rounded-lg border-2 border-amber-300 bg-white px-4 py-2.5 text-xl font-black text-amber-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                />
+                <p className="mt-1 text-[11px] text-amber-600">
+                  1.0 = solo ingredientes · 1.4 = típico pastelería · 1.8 = alto overhead
+                </p>
+              </div>
+
+              <div className="flex gap-1.5">
+                {[
+                  { label: "1.2", value: 1.2 },
+                  { label: "1.4", value: 1.4 },
+                  { label: "1.6", value: 1.6 },
+                  { label: "1.8", value: 1.8 },
+                ].map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => setMultiplicadorGastos(preset.value)}
+                    className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${
+                      multiplicadorGastos === preset.value
+                        ? "bg-amber-600 text-white"
+                        : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {multiplicadorGastos > 1 && (
+              <div className="rounded-xl bg-white/80 border border-amber-200 p-4 space-y-2.5">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase text-gray-400">Solo Ingredientes</p>
+                    <p className="text-base font-bold text-gray-600">
+                      S/ {costoReal.costoBase.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase text-amber-600">Costo REAL (×{multiplicadorGastos})</p>
+                    <p className="text-base font-black text-amber-800">
+                      S/ {costoReal.costoReal.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase text-emerald-600">Ganancia REAL</p>
+                    <p className="text-base font-black text-emerald-700">
+                      S/ {costoReal.gananciaReal.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase text-blue-600">Margen REAL</p>
+                    <p className={`text-base font-black ${costoReal.margenRealPct > 50 ? "text-emerald-700" : costoReal.margenRealPct > 30 ? "text-amber-700" : "text-red-700"}`}>
+                      {costoReal.margenRealPct}%
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg bg-amber-50 border-l-4 border-amber-500 px-3 py-2 text-xs text-amber-800">
+                  <strong>Cada unidad te está costando S/ {costoReal.costoReal.toFixed(2)}</strong> (incluye
+                  S/ {costoReal.overheadPorUnidad.toFixed(2)} de planilla, alquiler, luz y demás gastos fijos).
+                  {costoReal.margenRealPct < 20
+                    ? " ⚠️ Margen muy bajo: revisa tu precio de venta o baja costos fijos."
+                    : " ✅ Margen saludable que cubre todos tus gastos."}
+                </div>
+              </div>
+            )}
+
+            {multiplicadorGastos === 1 && (
+              <p className="rounded-lg bg-gray-100 px-3 py-2 text-xs text-gray-500">
+                Con 1.0 solo ves el costo de ingredientes (sin planilla ni alquiler). Sube el multiplicador
+                para ver el costo real de producir cada unidad. Tip: revisa tus gastos de Contapro para
+                calcularlo.
+              </p>
             )}
           </div>
 

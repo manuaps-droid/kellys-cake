@@ -8,26 +8,56 @@ import { guardarReceta } from "../actions/receta-actions";
 
 type IngredienteOpcion = { id: string; nombre: string; unidad_uso: string; costo_por_unidad_uso: number; porcentaje_merma_estandar: number };
 
-export function RecetaEditor({ productoId, ingredientesDisponibles }: { productoId: string, ingredientesDisponibles: IngredienteOpcion[] }) {
+type ItemInicial = {
+  ingrediente_id: string;
+  cantidad: number;
+  unidad: string;
+  merma_porcentaje: number;
+};
+type Props = {
+  productoId: string;
+  ingredientesDisponibles: IngredienteOpcion[];
+  itemsIniciales?: ItemInicial[];
+  rendimientoInicial?: number;
+};
+
+export function RecetaEditor({
+  productoId,
+  ingredientesDisponibles,
+  itemsIniciales = [],
+  rendimientoInicial = 1,
+}: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<any>({
+  const itemsPorDefecto =
+    itemsIniciales.length > 0
+      ? itemsIniciales
+      : [{ ingrediente_id: "", cantidad: 0, unidad: "", merma_porcentaje: 0 }];
+
+  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<RecetaFormValues>({
     resolver: zodResolver(recetaSchema),
     defaultValues: {
       producto_id: productoId,
       nombre: "Receta Principal",
-      rendimiento: 1,
-      items: [{ ingrediente_id: "", cantidad: 0, unidad: "", merma_porcentaje: 0 }]
+      rendimiento: rendimientoInicial,
+      items: itemsPorDefecto
     }
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
-  const watchedItems = watch("items");
+  type ItemWatch = {
+    ingrediente_id: string;
+    cantidad: number;
+    unidad: string;
+    merma_porcentaje: number;
+  };
+
+  const watchedItems = watch("items") as ItemWatch[];
   const rendimientoWatch = watch("rendimiento") || 1;
 
-  const costoTotalVisual = (watchedItems || []).reduce((acc: number, item: any) => {
+  const costoTotalVisual = (watchedItems || []).reduce((acc: number, item: ItemWatch) => {
     const ingDB = ingredientesDisponibles.find(i => i.id === item.ingrediente_id);
     if (!ingDB) return acc;
     
@@ -72,11 +102,22 @@ export function RecetaEditor({ productoId, ingredientesDisponibles }: { producto
       <div className="space-y-4">
         <h3 className="text-lg font-medium border-b pb-2">Ingredientes de la Receta</h3>
         
-        {fields.map((field, index) => (
+        {fields.map((field, index) => {
+          const itemActual = (watchedItems || [])[index];
+          const ingActual = ingredientesDisponibles.find(i => i.id === itemActual?.ingrediente_id);
+
+          return (
           <div key={field.id} className="flex gap-4 items-end bg-gray-50 p-3 rounded-md border">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-500 uppercase">Ingrediente</label>
-              <select 
+              <label className="block text-xs font-medium text-gray-500 uppercase">
+                Ingrediente
+                {ingActual && (
+                  <span className="ml-2 font-bold text-blue-600 normal-case">
+                    S/ {ingActual.costo_por_unidad_uso.toFixed(4)}/{ingActual.unidad_uso}
+                  </span>
+                )}
+              </label>
+              <select
                 {...register(`items.${index}.ingrediente_id` as const)}
                 className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm"
                 onChange={(e) => {
@@ -108,7 +149,8 @@ export function RecetaEditor({ productoId, ingredientesDisponibles }: { producto
 
             <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700 p-2 font-bold">X</button>
           </div>
-        ))}
+          );
+        })}
         
         <button 
           type="button" 

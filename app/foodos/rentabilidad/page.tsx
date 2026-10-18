@@ -1,12 +1,13 @@
-import { Suspense } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
+import type { DesgloseCosteo } from "@/features/rentabilidad/services/costeo-real.service";
 import { SimuladorRentabilidad } from "@/features/rentabilidad/components/SimuladorRentabilidad";
 import { ProductoPreset } from "@/features/rentabilidad/types/rentabilidad.types";
 
 export const metadata = {
   title: "Costeo Real por Producto | FoodOS",
   description:
-    "Costeo directo conectado a tus recetas: ingredientes + costos directos + overhead = costo real objetivo.",
+    "Costeo profesional en 4 capas: ingredientes, empaques, mano de obra e indirectos. Datos reales, no multiplicadores.",
 };
 
 export default async function RentabilidadPage() {
@@ -25,17 +26,19 @@ export default async function RentabilidadPage() {
     margen_porcentaje: Number(p.margen_porcentaje) || undefined,
   }));
 
+  // Calcular costeo real para cada producto (con receta activa)
+  const costeos: Record<string, DesgloseCosteo | null> = {};
+
+  for (const prod of productosExistentes) {
+    costeos[prod.id] = await calcularCosteoReal(prod.id);
+  }
+
   return (
     <div className="p-4 sm:p-6 md:p-8 mx-auto max-w-7xl">
-      <Suspense
-        fallback={
-          <div className="p-12 text-center text-slate-500 font-medium">
-            Cargando motor de costeo…
-          </div>
-        }
-      >
-        <SimuladorRentabilidad productosExistentes={productosExistentes} />
-      </Suspense>
+      <SimuladorRentabilidad
+        productosExistentes={productosExistentes}
+        costeosIniciales={costeos}
+      />
     </div>
   );
 }

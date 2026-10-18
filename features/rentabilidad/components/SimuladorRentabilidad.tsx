@@ -2,1306 +2,608 @@
 
 import { useState, useId, useEffect, useMemo } from "react";
 import {
-  DollarSign,
-  TrendingUp,
-  Percent,
-  AlertTriangle,
-  CheckCircle2,
-  Copy,
-  RotateCcw,
-  Save,
-  Info,
-  Scale,
-  Activity,
-  Layers,
-  Sparkles,
-  HelpCircle,
-  ShieldCheck,
-  Target,
-  Users,
-  PieChart,
+  Cake, Scale, Package, Percent, Copy, RotateCcw,
+  TrendingUp, AlertTriangle, CheckCircle2, Info,
+  DollarSign, Target, Lightbulb, Loader2, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  CostosFijos,
-  CostosVariablesUnitarios,
-  ProductoPreset,
-} from "../types/rentabilidad.types";
-import {
-  CATEGORIAS_MARGEN_SUGERIDO,
-  COSTOS_FIJOS_DEFAULT,
-  COSTOS_VARIABLES_DEFAULT,
-  calcularRentabilidad,
-} from "../utils/calculadora-rentabilidad";
 
-const STORAGE_KEY_FIJOS = "kellys_foodos_costos_fijos_v1";
-const STORAGE_KEY_VARIABLES = "kellys_foodos_costos_variables_v1";
-const STORAGE_KEY_MARGEN = "kellys_foodos_margen_v1";
-const STORAGE_KEY_MULTIPLICADOR = "kellys_foodos_multiplicador_v1";
+import type { ProductoPreset } from "../types/rentabilidad.types";
+import {
+  calcularCosteoDirecto,
+  type ResultadoCosteoDirecto,
+  EMPAQUE_DEFAULT,
+  OTROS_DIRECTOS_DEFAULT,
+  MULTIPLICADOR_DEFAULT,
+} from "../utils/costeo-directo";
+import { CATEGORIAS_MARGEN_SUGERIDO } from "../utils/calculadora-rentabilidad";
+
+const STORAGE_KEY = "kellys_foodos_costeo_directo_v1";
 
 type Props = {
   productosExistentes?: ProductoPreset[];
 };
 
 export function SimuladorRentabilidad({ productosExistentes = [] }: Props) {
-  // Generar IDs únicos para accesibilidad en inputs de formulario
-  const idProductoNombre = useId();
-  const idMateriaPrima = useId();
+  const idProducto = useId();
   const idEmpaque = useId();
-  const idManoObra = useId();
-  const idOtrosVariables = useId();
-  const idMargenPersonalizado = useId();
-  const idAlquiler = useId();
-  const idServicios = useId();
-  const idSueldosAdmin = useId();
-  const idSoftware = useId();
-  const idMarketing = useId();
-  const idOtrosFijos = useId();
-  const idUnidadesMensuales = useId();
-  const idPatrimonio = useId();
-
-  // Estados de entrada de costos
-  const [nombreProducto, setNombreProducto] = useState("Torta de Autor Signature (20 porciones)");
-  const [costosVariables, setCostosVariables] = useState<CostosVariablesUnitarios>(COSTOS_VARIABLES_DEFAULT);
-  const [costosFijos, setCostosFijos] = useState<CostosFijos>(COSTOS_FIJOS_DEFAULT);
-
-  // Estados de margen
-  const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>("tortas-autor");
-  const [usarMargenPersonalizado, setUsarMargenPersonalizado] = useState<boolean>(false);
-  const [margenPersonalizadoValor, setMargenPersonalizadoValor] = useState<number>(75);
-
-  // Estados de proyección
-  const [unidadesMensuales, setUnidadesMensuales] = useState<number>(45);
-  const [patrimonioInvertido, setPatrimonioInvertido] = useState<number>(20000);
-
-  // Multiplicador de gastos generales (1.0 = sin overhead, 1.4 = típico)
-  const [multiplicadorGastos, setMultiplicadorGastos] = useState<number>(1.0);
+  const idOtrosDirectos = useId();
   const idMultiplicador = useId();
+  const idPrecioVenta = useId();
 
-  // Cargar preferencias guardadas en localStorage si existen
+  const [productoId, setProductoId] = useState<string>("");
+  const [productoNombre, setProductoNombre] = useState<string>("");
+  const [costoIngredientes, setCostoIngredientes] = useState<number>(0);
+  const [rendimiento, setRendimiento] = useState<number>(1);
+  const [precioVenta, setPrecioVenta] = useState<number>(0);
+
+  const [empaque, setEmpaque] = useState<number>(EMPAQUE_DEFAULT);
+  const [otrosDirectos, setOtrosDirectos] = useState<number>(OTROS_DIRECTOS_DEFAULT);
+  const [multiplicador, setMultiplicador] = useState<number>(MULTIPLICADOR_DEFAULT);
+
+  const [categoriaId, setCategoriaId] = useState<string>("tortas-autor");
+  const [margenObjetivo, setMargenObjetivo] = useState<number>(75);
+  const [usarMargenPersonalizado, setUsarMargenPersonalizado] = useState(false);
+
+  const [mostrarPuntoEquilibrio, setMostrarPuntoEquilibrio] = useState(false);
+  const [costosFijosMensuales, setCostosFijosMensuales] = useState<number>(4400);
+  const [unidadesMensualesEstimadas, setUnidadesMensualesEstimadas] = useState<number>(45);
+
   useEffect(() => {
     try {
-      const savedFijos = localStorage.getItem(STORAGE_KEY_FIJOS);
-      if (savedFijos) setCostosFijos(JSON.parse(savedFijos));
-
-      const savedVariables = localStorage.getItem(STORAGE_KEY_VARIABLES);
-      if (savedVariables) setCostosVariables(JSON.parse(savedVariables));
-
-      const savedMargen = localStorage.getItem(STORAGE_KEY_MARGEN);
-      if (savedMargen) {
-        const parsed = JSON.parse(savedMargen);
-        if (parsed.usarPersonalizado !== undefined) setUsarMargenPersonalizado(parsed.usarPersonalizado);
-        if (parsed.valor !== undefined) setMargenPersonalizadoValor(parsed.valor);
-        if (parsed.categoriaId) setCategoriaSeleccionadaId(parsed.categoriaId);
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.empaque != null) setEmpaque(parsed.empaque);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.otrosDirectos != null) setOtrosDirectos(parsed.otrosDirectos);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.multiplicador != null) setMultiplicador(parsed.multiplicador);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.categoriaId) setCategoriaId(parsed.categoriaId);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.margenObjetivo != null) setMargenObjetivo(parsed.margenObjetivo);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.usarMargenPersonalizado != null) setUsarMargenPersonalizado(parsed.usarMargenPersonalizado);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.costosFijosMensuales != null) setCostosFijosMensuales(parsed.costosFijosMensuales);
       }
-
-      const savedMultiplicador = localStorage.getItem(STORAGE_KEY_MULTIPLICADOR);
-      if (savedMultiplicador) {
-        const val = parseFloat(savedMultiplicador);
-        if (Number.isFinite(val) && val >= 1 && val <= 5) {
-          setMultiplicadorGastos(val);
-        }
-      }
-    } catch {
-      // Ignorar errores de localStorage en entornos restringidos
-    }
+    } catch { /* localStorage error */ }
   }, []);
 
-  // Determinar margen activo
-  const categoriaActiva = useMemo(() => {
-    return (
-      CATEGORIAS_MARGEN_SUGERIDO.find((c) => c.id === categoriaSeleccionadaId) ||
-      CATEGORIAS_MARGEN_SUGERIDO[0]
-    );
-  }, [categoriaSeleccionadaId]);
-
-  const margenActivo = usarMargenPersonalizado
-    ? margenPersonalizadoValor
-    : categoriaActiva.margenSugerido;
-
-  // Cálculo reactivo central
-  const resultado = useMemo(() => {
-    return calcularRentabilidad(
-      costosVariables,
-      costosFijos,
-      margenActivo,
-      usarMargenPersonalizado,
-      unidadesMensuales,
-      patrimonioInvertido
-    );
-  }, [
-    costosVariables,
-    costosFijos,
-    margenActivo,
-    usarMargenPersonalizado,
-    unidadesMensuales,
-    patrimonioInvertido,
-  ]);
-
-  // Costo REAL con multiplicador de gastos generales
-  const costoReal = useMemo(() => {
-    const costoBase = resultado.costoVariableTotal;
-    const real = costoBase * multiplicadorGastos;
-    const gananciaReal = resultado.precioVentaSugerido - real;
-    const margenRealPct =
-      resultado.precioVentaSugerido > 0
-        ? (gananciaReal / resultado.precioVentaSugerido) * 100
-        : 0;
-
-    return {
-      costoBase,
-      costoReal: Math.round(real * 100) / 100,
-      gananciaReal: Math.round(gananciaReal * 100) / 100,
-      margenRealPct: Math.round(margenRealPct * 10) / 10,
-      overheadPorUnidad: Math.round((real - costoBase) * 100) / 100,
-    };
-  }, [resultado.costoVariableTotal, resultado.precioVentaSugerido, multiplicadorGastos]);
-
-  // Guardar multiplicador en localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_MULTIPLICADOR, String(multiplicadorGastos));
-    } catch {
-      // Silenciar errores
-    }
-  }, [multiplicadorGastos]);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        empaque, otrosDirectos, multiplicador, categoriaId,
+        margenObjetivo, usarMargenPersonalizado, costosFijosMensuales,
+      }));
+    } catch { /* localStorage error */ }
+  }, [empaque, otrosDirectos, multiplicador, categoriaId, margenObjetivo, usarMargenPersonalizado, costosFijosMensuales]);
 
-  // Manejar selección de producto del catálogo FoodOS
-  const handleSelectProductoExistente = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  function handleSelectProducto(e: React.ChangeEvent<HTMLSelectElement>) {
     const id = e.target.value;
     if (!id) return;
-
-    const prod = productosExistentes.find((p) => p.id === id);
+    const prod = productosExistentes.find(p => p.id === id);
     if (!prod) return;
 
-    setNombreProducto(prod.nombre);
-    if (prod.precio_costo && prod.precio_costo > 0) {
-      setCostosVariables((prev) => ({
-        ...prev,
-        materiaPrima: prod.precio_costo ?? prev.materiaPrima,
-      }));
-    }
+    setProductoId(id);
+    setProductoNombre(prod.nombre);
+    const costo = Number(prod.precio_costo) || 0;
+    setCostoIngredientes(costo);
+    setPrecioVenta(Number(prod.precio_venta) || 0);
+  }
 
-    if (prod.margen_porcentaje && prod.margen_porcentaje > 0) {
-      setUsarMargenPersonalizado(true);
-      setMargenPersonalizadoValor(Math.round(prod.margen_porcentaje));
-    }
+  const categoriaActiva = useMemo(() => {
+    return CATEGORIAS_MARGEN_SUGERIDO.find(c => c.id === categoriaId) ?? CATEGORIAS_MARGEN_SUGERIDO[0];
+  }, [categoriaId]);
 
-    toast.success(`Cargada receta de "${prod.nombre}" con costo de insumos S/ ${(prod.precio_costo || 0).toFixed(2)}`);
-  };
+  const margenActivo = useMemo(() => {
+    if (usarMargenPersonalizado) return margenObjetivo;
+    return categoriaActiva?.margenSugerido ?? 70;
+  }, [usarMargenPersonalizado, margenObjetivo, categoriaActiva]);
 
-  // Guardar configuración en localStorage
-  const handleGuardarConfiguracion = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY_FIJOS, JSON.stringify(costosFijos));
-      localStorage.setItem(STORAGE_KEY_VARIABLES, JSON.stringify(costosVariables));
-      localStorage.setItem(
-        STORAGE_KEY_MARGEN,
-        JSON.stringify({
-          usarPersonalizado: usarMargenPersonalizado,
-          valor: margenPersonalizadoValor,
-          categoriaId: categoriaSeleccionadaId,
-        })
-      );
-      toast.success("Estructura de costos guardada correctamente en este navegador.");
-    } catch {
-      toast.error("No se pudo guardar la configuración.");
-    }
-  };
+  const resultado = useMemo(() => {
+    return calcularCosteoDirecto({
+      costoIngredientes,
+      rendimiento,
+      empaque,
+      otrosDirectos,
+      multiplicador,
+      precioVenta,
+    });
+  }, [costoIngredientes, rendimiento, empaque, otrosDirectos, multiplicador, precioVenta]);
 
-  // Restablecer a los valores por defecto de Kelly's Cake
-  const handleRestablecerValores = () => {
-    setCostosVariables(COSTOS_VARIABLES_DEFAULT);
-    setCostosFijos(COSTOS_FIJOS_DEFAULT);
-    setCategoriaSeleccionadaId("tortas-autor");
+  const precioSugerido = useMemo(() => {
+    if (resultado.costoRealUnitario <= 0) return 0;
+    const factor = 1 - margenActivo / 100;
+    return factor > 0 ? resultado.costoRealUnitario / factor : 0;
+  }, [resultado.costoRealUnitario, margenActivo]);
+
+  const puntoEquilibrio = useMemo(() => {
+    const margenContribucion = precioVenta - resultado.costoRealUnitario;
+    if (margenContribucion <= 0) return { unidades: 0, soles: 0 };
+    const unidades = Math.ceil(costosFijosMensuales / margenContribucion);
+    const soles = unidades * precioVenta;
+    return { unidades, soles };
+  }, [precioVenta, resultado.costoRealUnitario, costosFijosMensuales]);
+
+  function resetear() {
+    setEmpaque(EMPAQUE_DEFAULT);
+    setOtrosDirectos(OTROS_DIRECTOS_DEFAULT);
+    setMultiplicador(MULTIPLICADOR_DEFAULT);
+    setCategoriaId("tortas-autor");
     setUsarMargenPersonalizado(false);
-    setMargenPersonalizadoValor(75);
-    setUnidadesMensuales(45);
-    setPatrimonioInvertido(20000);
-    setNombreProducto("Torta de Autor Signature (20 porciones)");
-    toast.info("Valores estándar de Kelly's Cake restablecidos.");
-  };
+    setCostosFijosMensuales(4400);
+    toast.success("Valores reiniciados a los defaults.");
+  }
 
-  // Copiar resumen ejecutivo para compartir o cotizar
-  const handleCopiarResumen = () => {
-    const resumen = `📊 DIAGNÓSTICO FINANCIERO & RENTABILIDAD - KELLY'S CAKE
---------------------------------------------------
-Producto: ${nombreProducto}
-Costo Variable Total: S/ ${resultado.costoVariableTotal.toFixed(2)}
-  • Materia Prima: S/ ${costosVariables.materiaPrima.toFixed(2)} (${resultado.foodCostPorcentaje.toFixed(1)}% Food Cost)
-  • Empaque: S/ ${costosVariables.empaque.toFixed(2)}
-  • Mano de Obra: S/ ${costosVariables.manoObraDirecta.toFixed(2)} (${resultado.laborCostPorcentaje.toFixed(1)}% Labor Cost)
-  • Otros/Comisión: S/ ${costosVariables.otrosVariables.toFixed(2)}
+  const resumenCopiable = `📊 COSTEO REAL — ${productoNombre || "Producto"}
+═══════════════════════════════════
 
-Margen de Ganancia: ${resultado.margenPorcentajeAplicado}% (${resultado.esMargenPersonalizado ? "Personalizado" : categoriaActiva.nombre})
-PRECIO DE VENTA SUGERIDO: S/ ${resultado.precioVentaSugerido.toFixed(2)}
-Ganancia Bruta por Unidad: S/ ${resultado.gananciaBrutaUnitaria.toFixed(2)}
+FASE 1 · Ingredientes (receta FoodOS):
+  Rinde: ${rendimiento} porciones
+  Costo ingredientes: S/ ${resultado.costoIngredientes.toFixed(2)}/porción
 
-PUNTO DE EQUILIBRIO MENSUAL:
-  • Costos Fijos Mensuales: S/ ${resultado.costosFijosTotales.toFixed(2)}
-  • Mínimo a Facturar: S/ ${resultado.puntoEquilibrioSoles.toFixed(2)}
-  • Unidades Requeridas: ${resultado.puntoEquilibrioUnidades} pasteles/mes (${resultado.unidadesDiariasPuntoEquilibrio}/día)
+FASE 2 · Costos directos por unidad:
+  Empaque: S/ ${empaque.toFixed(2)}
+  Otros directos: S/ ${otrosDirectos.toFixed(2)}
+  Subtotal: S/ ${resultado.subtotalDirectos.toFixed(2)}
 
-PROYECCIÓN CON ${unidadesMensuales} PEDIDOS AL MES:
-  • Facturación Mensual: S/ ${resultado.ventasTotalesProyectadas.toFixed(2)}
-  • Utilidad Neta Mensual: S/ ${resultado.utilidadNetaMensual.toFixed(2)}
-  • ROS (Rentabilidad sobre Ventas): ${resultado.ros.toFixed(1)}%
-  • ROE Anualizado: ${resultado.roe.toFixed(1)}%
-  • ROI Anual: ${resultado.roi.toFixed(1)}%
+FASE 3 · Overhead (multiplicador ×${multiplicador}):
+  S/ ${resultado.costoIngredientes.toFixed(2)} × ${multiplicador} = S/ ${resultado.costoIngredientesConOverhead.toFixed(2)}
+  (incluye S/ ${resultado.costoOverhead.toFixed(2)} de planilla, alquiler, luz, etc.)
 
-INDICADORES COMERCIALES:
-  • Ticket Promedio: S/ ${resultado.ticketPromedio.toFixed(2)}
-  • CAC Máximo Sugerido (Pauta): S/ ${resultado.cacMaximoRecomendado.toFixed(2)}
-  • LTV Objetivo Anual: S/ ${resultado.ltvObjetivo.toFixed(2)}`;
-
-    navigator.clipboard.writeText(resumen);
-    toast.success("¡Resumen ejecutivo copiado al portapapeles!");
-  };
+═══════════════════════════════════
+  COSTO REAL: S/ ${resultado.costoRealUnitario.toFixed(2)}/unidad
+  PRECIO ACTUAL: S/ ${precioVenta.toFixed(2)}
+  GANANCIA REAL: S/ ${resultado.gananciaReal.toFixed(2)} (${resultado.margenRealPct}%)
+  PRECIO SUGERIDO (margen ${margenActivo}%): S/ ${precioSugerido.toFixed(2)}
+═══════════════════════════════════
+  ${resultado.diagnostico}`;
 
   return (
-    <div className="space-y-8">
-      {/* 1. Header con Resumen & Acciones */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-700/50">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-500/30">
-              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-              <span>FoodOS Financial Intelligence Suite</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Simulador de Rentabilidad & Diagnóstico Financiero
-            </h1>
-            <p className="text-slate-300 text-sm md:text-base max-w-2xl leading-relaxed">
-              Calcula con precisión matemática el precio óptimo, tu punto de equilibrio y audita los techos de Food Cost, Mano de Obra, ROS, ROE y ROI de tu pastelería.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={handleCopiarResumen}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700 shadow-sm"
-              title="Copiar diagnóstico para informe o WhatsApp"
-            >
-              <Copy className="w-3.5 h-3.5 text-blue-400" />
-              <span>Copiar Resumen</span>
-            </button>
-            <button
-              onClick={handleGuardarConfiguracion}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm"
-              title="Guardar mis costos en este navegador"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>Guardar Costos</span>
-            </button>
-            <button
-              onClick={handleRestablecerValores}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs transition border border-slate-700/60"
-              title="Restablecer valores por defecto"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </div>
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900">
+            Costeo Real por Producto
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Tres capas conectadas: receta → costos directos → overhead. Sin números sueltos.
+          </p>
         </div>
-
-        {/* Barra superior de métricas ultra-rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80">
-          <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] text-slate-400 font-medium">Margen Aplicado</span>
-            <div className="text-xl font-bold text-blue-400 mt-0.5">
-              {resultado.margenPorcentajeAplicado}%
-              <span className="text-[10px] text-slate-400 font-normal ml-1.5">
-                {resultado.esMargenPersonalizado ? "(Manual)" : "(Sugerido)"}
-              </span>
-            </div>
-          </div>
-          <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] text-slate-400 font-medium">Precio Venta</span>
-            <div className="text-xl font-bold text-emerald-400 mt-0.5">
-              S/ {resultado.precioVentaSugerido.toFixed(2)}
-            </div>
-          </div>
-          <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] text-slate-400 font-medium">Pto. Equilibrio</span>
-            <div className="text-xl font-bold text-amber-300 mt-0.5">
-              {resultado.puntoEquilibrioUnidades} <span className="text-xs font-normal text-slate-400">pasteles/mes</span>
-            </div>
-          </div>
-          <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] text-slate-400 font-medium">ROS Proyectado</span>
-            <div className={`text-xl font-bold mt-0.5 ${resultado.ros >= 15 ? "text-emerald-400" : resultado.ros > 0 ? "text-amber-400" : "text-rose-400"}`}>
-              {resultado.ros.toFixed(1)}%
-            </div>
-          </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(resumenCopiable);
+              toast.success("Diagnóstico copiado al portapapeles.");
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            <Copy className="h-3.5 w-3.5" /> Copiar
+          </button>
+          <button
+            type="button"
+            onClick={resetear}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Reiniciar
+          </button>
         </div>
       </div>
 
-      {/* 2. Cuerpo Principal: 2 Columnas (Inputs de Costo vs Diagnóstico Financiero) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* ========================================================= */}
-        {/* COLUMNA IZQUIERDA: ENTRADA DE TODOS LOS COSTOS (7 COLS)   */}
-        {/* ========================================================= */}
-        <div className="lg:col-span-7 space-y-6">
+      {/* Seleccionar producto */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <label htmlFor={idProducto} className="mb-2 block text-sm font-bold text-slate-800">
+          <Cake className="mr-1.5 inline h-4 w-4 text-blue-600" />
+          Producto a costear
+        </label>
 
-          {/* TARJETA 0: PRECARGAR PRODUCTO O DEFINIR NOMBRE */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <label htmlFor={idProductoNombre} className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-blue-600" />
-                <span>Producto a Simular</span>
+        {productosExistentes.length > 0 ? (
+          <select
+            id={idProducto}
+            onChange={handleSelectProducto}
+            value={productoId}
+            className="w-full rounded-lg border border-slate-300 p-2.5 text-sm font-medium text-slate-800"
+          >
+            <option value="">Seleccionar de tus recetas FoodOS…</option>
+            {productosExistentes.map(prod => (
+              <option key={prod.id} value={prod.id}>
+                {prod.nombre} — ingredientes: S/ {(Number(prod.precio_costo) || 0).toFixed(2)}
+                {Number(prod.precio_venta) > 0 && ` · precio: S/ ${Number(prod.precio_venta).toFixed(2)}`}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-700">
+            No tienes productos con receta aún. Crea uno en{" "}
+            <strong>Productos & Recetas → Nuevo Producto</strong> para que aparezca aquí.
+          </div>
+        )}
+
+        {productoId && (
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase text-slate-500">
+                Rendimiento (porciones)
               </label>
-
-              {productosExistentes.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">Cargar de Recetas:</span>
-                  <select
-                    onChange={handleSelectProductoExistente}
-                    defaultValue=""
-                    className="text-xs bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-                  >
-                    <option value="" disabled>Seleccionar producto...</option>
-                    {productosExistentes.map((prod) => (
-                      <option key={prod.id} value={prod.id}>
-                        {prod.nombre} (Costo: S/ {(prod.precio_costo || 0).toFixed(2)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                value={rendimiento}
+                onChange={e => setRendimiento(Number(e.target.value) || 1)}
+                className="w-full rounded-lg border border-slate-300 p-2 text-sm"
+              />
             </div>
-
-            <input
-              id={idProductoNombre}
-              type="text"
-              value={nombreProducto}
-              onChange={(e) => setNombreProducto(e.target.value)}
-              placeholder="Ej: Torta de Chocolate Húmeda 20p..."
-              className="w-full text-base font-semibold text-gray-900 bg-gray-50/80 border border-gray-200 rounded-xl px-4 py-2.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            />
-          </div>
-
-          {/* TARJETA 1: COSTOS VARIABLES UNITARIOS */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                  <span>Costos Variables Unitarios</span>
-                </h2>
-                <p className="text-xs text-gray-500">Gastos que se consumen directamente por cada pastel elaborado.</p>
-              </div>
-              <div className="text-right">
-                <span className="text-xs text-gray-400 block font-medium">Total Variable</span>
-                <span className="text-lg font-extrabold text-emerald-600">
-                  S/ {resultado.costoVariableTotal.toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Materia Prima */}
-              <div className="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label htmlFor={idMateriaPrima} className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <span>🥑 Insumos / Materia Prima</span>
-                  </label>
-                  <span className="text-[11px] text-gray-400">Receta</span>
-                </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idMateriaPrima}
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={costosVariables.materiaPrima}
-                    onChange={(e) =>
-                      setCostosVariables({
-                        ...costosVariables,
-                        materiaPrima: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-8 pr-3 py-2 text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400">Harina, huevos, mantequilla, chocolate, manjar, frutas.</p>
-              </div>
-
-              {/* Empaque & Packaging */}
-              <div className="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label htmlFor={idEmpaque} className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <span>🎁 Empaque & Presentación</span>
-                  </label>
-                  <span className="text-[11px] text-gray-400">Packaging</span>
-                </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idEmpaque}
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={costosVariables.empaque}
-                    onChange={(e) =>
-                      setCostosVariables({
-                        ...costosVariables,
-                        empaque: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-8 pr-3 py-2 text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400">Caja con visor, base rígida, lazo satinado, sticker Kelly&apos;s.</p>
-              </div>
-
-              {/* Mano de Obra Directa */}
-              <div className="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label htmlFor={idManoObra} className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <span>👨‍🍳 Mano de Obra Directa</span>
-                  </label>
-                  <span className="text-[11px] text-gray-400">Producción</span>
-                </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idManoObra}
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={costosVariables.manoObraDirecta}
-                    onChange={(e) =>
-                      setCostosVariables({
-                        ...costosVariables,
-                        manoObraDirecta: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-8 pr-3 py-2 text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400">Horas de decoración y horneado asignadas a este pastel.</p>
-              </div>
-
-              {/* Otros Variables / Comisión */}
-              <div className="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label htmlFor={idOtrosVariables} className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <span>💳 Pasarela / Gas / Varios</span>
-                  </label>
-                  <span className="text-[11px] text-gray-400">Indirecto U.</span>
-                </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idOtrosVariables}
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={costosVariables.otrosVariables}
-                    onChange={(e) =>
-                      setCostosVariables({
-                        ...costosVariables,
-                        otrosVariables: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-8 pr-3 py-2 text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400">Comisión tarjeta/pasarela (3.5%), gas por horneada, guantes.</p>
-              </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase text-slate-500">
+                Costo ingredientes (S/ total receta)
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={costoIngredientes}
+                onChange={e => setCostoIngredientes(Number(e.target.value) || 0)}
+                className="w-full rounded-lg border border-slate-300 p-2 text-sm"
+              />
             </div>
           </div>
+        )}
+      </div>
 
-          {/* TARJETA 2: SELECTOR DE MARGEN (SUGERIDO VS ALTERNATIVA PERSONALIZADA) */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-              <div>
-                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <Percent className="w-5 h-5 text-blue-600" />
-                  <span>Configuración del Margen de Ganancia</span>
-                </h2>
-                <p className="text-xs text-gray-500">
-                  Elige el margen sugerido de la industria o escribe tu margen alternativo deseado.
+      {productoId && (
+        <>
+          {/* FASE 1: Ingredientes */}
+          <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-black text-white">1</span>
+              <h3 className="text-base font-bold text-emerald-900">Ingredientes (automático de tu receta)</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg bg-white p-3 text-center shadow-sm">
+                <p className="text-[11px] font-bold uppercase text-emerald-500">Costo por porción</p>
+                <p className="text-2xl font-black text-emerald-800">
+                  S/ {resultado.costoIngredientes.toFixed(2)}
                 </p>
               </div>
-
-              {/* Botón de Alternancia (Switch) */}
-              <div className="flex items-center bg-gray-100 p-1 rounded-xl text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setUsarMargenPersonalizado(false)}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    !usarMargenPersonalizado
-                      ? "bg-white text-blue-700 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Márgenes Sugeridos
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUsarMargenPersonalizado(true)}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    usarMargenPersonalizado
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Mi Margen Propio
-                </button>
-              </div>
-            </div>
-
-            {/* OPCIÓN A: MARGEN SUGERIDO POR CATEGORÍA */}
-            {!usarMargenPersonalizado ? (
-              <div className="space-y-3">
-                <span className="text-xs font-bold text-gray-600 block uppercase tracking-wider">
-                  Márgenes Recomendados por Tipo de Pastelería
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {CATEGORIAS_MARGEN_SUGERIDO.map((cat) => {
-                    const isSelected = categoriaSeleccionadaId === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setCategoriaSeleccionadaId(cat.id)}
-                        className={`text-left p-3.5 rounded-xl border transition relative flex flex-col justify-between ${
-                          isSelected
-                            ? "border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20"
-                            : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span className="font-bold text-xs text-gray-900 block">{cat.nombre}</span>
-                            <span className="text-[11px] text-gray-500 line-clamp-2 mt-0.5 leading-tight">
-                              {cat.descripcion}
-                            </span>
-                          </div>
-                          <span className={`text-xs font-extrabold px-2 py-0.5 rounded-md ${
-                            isSelected ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
-                          }`}>
-                            {cat.margenSugerido}%
-                          </span>
-                        </div>
-                        <div className="mt-2.5 flex items-center justify-between text-[11px] text-gray-400">
-                          <span>Rango: {cat.rangoMin}% - {cat.rangoMax}%</span>
-                          <span className="font-medium text-blue-600">{cat.badge}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              /* OPCIÓN B: MARGEN PERSONALIZADO ALTERNATIVO */
-              <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200/80 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label htmlFor={idMargenPersonalizado} className="text-xs font-bold text-blue-950 block">
-                      Ingresa tu Margen Deseado como Alternativa
-                    </label>
-                    <p className="text-[11px] text-blue-800">
-                      Tú defines el porcentaje que deseas ganar sobre el precio final de venta.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-lg border border-blue-300 shadow-xs">
-                    <input
-                      id={idMargenPersonalizado}
-                      type="number"
-                      min="5"
-                      max="95"
-                      value={margenPersonalizadoValor}
-                      onChange={(e) => setMargenPersonalizadoValor(parseFloat(e.target.value) || 0)}
-                      className="w-14 text-center font-extrabold text-blue-600 text-lg focus:outline-none"
-                    />
-                    <span className="text-sm font-black text-blue-600">%</span>
-                  </div>
-                </div>
-
-                {/* Slider interactivo */}
-                <div className="space-y-1">
-                  <input
-                    type="range"
-                    min="30"
-                    max="90"
-                    step="1"
-                    value={margenPersonalizadoValor}
-                    aria-label="Margen deseado"
-                    onChange={(e) => setMargenPersonalizadoValor(parseInt(e.target.value))}
-                    className="w-full accent-blue-600 cursor-pointer h-2 bg-blue-200 rounded-lg"
-                  />
-                  <div className="flex justify-between text-[10px] text-blue-700 font-medium">
-                    <span>30% (Margen mínimo)</span>
-                    <span>50% (Equilibrado)</span>
-                    <span>70% (Boutique)</span>
-                    <span>90% (Alta Joyería)</span>
-                  </div>
-                </div>
-
-                {/* Botones rápidos de margen personalizado */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {[50, 60, 65, 70, 75, 80, 85].map((pct) => (
-                    <button
-                      key={pct}
-                      type="button"
-                      onClick={() => setMargenPersonalizadoValor(pct)}
-                      className={`px-2.5 py-1 text-xs rounded-lg font-bold border transition ${
-                        margenPersonalizadoValor === pct
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-blue-900 border-blue-200 hover:bg-blue-100"
-                      }`}
-                    >
-                      {pct}%
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* TARJETA 2.5: MULTIPLICADOR DE GASTOS GENERALES */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-2xl p-6 shadow-sm border-2 border-amber-200/60 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-bold text-amber-900 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-amber-600" />
-                  <span>Multiplicador de Gastos Generales</span>
-                </h2>
-                <p className="text-xs text-amber-700/80">
-                  (Fijos + Planilla) ÷ Insumos del mes. Carga overhead en todos tus productos sin contabilidad.
+              <div className="rounded-lg bg-white p-3 text-center shadow-sm">
+                <p className="text-[11px] font-bold uppercase text-emerald-500">Total de la receta</p>
+                <p className="text-2xl font-black text-emerald-800">
+                  S/ {costoIngredientes.toFixed(2)}
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* FASE 2: Costos directos */}
+          <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/40 p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">2</span>
+              <h3 className="text-base font-bold text-blue-900">Costos Directos por Unidad</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor={idEmpaque} className="mb-1 block text-xs font-bold text-blue-700">
+                  Empaque (caja, base, lazo, sticker)
+                </label>
+                <input
+                  id={idEmpaque}
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={empaque}
+                  onChange={e => setEmpaque(Number(e.target.value) || 0)}
+                  className="w-full rounded-lg border border-blue-300 bg-white p-2 text-sm font-bold text-blue-800"
+                />
+              </div>
+              <div>
+                <label htmlFor={idOtrosDirectos} className="mb-1 block text-xs font-bold text-blue-700">
+                  Otros directos (comisión pasarela, gas)
+                </label>
+                <input
+                  id={idOtrosDirectos}
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={otrosDirectos}
+                  onChange={e => setOtrosDirectos(Number(e.target.value) || 0)}
+                  className="w-full rounded-lg border border-blue-300 bg-white p-2 text-sm font-bold text-blue-800"
+                />
+              </div>
+            </div>
+            <div className="mt-3 rounded-lg bg-white px-4 py-2 text-center shadow-sm">
+              <p className="text-sm font-bold text-blue-800">
+                Subtotal directos: S/ {resultado.subtotalDirectos.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* FASE 3: Overhead */}
+          <div className="rounded-2xl border-2 border-amber-200 bg-amber-50/40 p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-xs font-black text-white">3</span>
+              <h3 className="text-base font-bold text-amber-900">Overhead (Multiplicador)</h3>
+            </div>
+            <p className="mb-3 text-xs text-amber-700">
+              (Fijos mensuales + Planilla) ÷ Insumos del mes. Solo multiplica los{" "}
+              <strong>ingredientes</strong> — el empaque y la comisión son directos.
+            </p>
 
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <label htmlFor={idMultiplicador} className="mb-1 block text-xs font-bold text-amber-800">
-                  Tu multiplicador
-                </label>
                 <input
                   id={idMultiplicador}
                   type="number"
                   step="0.1"
                   min="1"
                   max="5"
-                  value={multiplicadorGastos}
-                  onChange={(e) => {
+                  value={multiplicador}
+                  onChange={e => {
                     const val = parseFloat(e.target.value);
                     if (Number.isFinite(val) && val >= 1 && val <= 5) {
-                      setMultiplicadorGastos(val);
+                      setMultiplicador(val);
                     }
                   }}
-                  className="w-full rounded-lg border-2 border-amber-300 bg-white px-4 py-2.5 text-xl font-black text-amber-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                  className="w-full rounded-lg border-2 border-amber-300 bg-white px-4 py-2 text-xl font-black text-amber-800"
                 />
                 <p className="mt-1 text-[11px] text-amber-600">
-                  1.0 = solo ingredientes · 1.4 = típico pastelería · 1.8 = alto overhead
+                  1.0 = solo ingredientes · 1.4 = típico · 1.8 = alto overhead
                 </p>
               </div>
-
               <div className="flex gap-1.5">
-                {[
-                  { label: "1.2", value: 1.2 },
-                  { label: "1.4", value: 1.4 },
-                  { label: "1.6", value: 1.6 },
-                  { label: "1.8", value: 1.8 },
-                ].map((preset) => (
+                {[1.2, 1.4, 1.6, 1.8].map(preset => (
                   <button
-                    key={preset.value}
+                    key={preset}
                     type="button"
-                    onClick={() => setMultiplicadorGastos(preset.value)}
+                    onClick={() => setMultiplicador(preset)}
                     className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${
-                      multiplicadorGastos === preset.value
+                      multiplicador === preset
                         ? "bg-amber-600 text-white"
                         : "bg-amber-100 text-amber-700 hover:bg-amber-200"
                     }`}
                   >
-                    {preset.label}
+                    {preset}
                   </button>
                 ))}
               </div>
             </div>
 
-            {multiplicadorGastos > 1 && (
-              <div className="rounded-xl bg-white/80 border border-amber-200 p-4 space-y-2.5">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase text-gray-400">Solo Ingredientes</p>
-                    <p className="text-base font-bold text-gray-600">
-                      S/ {costoReal.costoBase.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase text-amber-600">Costo REAL (×{multiplicadorGastos})</p>
-                    <p className="text-base font-black text-amber-800">
-                      S/ {costoReal.costoReal.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase text-emerald-600">Ganancia REAL</p>
-                    <p className="text-base font-black text-emerald-700">
-                      S/ {costoReal.gananciaReal.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase text-blue-600">Margen REAL</p>
-                    <p className={`text-base font-black ${costoReal.margenRealPct > 50 ? "text-emerald-700" : costoReal.margenRealPct > 30 ? "text-amber-700" : "text-red-700"}`}>
-                      {costoReal.margenRealPct}%
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-lg bg-amber-50 border-l-4 border-amber-500 px-3 py-2 text-xs text-amber-800">
-                  <strong>Cada unidad te está costando S/ {costoReal.costoReal.toFixed(2)}</strong> (incluye
-                  S/ {costoReal.overheadPorUnidad.toFixed(2)} de planilla, alquiler, luz y demás gastos fijos).
-                  {costoReal.margenRealPct < 20
-                    ? " ⚠️ Margen muy bajo: revisa tu precio de venta o baja costos fijos."
-                    : " ✅ Margen saludable que cubre todos tus gastos."}
-                </div>
-              </div>
-            )}
-
-            {multiplicadorGastos === 1 && (
-              <p className="rounded-lg bg-gray-100 px-3 py-2 text-xs text-gray-500">
-                Con 1.0 solo ves el costo de ingredientes (sin planilla ni alquiler). Sube el multiplicador
-                para ver el costo real de producir cada unidad. Tip: revisa tus gastos de Contapro para
-                calcularlo.
-              </p>
-            )}
+            <div className="mt-3 rounded-lg bg-white px-4 py-2 text-sm text-center shadow-sm">
+              <span className="font-bold text-slate-600">
+                S/ {resultado.costoIngredientes.toFixed(2)} × {multiplicador} ={" "}
+              </span>
+              <span className="font-black text-amber-800">
+                S/ {resultado.costoIngredientesConOverhead.toFixed(2)}
+              </span>
+              <span className="ml-2 text-xs text-slate-400">
+                (S/ {resultado.costoOverhead.toFixed(2)} de overhead)
+              </span>
+            </div>
           </div>
 
-          {/* TARJETA 3: COSTOS FIJOS MENSUALES DEL NEGOCIO */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-indigo-600" />
-                  <span>Costos Fijos Mensuales del Negocio</span>
-                </h2>
-                <p className="text-xs text-gray-500">
-                  Gastos estructurales que se pagan cada mes aunque no se venda ni un solo pastel.
+          {/* RESULTADO: Costo Real */}
+          <div className={`rounded-2xl border-2 p-6 shadow-md ${
+            resultado.estado === "optimo" ? "border-emerald-300 bg-emerald-50" :
+            resultado.estado === "alerta" ? "border-amber-300 bg-amber-50" :
+            "border-red-300 bg-red-50"
+          }`}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <div className="text-center">
+                <p className="text-[11px] font-bold uppercase text-slate-500">Costo Real</p>
+                <p className="text-3xl font-black text-slate-900">
+                  S/ {resultado.costoRealUnitario.toFixed(2)}
                 </p>
               </div>
-              <div className="text-right">
-                <span className="text-xs text-gray-400 block font-medium">Total Fijo Mensual</span>
-                <span className="text-lg font-extrabold text-indigo-600">
-                  S/ {resultado.costosFijosTotales.toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {/* Alquiler */}
-              <div className="bg-gray-50/60 p-3 rounded-xl border border-gray-100 space-y-1">
-                <label htmlFor={idAlquiler} className="text-xs font-semibold text-gray-700 block">
-                  🏢 Alquiler Local/Taller
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idAlquiler}
-                    type="number"
-                    step="50"
-                    min="0"
-                    value={costosFijos.alquiler}
-                    onChange={(e) =>
-                      setCostosFijos({ ...costosFijos, alquiler: parseFloat(e.target.value) || 0 })
-                    }
-                    className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Servicios (Luz, agua, gas) */}
-              <div className="bg-gray-50/60 p-3 rounded-xl border border-gray-100 space-y-1">
-                <label htmlFor={idServicios} className="text-xs font-semibold text-gray-700 block">
-                  ⚡ Servicios (Luz/Agua/Gas)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idServicios}
-                    type="number"
-                    step="20"
-                    min="0"
-                    value={costosFijos.servicios}
-                    onChange={(e) =>
-                      setCostosFijos({ ...costosFijos, servicios: parseFloat(e.target.value) || 0 })
-                    }
-                    className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Sueldos Fijos / Admin */}
-              <div className="bg-gray-50/60 p-3 rounded-xl border border-gray-100 space-y-1">
-                <label htmlFor={idSueldosAdmin} className="text-xs font-semibold text-gray-700 block">
-                  👔 Sueldos Fijos / Admin
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idSueldosAdmin}
-                    type="number"
-                    step="50"
-                    min="0"
-                    value={costosFijos.sueldosAdministrativos}
-                    onChange={(e) =>
-                      setCostosFijos({
-                        ...costosFijos,
-                        sueldosAdministrativos: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Software, Dominio & Web */}
-              <div className="bg-gray-50/60 p-3 rounded-xl border border-gray-100 space-y-1">
-                <label htmlFor={idSoftware} className="text-xs font-semibold text-gray-700 block">
-                  💻 Software & Web FoodOS
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idSoftware}
-                    type="number"
-                    step="10"
-                    min="0"
-                    value={costosFijos.softwareInternet}
-                    onChange={(e) =>
-                      setCostosFijos({
-                        ...costosFijos,
-                        softwareInternet: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Marketing & Publicidad */}
-              <div className="bg-gray-50/60 p-3 rounded-xl border border-gray-100 space-y-1">
-                <label htmlFor={idMarketing} className="text-xs font-semibold text-gray-700 block">
-                  📢 Pauta Meta & Google Ads
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idMarketing}
-                    type="number"
-                    step="50"
-                    min="0"
-                    value={costosFijos.marketingPublicidad}
-                    onChange={(e) =>
-                      setCostosFijos({
-                        ...costosFijos,
-                        marketingPublicidad: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Otros Gastos Fijos */}
-              <div className="bg-gray-50/60 p-3 rounded-xl border border-gray-100 space-y-1">
-                <label htmlFor={idOtrosFijos} className="text-xs font-semibold text-gray-700 block">
-                  🛡️ Contador & Depreciación
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-xs text-gray-400 font-bold">S/</span>
-                  <input
-                    id={idOtrosFijos}
-                    type="number"
-                    step="20"
-                    min="0"
-                    value={costosFijos.otrosFijos}
-                    onChange={(e) =>
-                      setCostosFijos({ ...costosFijos, otrosFijos: parseFloat(e.target.value) || 0 })
-                    }
-                    className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* TARJETA 4: ESCENARIO DE VENTAS MENSUALES & PATRIMONIO */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-purple-600" />
-              <span>Escenario de Producción Mensual & Capital Invertido</span>
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-100 space-y-2">
-                <div className="flex justify-between items-center">
-                  <label htmlFor={idUnidadesMensuales} className="text-xs font-bold text-purple-950">
-                    Ventas Mensuales Estimadas
-                  </label>
-                  <span className="text-xs font-extrabold text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200">
-                    {unidadesMensuales} pedidos
-                  </span>
-                </div>
+              <div className="text-center">
+                <p className="text-[11px] font-bold uppercase text-slate-500">Precio Venta</p>
                 <input
-                  id={idUnidadesMensuales}
-                  type="range"
-                  min="5"
-                  max="150"
-                  step="5"
-                  value={unidadesMensuales}
-                  onChange={(e) => setUnidadesMensuales(parseInt(e.target.value) || 1)}
-                  className="w-full accent-purple-600 cursor-pointer h-2 bg-purple-200 rounded-lg"
+                  id={idPrecioVenta}
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={precioVenta}
+                  onChange={e => setPrecioVenta(Number(e.target.value) || 0)}
+                  className="w-full rounded-lg border-2 border-slate-300 bg-white px-2 py-1 text-center text-2xl font-black text-slate-900"
                 />
-                <p className="text-[11px] text-purple-800">
-                  Volumen promedio de pasteles o pedidos elaborados en el mes para proyectar utilidades.
+              </div>
+              <div className="text-center">
+                <p className="text-[11px] font-bold uppercase text-slate-500">Ganancia Real</p>
+                <p className={`text-3xl font-black ${
+                  resultado.gananciaReal > 0 ? "text-emerald-700" : "text-red-700"
+                }`}>
+                  S/ {resultado.gananciaReal.toFixed(2)}
                 </p>
               </div>
+              <div className="text-center">
+                <p className="text-[11px] font-bold uppercase text-slate-500">Margen Real</p>
+                <p className={`text-3xl font-black ${
+                  resultado.margenRealPct > 50 ? "text-emerald-700" :
+                  resultado.margenRealPct > 30 ? "text-amber-700" : "text-red-700"
+                }`}>
+                  {resultado.margenRealPct}%
+                </p>
+              </div>
+            </div>
 
-              <div className="bg-gray-50/80 p-4 rounded-xl border border-gray-200 space-y-2">
-                <div className="flex justify-between items-center">
-                  <label htmlFor={idPatrimonio} className="text-xs font-bold text-gray-800">
-                    Capital / Maquinaria Invertida
-                  </label>
-                  <span className="text-xs font-semibold text-gray-500">Para ROE</span>
-                </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs text-gray-400 font-bold">S/</span>
+            <div className="mt-4 rounded-lg border-l-4 border-current bg-white/60 px-4 py-3 text-sm">
+              {resultado.diagnostico}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-100 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-bold text-slate-600">
+                  Margen objetivo:
+                </span>
+                {!usarMargenPersonalizado ? (
+                  <select
+                    value={categoriaId}
+                    onChange={e => setCategoriaId(e.target.value)}
+                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+                  >
+                    {CATEGORIAS_MARGEN_SUGERIDO.map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.nombre} ({cat.margenSugerido}%)
+                      </option>
+                    ))}
+                  </select>
+                ) : (
                   <input
-                    id={idPatrimonio}
                     type="number"
-                    step="1000"
-                    min="1000"
-                    value={patrimonioInvertido}
-                    onChange={(e) => setPatrimonioInvertido(parseFloat(e.target.value) || 1000)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs font-bold text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    min="10"
+                    max="90"
+                    value={margenObjetivo}
+                    onChange={e => setMargenObjetivo(Number(e.target.value) || 70)}
+                    className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1 text-center text-xs font-bold text-slate-700"
                   />
-                </div>
-                <p className="text-[11px] text-gray-500">
-                  Inversión en hornos, batidoras, mobiliario y capital de trabajo inicial.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================= */}
-        {/* COLUMNA DERECHA: RESULTADOS, SEMÁFOROS Y DIAGNÓSTICO (5 C)*/}
-        {/* ========================================================= */}
-        <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-4">
-
-          {/* 1. TARJETA MAESTRA: PRECIO DE VENTA Y GANANCIA */}
-          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-blue-900/60 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Target className="w-3.5 h-3.5 text-blue-400" />
-                <span>Precio de Venta Recomendado</span>
-              </span>
-              <span className="text-[11px] bg-blue-600/30 text-blue-200 border border-blue-500/40 px-2.5 py-0.5 rounded-full font-bold">
-                {resultado.margenPorcentajeAplicado}% Margen
-              </span>
-            </div>
-
-            <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                S/ {resultado.precioVentaSugerido.toFixed(2)}
-              </span>
-              <span className="text-xs text-slate-300 font-medium">/ unidad</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800">
-              <div>
-                <span className="text-[11px] text-slate-400 block font-medium">Ganancia Bruta</span>
-                <span className="text-lg font-bold text-emerald-400">
-                  + S/ {resultado.gananciaBrutaUnitaria.toFixed(2)}
-                </span>
-              </div>
-              <div>
-                <span className="text-[11px] text-slate-400 block font-medium">Costo Total Var.</span>
-                <span className="text-lg font-bold text-slate-300">
-                  S/ {resultado.costoVariableTotal.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. AUDITORÍA DE TECHOS GASTRONÓMICOS (FOOD COST & LABOR COST) */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Auditoría de Techos de Costo</span>
-              </h3>
-              <span className="text-[10px] text-gray-400 font-medium">Estándar Pastelería</span>
-            </div>
-
-            {/* FOOD COST */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-gray-700">Food Cost (Materia Prima)</span>
-                <span className={`font-black ${
-                  resultado.diagnosticoFoodCost.estado === "optimo"
-                    ? "text-emerald-600"
-                    : resultado.diagnosticoFoodCost.estado === "alerta"
-                    ? "text-amber-600"
-                    : "text-rose-600"
-                }`}>
-                  {resultado.foodCostPorcentaje.toFixed(1)}% (Meta: ≤ 30%)
-                </span>
-              </div>
-              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    resultado.diagnosticoFoodCost.estado === "optimo"
-                      ? "bg-emerald-500"
-                      : resultado.diagnosticoFoodCost.estado === "alerta"
-                      ? "bg-amber-500"
-                      : "bg-rose-500"
-                  }`}
-                  style={{ width: `${Math.min(100, resultado.foodCostPorcentaje * 2.5)}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-gray-500 leading-tight">
-                {resultado.diagnosticoFoodCost.mensaje}
-              </p>
-            </div>
-
-            {/* LABOR COST */}
-            <div className="space-y-1.5 pt-2 border-t border-gray-50">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-gray-700">Labor Cost (Mano de Obra Directa)</span>
-                <span className={`font-black ${
-                  resultado.diagnosticoLaborCost.estado === "optimo"
-                    ? "text-emerald-600"
-                    : resultado.diagnosticoLaborCost.estado === "alerta"
-                    ? "text-amber-600"
-                    : "text-rose-600"
-                }`}>
-                  {resultado.laborCostPorcentaje.toFixed(1)}% (Meta: ≤ 25%)
-                </span>
-              </div>
-              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    resultado.diagnosticoLaborCost.estado === "optimo"
-                      ? "bg-emerald-500"
-                      : resultado.diagnosticoLaborCost.estado === "alerta"
-                      ? "bg-amber-500"
-                      : "bg-rose-500"
-                  }`}
-                  style={{ width: `${Math.min(100, resultado.laborCostPorcentaje * 3)}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-gray-500 leading-tight">
-                {resultado.diagnosticoLaborCost.mensaje}
-              </p>
-            </div>
-
-            {/* PRIME COST */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Prime Cost Total</span>
-                <span className="text-[10px] text-slate-500">Materia Prima + Personal Directo</span>
+                )}
+                <label className="flex items-center gap-1 text-xs text-slate-500">
+                  <input
+                    type="checkbox"
+                    checked={usarMargenPersonalizado}
+                    onChange={e => setUsarMargenPersonalizado(e.target.checked)}
+                  />
+                  Personalizado
+                </label>
               </div>
               <div className="text-right">
-                <span className={`text-sm font-extrabold ${
-                  resultado.diagnosticoPrimeCost.estado === "optimo"
-                    ? "text-emerald-600"
-                    : resultado.diagnosticoPrimeCost.estado === "alerta"
-                    ? "text-amber-600"
-                    : "text-rose-600"
-                }`}>
-                  {resultado.primeCostPorcentaje.toFixed(1)}%
-                </span>
-                <span className="text-[10px] text-gray-400 block">Meta ≤ 55%</span>
+                <p className="text-xs font-medium text-slate-500">Precio sugerido</p>
+                <p className="text-xl font-black text-slate-800">
+                  S/ {precioSugerido.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* 3. PUNTO DE EQUILIBRIO (BREAK-EVEN POINT) */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <Scale className="w-4 h-4 text-amber-500" />
-                <span>Punto de Equilibrio Mensual</span>
-              </h3>
-              <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold">
-                Cero Pérdidas
+          {/* Desglose visual de las 3 fases */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h4 className="mb-3 text-sm font-bold text-slate-800">
+              Desglose paso a paso
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-2">
+                <span className="text-emerald-700">🟢 Ingredientes (receta):</span>
+                <span className="font-bold text-emerald-800">S/ {resultado.costoIngredientes.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50/50 px-4 py-2">
+                <span className="text-emerald-600">   + Overhead (×{multiplicador}):</span>
+                <span className="font-bold text-emerald-700">S/ {resultado.costoOverhead.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-blue-50 px-4 py-2">
+                <span className="text-blue-700">🔵 Empaque:</span>
+                <span className="font-bold text-blue-800">S/ {empaque.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-blue-50/50 px-4 py-2">
+                <span className="text-blue-700">   + Otros directos:</span>
+                <span className="font-bold text-blue-800">S/ {otrosDirectos.toFixed(2)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-900 px-4 py-3 text-white">
+                <span className="font-bold">= COSTO REAL:</span>
+                <span className="text-lg font-black">S/ {resultado.costoRealUnitario.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Punto de equilibrio (opcional, plegable) */}
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <button
+              type="button"
+              onClick={() => setMostrarPuntoEquilibrio(!mostrarPuntoEquilibrio)}
+              className="flex w-full items-center justify-between px-5 py-4"
+            >
+              <span className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                <TrendingUp className="h-4 w-4 text-slate-600" />
+                Punto de Equilibrio Mensual (opcional)
               </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
-                <span className="text-[11px] text-amber-900 font-semibold block">Facturación Mínima</span>
-                <span className="text-base font-extrabold text-amber-950 mt-0.5 block">
-                  S/ {resultado.puntoEquilibrioSoles.toFixed(2)}
-                </span>
-                <span className="text-[10px] text-amber-700">Para cubrir fijos de S/ {resultado.costosFijosTotales.toFixed(0)}</span>
-              </div>
-
-              <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
-                <span className="text-[11px] text-amber-900 font-semibold block">Pedidos Requeridos</span>
-                <span className="text-base font-extrabold text-amber-950 mt-0.5 block">
-                  {resultado.puntoEquilibrioUnidades} pasteles
-                </span>
-                <span className="text-[10px] text-amber-700">o {resultado.unidadesDiariasPuntoEquilibrio} por día</span>
-              </div>
-            </div>
-
-            <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
-              💡 Con <strong className="text-gray-900">{unidadesMensuales} pedidos</strong> mensuales simulados, estás{" "}
-              {unidadesMensuales >= resultado.puntoEquilibrioUnidades ? (
-                <span className="text-emerald-700 font-bold">
-                  {unidadesMensuales - resultado.puntoEquilibrioUnidades} pedidos por encima del punto de equilibrio (colchón de ganancia neta).
-                </span>
+              {mostrarPuntoEquilibrio ? (
+                <ChevronUp className="h-4 w-4 text-slate-400" />
               ) : (
-                <span className="text-rose-700 font-bold">
-                  {resultado.puntoEquilibrioUnidades - unidadesMensuales} pedidos por debajo del punto de equilibrio (en riesgo de pérdida).
-                </span>
+                <ChevronDown className="h-4 w-4 text-slate-400" />
               )}
-            </div>
-          </div>
+            </button>
 
-          {/* 4. RATIOS FINANCIEROS CLAVE: ROS, ROE, ROI */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-600" />
-                <span>Ratios de Rentabilidad (ROS, ROE, ROI)</span>
-              </h3>
-              <span className="text-[10px] text-gray-400 font-medium">Con {unidadesMensuales} ped./mes</span>
-            </div>
-
-            <div className="space-y-2.5">
-              {/* ROS */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/80 border border-gray-100">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-900">ROS (Return on Sales)</span>
-                    <span className="text-[10px] text-gray-400 font-medium">Margen Neto</span>
+            {mostrarPuntoEquilibrio && (
+              <div className="border-t px-5 py-4 space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-500">
+                      Costos fijos mensuales (S/)
+                    </label>
+                    <input
+                      type="number"
+                      step="50"
+                      min="0"
+                      value={costosFijosMensuales}
+                      onChange={e => setCostosFijosMensuales(Number(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-slate-300 p-2 text-sm"
+                    />
                   </div>
-                  <span className="text-[11px] text-gray-500">Utilidad Neta / Facturación</span>
-                </div>
-                <div className="text-right">
-                  <span className={`text-sm font-extrabold ${
-                    resultado.diagnosticoROS.estado === "optimo"
-                      ? "text-emerald-600"
-                      : resultado.diagnosticoROS.estado === "alerta"
-                      ? "text-amber-600"
-                      : "text-rose-600"
-                  }`}>
-                    {resultado.ros.toFixed(1)}%
-                  </span>
-                  <span className="text-[10px] text-gray-400 block">Objetivo ≥ 20%</span>
-                </div>
-              </div>
-
-              {/* ROE */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/80 border border-gray-100">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-900">ROE (Return on Equity)</span>
-                    <span className="text-[10px] text-gray-400 font-medium">Retorno Capital</span>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-500">
+                      Unidades estimadas por mes
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={unidadesMensualesEstimadas}
+                      onChange={e => setUnidadesMensualesEstimadas(Number(e.target.value) || 1)}
+                      className="w-full rounded-lg border border-slate-300 p-2 text-sm"
+                    />
                   </div>
-                  <span className="text-[11px] text-gray-500">Utilidad Anual / Patrimonio (S/ {resultado.patrimonioInvertido})</span>
                 </div>
-                <div className="text-right">
-                  <span className={`text-sm font-extrabold ${
-                    resultado.diagnosticoROE.estado === "optimo"
-                      ? "text-emerald-600"
-                      : resultado.diagnosticoROE.estado === "alerta"
-                      ? "text-amber-600"
-                      : "text-rose-600"
-                  }`}>
-                    {resultado.roe.toFixed(1)}%
-                  </span>
-                  <span className="text-[10px] text-gray-400 block">Objetivo ≥ 30%</span>
-                </div>
-              </div>
 
-              {/* ROI */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/80 border border-gray-100">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-900">ROI (Return on Investment)</span>
-                    <span className="text-[10px] text-gray-400 font-medium">Inversión Operativa</span>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-lg bg-slate-100 p-3">
+                    <p className="text-[11px] font-bold uppercase text-slate-500">
+                      Unidades para equilibrio
+                    </p>
+                    <p className="text-xl font-black text-slate-800">
+                      {puntoEquilibrio.unidades}
+                    </p>
                   </div>
-                  <span className="text-[11px] text-gray-500">Retorno sobre Costos Anuales</span>
+                  <div className="rounded-lg bg-slate-100 p-3">
+                    <p className="text-[11px] font-bold uppercase text-slate-500">
+                      Facturar mínimo
+                    </p>
+                    <p className="text-xl font-black text-slate-800">
+                      S/ {puntoEquilibrio.soles.toLocaleString("es-PE", { maximumFractionDigits: 0 })}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-slate-100 p-3">
+                    <p className="text-[11px] font-bold uppercase text-slate-500">
+                      {unidadesMensualesEstimadas >= puntoEquilibrio.unidades ? "Sobres el mínimo" : "Bajo el mínimo"}
+                    </p>
+                    <p className={`text-xl font-black ${
+                      unidadesMensualesEstimadas >= puntoEquilibrio.unidades ? "text-emerald-700" : "text-red-700"
+                    }`}>
+                      {unidadesMensualesEstimadas - puntoEquilibrio.unidades >= 0 ? "+" : ""}
+                      {unidadesMensualesEstimadas - puntoEquilibrio.unidades} unidades
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className={`text-sm font-extrabold ${
-                    resultado.diagnosticoROI.estado === "optimo"
-                      ? "text-emerald-600"
-                      : resultado.diagnosticoROI.estado === "alerta"
-                      ? "text-amber-600"
-                      : "text-rose-600"
-                  }`}>
-                    {resultado.roi.toFixed(1)}%
-                  </span>
-                  <span className="text-[10px] text-gray-400 block">Objetivo ≥ 25%</span>
-                </div>
-              </div>
-            </div>
 
-            {/* ESTADO DE RESULTADOS RESUMIDO */}
-            <div className="bg-slate-900 text-white p-3.5 rounded-xl text-xs space-y-1.5">
-              <div className="flex justify-between text-slate-300">
-                <span>Ventas Totales Proyectadas:</span>
-                <span className="font-semibold text-white">S/ {resultado.ventasTotalesProyectadas.toFixed(2)}</span>
+                {puntoEquilibrio.unidades === 0 && (
+                  <p className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">
+                    Tu precio de venta no cubre el costo real. No hay punto de equilibrio posible — sube el precio.
+                  </p>
+                )}
               </div>
-              <div className="flex justify-between text-slate-400">
-                <span>(-) Costos Variables ({unidadesMensuales} u):</span>
-                <span>- S/ {resultado.costosVariablesTotales.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-slate-300 font-semibold border-t border-slate-800 pt-1">
-                <span>(=) Utilidad Bruta:</span>
-                <span>S/ {resultado.utilidadBrutaMensual.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>(-) Costos Fijos del Negocio:</span>
-                <span>- S/ {resultado.costosFijosTotales.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-emerald-400 font-extrabold text-sm border-t border-slate-700 pt-1.5">
-                <span>(=) Utilidad Neta Mensual:</span>
-                <span>S/ {resultado.utilidadNetaMensual.toFixed(2)}</span>
-              </div>
-            </div>
+            )}
           </div>
+        </>
+      )}
 
-          {/* 5. INDICADORES COMERCIALES (CAC, LTV, TICKET) */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-3">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-600" />
-              <span>Indicadores Comerciales Kelly&apos;s Cake</span>
-            </h3>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                <span className="text-[11px] text-indigo-900 font-bold block">CAC Máximo Sugerido</span>
-                <span className="text-base font-extrabold text-indigo-950 mt-0.5 block">
-                  S/ {resultado.cacMaximoRecomendado.toFixed(2)}
-                </span>
-                <span className="text-[10px] text-indigo-700">Límite por cliente en Meta Ads</span>
-              </div>
-
-              <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                <span className="text-[11px] text-indigo-900 font-bold block">LTV Estimado (12m)</span>
-                <span className="text-base font-extrabold text-indigo-950 mt-0.5 block">
-                  S/ {resultado.ltvObjetivo.toFixed(2)}
-                </span>
-                <span className="text-[10px] text-indigo-700">Base 3.2 recompras anuales</span>
-              </div>
-            </div>
-          </div>
-
+      {!productoId && productosExistentes.length > 0 && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+          <Info className="mr-1.5 inline h-4 w-4" />
+          Selecciona un producto arriba para ver su costeo real completo en 3 capas.
         </div>
-
-      </div>
+      )}
     </div>
   );
 }

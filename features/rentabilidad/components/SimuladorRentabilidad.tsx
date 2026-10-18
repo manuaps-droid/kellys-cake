@@ -419,12 +419,15 @@ FASE 3 · Overhead (multiplicador ×${multiplicador}):
                   S/ {resultado.gananciaReal.toFixed(2)}
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-[11px] font-bold uppercase text-slate-500">Margen Real</p>
-                <p className={`text-3xl font-black ${
-                  resultado.margenRealPct > 50 ? "text-emerald-700" :
-                  resultado.margenRealPct > 30 ? "text-amber-700" : "text-red-700"
-                }`}>
+              <div className={`rounded-xl p-3 ${
+                resultado.margenRealPct > 50
+                  ? "bg-emerald-600"
+                  : resultado.margenRealPct > 30
+                    ? "bg-amber-500"
+                    : "bg-red-600"
+              }`}>
+                <p className="text-[11px] font-bold uppercase text-white/80">Margen Utilidad</p>
+                <p className="text-4xl font-black text-white leading-none">
                   {resultado.margenRealPct}%
                 </p>
               </div>
@@ -505,6 +508,21 @@ FASE 3 · Overhead (multiplicador ×${multiplicador}):
               <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-900 px-4 py-3 text-white">
                 <span className="font-bold">= COSTO REAL:</span>
                 <span className="text-lg font-black">S/ {resultado.costoRealUnitario.toFixed(2)}</span>
+              </div>
+              <div className={`mt-1 flex items-center justify-between rounded-lg px-4 py-2.5 text-white ${
+                resultado.margenRealPct > 50
+                  ? "bg-emerald-600"
+                  : resultado.margenRealPct > 30
+                    ? "bg-amber-500"
+                    : "bg-red-600"
+              }`}>
+                <span className="font-bold text-sm">
+                  {resultado.margenRealPct > 50 ? "✅" : resultado.margenRealPct > 30 ? "⚠️" : "🚨"}
+                  {" "}MARGEN UTILIDAD: {resultado.margenRealPct}%
+                </span>
+                <span className="font-bold text-sm">
+                  Ganancia: S/ {resultado.gananciaReal.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>

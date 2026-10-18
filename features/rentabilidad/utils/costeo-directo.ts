@@ -86,6 +86,6 @@ export function calcularCosteoDirecto(input: {
   };
 }
 
-export const EMPAQUE_DEFAULT = 7.5;
+export const EMPAQUE_DEFAULT = 0.5;
 export const OTROS_DIRECTOS_DEFAULT = 2.0;
 export const MULTIPLICADOR_DEFAULT = 1.4;

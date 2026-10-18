@@ -13,6 +13,15 @@ export type FilaRotacion = {
   estado: EstadoRotacion;
 };
 
+export type CanalResumen = {
+  canal: "web" | "vending" | "directo";
+  etiqueta: string;
+  pedidosMes: number;
+  totalMes: number;
+  ticket: number;
+  pctParticipacion: number;
+};
+
 export type DatosPulso = {
   tieneDatos: boolean;
   ticket: {
@@ -36,4 +45,5 @@ export type DatosPulso = {
     estado: EstadoMerma;
   };
   rotacion: FilaRotacion[];
+  canales: CanalResumen[];
 };

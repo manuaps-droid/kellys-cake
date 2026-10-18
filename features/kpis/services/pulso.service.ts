@@ -5,6 +5,7 @@ import type {
   EstadoMerma,
   EstadoRotacion,
   FilaRotacion,
+  CanalResumen,
 } from "../types/pulso.types";
 
 function ahoraLima(): Date {
@@ -72,11 +73,12 @@ export async function getPulsoNegocio(): Promise<DatosPulso> {
       estado: "sin-registro",
     },
     rotacion: [],
+    canales: [],
   };
 
   const { data: pedidos, error } = await supabase
     .from("pedidos")
-    .select("id, cliente_id, total, created_at")
+    .select("id, cliente_id, total, created_at, canal")
     .neq("estado", "cancelado")
     .order("created_at", { ascending: true });
 
@@ -86,7 +88,6 @@ export async function getPulsoNegocio(): Promise<DatosPulso> {
   }
 
   if (!pedidos || pedidos.length === 0) {
-    // Sin pedidos: aún puede haber merma registrada
     const merma = await leerMermaRegistrada(supabase, mesActual, 0);
     return { ...vacio, merma, tieneDatos: false };
   }
@@ -96,6 +97,7 @@ export async function getPulsoNegocio(): Promise<DatosPulso> {
     cliente_id: string | null;
     total: number | null;
     created_at: string;
+    canal: string | null;
   };
 
   const filas = pedidos as PedidoRow[];
@@ -207,6 +209,52 @@ export async function getPulsoNegocio(): Promise<DatosPulso> {
 
   const merma = await leerMermaRegistrada(supabase, mesActual, totalMes);
 
+  // Desglose por canal de ventas
+  const conteoCanal = new Map<string, { pedidos: number; total: number }>();
+
+  for (const p of delMes) {
+    const canal = (p as PedidoRow).canal ?? "web";
+    const acumulado = conteoCanal.get(canal) ?? { pedidos: 0, total: 0 };
+    acumulado.pedidos += 1;
+    acumulado.total += Number(p.total ?? 0);
+    conteoCanal.set(canal, acumulado);
+  }
+
+  const ETIQUETAS: Record<string, string> = {
+    web: "🛒 Tienda Web",
+    vending: "🤖 Vending",
+    directo: "📱 Directo / WhatsApp",
+  };
+
+  const canales: CanalResumen[] = [...conteoCanal.entries()]
+    .map(([canal, v]) => ({
+      canal: (canal === "vending" ? "vending" : canal === "directo" ? "directo" : "web") as CanalResumen["canal"],
+      etiqueta: ETIQUETAS[canal] ?? `📦 ${canal}`,
+      pedidosMes: v.pedidos,
+      totalMes: Math.round(v.total * 100) / 100,
+      ticket:
+        v.pedidos > 0
+          ? Math.round((v.total / v.pedidos) * 100) / 100
+          : 0,
+      pctParticipacion:
+        totalMes > 0
+          ? Math.round((v.total / totalMes) * 100)
+          : 0,
+    }))
+    .sort((a, b) => b.totalMes - a.totalMes);
+
+  // Asegurar que el canal vending siempre aparezca (aunque esté en 0)
+  if (!canales.some((c) => c.canal === "vending")) {
+    canales.push({
+      canal: "vending",
+      etiqueta: "🤖 Vending",
+      pedidosMes: 0,
+      totalMes: 0,
+      ticket: 0,
+      pctParticipacion: 0,
+    });
+  }
+
   return {
     tieneDatos: true,
     ticket: {
@@ -234,6 +282,7 @@ export async function getPulsoNegocio(): Promise<DatosPulso> {
     },
     merma,
     rotacion,
+    canales,
   };
 }
 

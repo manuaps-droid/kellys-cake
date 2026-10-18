@@ -12,9 +12,15 @@ import {
   Clock,
   HeartPulse,
   Loader2,
+  Store,
+  Bot,
+  Plus,
 } from "lucide-react";
 
 import { guardarMermaMesAction } from "../actions/merma.action";
+import {
+  registrarVentaVendingAction,
+} from "../actions/vending.action";
 import type { DatosPulso } from "../types/pulso.types";
 
 function soles(valor: number): string {
@@ -37,6 +43,14 @@ export default function PulsoNegocio({
   );
   const [registrando, startTransition] = useTransition();
 
+  const [vending, setVending] = useState({
+    producto: "",
+    cantidad: "1",
+    precio: "",
+    fecha: new Date().toISOString().slice(0, 10),
+  });
+  const [registrandoVending, startVendingTransition] = useTransition();
+
   async function guardarMerma() {
     const monto = Number(montoMerma);
 
@@ -54,6 +68,39 @@ export default function PulsoNegocio({
       }
 
       toast.success("Merma del mes registrada.");
+    });
+  }
+
+  async function registrarVending() {
+    const precio = Number(vending.precio);
+
+    if (vending.producto.trim().length < 2) {
+      toast.error("Escribe el nombre del producto vendido.");
+      return;
+    }
+
+    if (!Number.isFinite(precio) || precio <= 0) {
+      toast.error("Ingresa un precio válido por unidad.");
+      return;
+    }
+
+    startVendingTransition(async () => {
+      const res = await registrarVentaVendingAction({
+        producto: vending.producto.trim(),
+        cantidad: Number(vending.cantidad) || 1,
+        precio_unitario: precio,
+        fecha: vending.fecha,
+      });
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success(
+        "Venta Vending registrada. Ya se refleja en tus KPIs del canal."
+      );
+      setVending({ producto: "", cantidad: "1", precio: "", fecha: vending.fecha });
     });
   }
 
@@ -358,6 +405,130 @@ export default function PulsoNegocio({
             </table>
           </div>
         )}
+      </div>
+
+      {/* Fila 3: Desglose por Canal de Ventas */}
+      <div className="rounded-2xl border bg-white shadow-sm">
+        <div className="flex items-center gap-2 border-b bg-neutral-50 px-6 py-4">
+          <Store className="h-5 w-5 text-indigo-600" />
+          <div>
+            <h3 className="font-semibold text-neutral-800">
+              Canales de Ventas — este mes
+            </h3>
+            <p className="text-xs text-neutral-500">
+              Cada canal medido por separado. Cuando las máquinas entren,
+              el canal Vending se alimenta solo.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 divide-y sm:grid-cols-2 lg:grid-cols-3 sm:divide-y-0 sm:divide-x">
+          {datos.canales.map((canal) => (
+            <div
+              key={canal.canal}
+              className={`p-6 ${canal.canal === "vending" ? "bg-indigo-50/30" : ""}`}
+            >
+              <p className="mb-1 text-sm font-bold text-neutral-800">
+                {canal.etiqueta}
+              </p>
+              <p className="text-2xl font-black text-neutral-800">
+                {soles(canal.totalMes)}
+              </p>
+              <p className="mt-1 text-xs text-neutral-500">
+                {canal.pedidosMes} pedido(s) · ticket{" "}
+                {soles(canal.ticket)} · {canal.pctParticipacion}% del total
+              </p>
+              {canal.canal === "vending" && canal.pedidosMes === 0 && (
+                <p className="mt-2 rounded-md bg-indigo-100 px-3 py-2 text-xs text-indigo-700">
+                  Aún sin ventas. Registra la primera abajo o conecta tus
+                  máquinas cuando estén instaladas.
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Formulario: Registrar venta Vending */}
+        <div className="border-t bg-indigo-50/40 px-6 py-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Bot className="h-4 w-4 text-indigo-600" />
+            <p className="text-sm font-bold text-indigo-800">
+              Registrar venta del canal Vending
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase text-neutral-500">
+                Producto
+              </label>
+              <input
+                value={vending.producto}
+                onChange={(e) =>
+                  setVending({ ...vending, producto: e.target.value })
+                }
+                placeholder="Ej: Porción Red Velvet"
+                className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase text-neutral-500">
+                Cantidad
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={vending.cantidad}
+                onChange={(e) =>
+                  setVending({ ...vending, cantidad: e.target.value })
+                }
+                className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase text-neutral-500">
+                Precio unit. (S/)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={vending.precio}
+                onChange={(e) =>
+                  setVending({ ...vending, precio: e.target.value })
+                }
+                placeholder="Ej: 8.50"
+                className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase text-neutral-500">
+                Fecha
+              </label>
+              <input
+                type="date"
+                value={vending.fecha}
+                onChange={(e) =>
+                  setVending({ ...vending, fecha: e.target.value })
+                }
+                className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => void registrarVending()}
+                disabled={registrandoVending}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50"
+              >
+                {registrandoVending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Registrar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

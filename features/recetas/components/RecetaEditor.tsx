@@ -35,7 +35,7 @@ export function RecetaEditor({
       ? itemsIniciales
       : [{ ingrediente_id: "", cantidad: 0, unidad: "", merma_porcentaje: 0 }];
 
-  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<RecetaFormValues>({
+  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(recetaSchema),
     defaultValues: {
       producto_id: productoId,
@@ -55,7 +55,7 @@ export function RecetaEditor({
   };
 
   const watchedItems = watch("items") as ItemWatch[];
-  const rendimientoWatch = watch("rendimiento") || 1;
+  const rendimientoWatch = Number(watch("rendimiento")) || 1;
 
   const costoTotalVisual = (watchedItems || []).reduce((acc: number, item: ItemWatch) => {
     const ingDB = ingredientesDisponibles.find(i => i.id === item.ingrediente_id);

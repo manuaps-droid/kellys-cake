@@ -94,9 +94,11 @@ export default async function Home() {
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Bakery",
+    "@id": `${SITE_URL}/#negocio`,
     name: nombre,
     url: SITE_URL,
     image: `${SITE_URL}/images/logos/nuevo-logo.png`,
+    logo: `${SITE_URL}/images/logos/nuevo-logo.png`,
     telephone: telefono ? `+${telefono}` : undefined,
     priceRange: "S/",
     address: {
@@ -123,11 +125,21 @@ export default async function Home() {
       "Pastelería de autor en Arequipa: tortas personalizadas para cumpleaños y bodas, toppers 3D, pastelería pet y delivery a domicilio.",
   };
 
+  const websiteLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: nombre,
+    alternateName: ["Kellys Cake", "Kelly's Cake Arequipa"],
+    url: SITE_URL,
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([jsonLd, websiteLd]),
+        }}
       />
 
       <Navbar />

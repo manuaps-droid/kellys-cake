@@ -1,8 +1,8 @@
 ﻿import { ProductoDesdeCatalogo } from "@/features/productos/components/ProductoDesdeCatalogo";
-import { getCatalogosTienda } from "@/features/productos/queries/get-catalogos-tienda";
+import { getProductosTienda } from "@/features/productos/queries/get-productos-tienda";
 
 export default async function NuevoProductoPage() {
-  const catalogos = await getCatalogosTienda();
+  const productos = await getProductosTienda();
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -11,11 +11,11 @@ export default async function NuevoProductoPage() {
           Crear Producto Final
         </h1>
         <p className="text-gray-500">
-          Elige un diseño de la tienda, arma su receta con tus ingredientes y
+          Elige un producto de tu tienda, arma su receta con tus ingredientes y
           FoodOS calcula el costo y el margen al instante.
         </p>
       </div>
-      <ProductoDesdeCatalogo catalogos={catalogos} />
+      <ProductoDesdeCatalogo productos={productos} />
     </div>
   );
 }

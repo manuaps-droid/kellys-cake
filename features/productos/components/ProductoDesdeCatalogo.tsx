@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, PackagePlus } from "lucide-react";
 
-import type { CatalogoTienda } from "../queries/get-catalogos-tienda";
+import type { ProductoTiendaItem } from "../queries/get-productos-tienda";
 import { crearProductoConReceta } from "../actions/producto-actions";
 import {
   buscarIngredientesAction,
@@ -380,19 +380,23 @@ function FilaIngrediente({
 }
 
 export function ProductoDesdeCatalogo({
-  catalogos,
+  productos,
 }: {
-  catalogos: CatalogoTienda[];
+  productos: ProductoTiendaItem[];
 }) {
   const router = useRouter();
 
-  const [catalogoActivo, setCatalogoActivo] = useState(
-    catalogos[0]?.id ?? ""
-  );
+  const categorias = useMemo(() => {
+    const unicas = [...new Set(productos.map((p) => p.categoria))];
+    return ["Todos", ...unicas];
+  }, [productos]);
 
-  const [diseno, setDiseno] = useState<
-    CatalogoTienda["items"][number] | null
-  >(null);
+  const [categoriaActiva, setCategoriaActiva] = useState("Todos");
+  const [busqueda, setBusqueda] = useState("");
+
+  const [diseno, setDiseno] = useState<ProductoTiendaItem | null>(
+    null
+  );
 
   const [modoManual, setModoManual] = useState(false);
 
@@ -403,10 +407,21 @@ export function ProductoDesdeCatalogo({
   const [filas, setFilas] = useState<Fila[]>([nuevaFila()]);
   const [enviando, setEnviando] = useState(false);
 
-  const catalogoActual = useMemo(
-    () => catalogos.find((c) => c.id === catalogoActivo),
-    [catalogos, catalogoActivo]
-  );
+  const productosVisibles = useMemo(() => {
+    const texto = busqueda.trim().toLowerCase();
+
+    return productos.filter((p) => {
+      if (categoriaActiva !== "Todos" && p.categoria !== categoriaActiva) {
+        return false;
+      }
+
+      if (texto && !p.nombre.toLowerCase().includes(texto)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [productos, categoriaActiva, busqueda]);
 
   const costoTotal = useMemo(() => {
     return filas.reduce((acc, f) => {
@@ -433,7 +448,7 @@ export function ProductoDesdeCatalogo({
   const margenPct =
     precioVenta > 0 ? (margen / precioVenta) * 100 : 0;
 
-  function elegirDiseno(item: CatalogoTienda["items"][number]) {
+  function elegirDiseno(item: ProductoTiendaItem) {
     setDiseno(item);
     setModoManual(false);
     setNombre(item.nombre || "");
@@ -499,16 +514,16 @@ export function ProductoDesdeCatalogo({
 
   return (
     <div className="space-y-6">
-      {/* Paso 1: catálogo de la tienda */}
+      {/* Paso 1: productos de la tienda */}
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-gray-900">
-              1 · Elige el diseño de la tienda online
+              1 · Elige el producto de tu tienda
             </h2>
             <p className="text-xs text-gray-500">
-              Los catálogos que ven tus clientes. El diseño elegido será tu
-              producto.
+              Todos los productos del menú Productos del admin. El que elijas
+              será tu producto en FoodOS.
             </p>
           </div>
           <button
@@ -525,40 +540,44 @@ export function ProductoDesdeCatalogo({
           </button>
         </div>
 
-        {catalogos.length === 0 ? (
+        {productos.length === 0 ? (
           <p className="rounded-md bg-amber-50 p-4 text-sm text-amber-700">
-            No hay catálogos en la tienda todavía. Puedes crear el producto
+            No hay productos en la tienda todavía. Puedes crear el producto
             manualmente.
           </p>
         ) : (
           <>
-            <div className="mb-4 flex flex-wrap gap-2">
-              {catalogos.map((c) => (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {categorias.map((cat) => (
                 <button
-                  key={c.id}
+                  key={cat}
                   type="button"
-                  onClick={() => setCatalogoActivo(c.id)}
+                  onClick={() => setCategoriaActiva(cat)}
                   className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                    c.id === catalogoActivo
+                    cat === categoriaActiva
                       ? "bg-slate-900 text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  {c.nombre}
-                  <span className="ml-1.5 font-normal opacity-60">
-                    ({c.items.length})
-                  </span>
+                  {cat}
                 </button>
               ))}
             </div>
 
-            {catalogoActual && catalogoActual.items.length === 0 ? (
+            <input
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar producto…"
+              className="mb-3 w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+
+            {productosVisibles.length === 0 ? (
               <p className="text-sm text-gray-400">
-                Este catálogo no tiene diseños con imagen.
+                No hay productos con ese filtro.
               </p>
             ) : (
               <div className="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-4">
-                {catalogoActual?.items.map((item) => (
+                {productosVisibles.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -570,16 +589,23 @@ export function ProductoDesdeCatalogo({
                     }`}
                   >
                     <div className="relative aspect-square bg-gray-100">
-                      <Image
-                        src={item.url}
-                        alt={item.nombre}
-                        fill
-                        sizes="(max-width: 640px) 50vw, 25vw"
-                        className="object-cover"
-                      />
+                      {item.url && (
+                        <Image
+                          src={item.url}
+                          alt={item.nombre}
+                          fill
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                          className="object-cover"
+                        />
+                      )}
                       {item.precio != null && (
                         <span className="absolute right-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
                           S/ {item.precio.toFixed(2)}
+                        </span>
+                      )}
+                      {item.estado !== "publicado" && (
+                        <span className="absolute left-1.5 top-1.5 rounded bg-amber-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                          {item.estado}
                         </span>
                       )}
                     </div>

@@ -106,6 +106,16 @@ export function RecetaEditor({
           const itemActual = (watchedItems || [])[index];
           const ingActual = ingredientesDisponibles.find(i => i.id === itemActual?.ingrediente_id);
 
+          // Costo por línea: cantidad × costo unitario (ajustado por merma)
+          const costoLinea = (() => {
+            if (!ingActual) return 0;
+            const cantidad = Number(itemActual?.cantidad) || 0;
+            if (cantidad <= 0) return 0;
+            const mermaTotal = (ingActual.porcentaje_merma_estandar + (Number(itemActual?.merma_porcentaje) || 0)) / 100;
+            const factorMerma = 1 - (mermaTotal >= 1 ? 0.99 : mermaTotal);
+            return (cantidad / factorMerma) * ingActual.costo_por_unidad_uso;
+          })();
+
           return (
           <div key={field.id} className="flex gap-4 items-end bg-gray-50 p-3 rounded-md border">
             <div className="flex-1">
@@ -147,6 +157,13 @@ export function RecetaEditor({
               <input type="number" step="0.1" {...register(`items.${index}.merma_porcentaje` as const)} className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm" title="Merma extra específica para esta receta" />
             </div>
 
+            <div className="w-28">
+              <label className="block text-xs font-medium text-gray-500 uppercase">Total S/</label>
+              <div className="mt-1 block w-full rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm font-bold text-emerald-700 text-right">
+                {costoLinea > 0 ? `S/ ${costoLinea.toFixed(2)}` : "—"}
+              </div>
+            </div>
+
             <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700 p-2 font-bold">X</button>
           </div>
           );
@@ -161,7 +178,17 @@ export function RecetaEditor({
         </button>
       </div>
 
-      <div className="flex justify-end pt-4 border-t">
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t">
+        <div className="flex gap-6 text-sm">
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase">Costo Total</p>
+            <p className="text-lg font-bold text-gray-800">S/ {costoTotalVisual.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase">Costo por Porción</p>
+            <p className="text-lg font-bold text-blue-700">S/ {costoUnitarioVisual.toFixed(2)}</p>
+          </div>
+        </div>
         <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
           {isSubmitting ? "Calculando y Guardando..." : "Guardar Receta"}
         </button>

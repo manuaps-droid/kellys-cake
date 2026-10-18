@@ -11,7 +11,7 @@ export default async function RecetaPage({ params }: { params: { id: string } })
     cookies: { get(name: string) { return cookieStore.get(name)?.value; } }
   });
   
-  const { data: producto } = await supabase.from('productos').select('nombre').eq('id', params.id).single();
+  const { data: producto } = await supabase.from('foodos_productos').select('nombre').eq('id', params.id).single();
 
   if (!producto) return <div className="p-6">Producto no encontrado</div>;
 

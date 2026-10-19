@@ -13,6 +13,13 @@ import {
   guardarEmpaqueAction,
   eliminarEmpaqueAction,
 } from "../actions/empaques.action";
+import {
+  guardarManoObraAction,
+  eliminarManoObraAction,
+  guardarCostoFijoAction,
+  eliminarCostoFijoAction,
+  guardarConfiguracionCosteoAction,
+} from "../actions/costeo-config.action";
 
 type Props = {
   productosExistentes: ProductoPreset[];
@@ -29,6 +36,33 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     Array<{ id?: string; nombre: string; cantidad: string; costo_unitario: string; _nuevo?: boolean }>
   >([]);
   const [guardandoEmpaque, startEmpaqueTransition] = useTransition();
+
+  // Estado editable de mano de obra
+  const [manoObraEdit, setManoObraEdit] = useState<
+    Array<{ id?: string; fase: string; minutos_activos: string; minutos_pasivos: string; _nuevo?: boolean }>
+  >([]);
+  const [guardandoManoObra, startManoObraTransition] = useTransition();
+
+  // Estado editable de costos fijos
+  const [costosFijosEdit, setCostosFijosEdit] = useState<
+    Array<{ id?: string; concepto: string; monto_mensual: string; _nuevo?: boolean }>
+  >([]);
+  const [guardandoFijos, startFijosTransition] = useTransition();
+
+  // Configuración editable
+  const [comisionPasarela, setComisionPasarela] = useState("2.00");
+  const [unidadesCapacidad, setUnidadesCapacidad] = useState("120");
+  const [costoMinuto, setCostoMinuto] = useState("0.0833");
+  const [guardandoConfig, startConfigTransition] = useTransition();
+
+  const FASES_MANO_OBRA = [
+    "preparacion",
+    "horneado",
+    "decoracion",
+    "acabado",
+    "limpieza",
+    "empaque",
+  ];
 
   const CATEGORIAS_EMPAQUE = [
     "Caja para Torta",
@@ -50,7 +84,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     return costeosIniciales[productoId] ?? null;
   }, [productoId, costeosIniciales]);
 
-  // Cargar empaques al cambiar de producto
+  // Cargar empaques + mano de obra al cambiar de producto
   useEffect(() => {
     if (!productoId || !costeo) return;
 
@@ -62,7 +96,29 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
         costo_unitario: String(e.costoUnitario),
       }))
     );
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setManoObraEdit(
+      costeo.manoObra.map(m => ({
+        fase: m.fase,
+        minutos_activos: String(m.minutosActivos),
+        minutos_pasivos: String(m.minutosPasivos),
+      }))
+    );
   }, [productoId, costeo]);
+
+  // Cargar costos fijos y configuración al montar
+  useEffect(() => {
+    if (!costeo) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCostosFijosEdit(
+      costeo.costosFijos.map(c => ({
+        concepto: c.concepto,
+        monto_mensual: String(c.montoMensual),
+      }))
+    );
+  }, [costeo]);
 
   async function guardarEmpaque(index: number) {
     const emp = empaquesEdit[index];
@@ -119,6 +175,138 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       ...prev,
       { nombre: "", cantidad: "1", costo_unitario: "", _nuevo: true },
     ]);
+  }
+
+  // ── Mano de obra ──
+  async function guardarManoObra(index: number) {
+    const mo = manoObraEdit[index];
+    if (!mo || !productoId) return;
+
+    startManoObraTransition(async () => {
+      const res = await guardarManoObraAction({
+        id: mo.id,
+        producto_id: productoId,
+        fase: mo.fase,
+        minutos_activos: Number(mo.minutos_activos) || 0,
+        minutos_pasivos: Number(mo.minutos_pasivos) || 0,
+      });
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success(
+        mo._nuevo
+          ? `Fase "${mo.fase}" registrada.`
+          : `Fase "${mo.fase}" actualizada.`
+      );
+
+      setManoObraEdit(prev =>
+        prev.map((m, i) => (i === index ? { ...m, _nuevo: false } : m))
+      );
+    });
+  }
+
+  async function eliminarManoObra(index: number) {
+    const mo = manoObraEdit[index];
+    if (!mo) return;
+
+    if (!window.confirm(`¿Eliminar la fase "${mo.fase}"?`)) return;
+
+    if (mo.id) {
+      startManoObraTransition(async () => {
+        const res = await eliminarManoObraAction(mo.id!);
+        if (res.error) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success("Fase eliminada.");
+      });
+    }
+
+    setManoObraEdit(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function agregarFilaManoObra() {
+    setManoObraEdit(prev => [
+      ...prev,
+      { fase: "", minutos_activos: "", minutos_pasivos: "0", _nuevo: true },
+    ]);
+  }
+
+  // ── Costos fijos ──
+  async function guardarCostoFijo(index: number) {
+    const cf = costosFijosEdit[index];
+    if (!cf) return;
+
+    startFijosTransition(async () => {
+      const res = await guardarCostoFijoAction({
+        id: cf.id,
+        concepto: cf.concepto,
+        monto_mensual: Number(cf.monto_mensual) || 0,
+      });
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success(
+        cf._nuevo
+          ? `"${cf.concepto}" registrado.`
+          : `"${cf.concepto}" actualizado.`
+      );
+
+      setCostosFijosEdit(prev =>
+        prev.map((c, i) => (i === index ? { ...c, _nuevo: false } : c))
+      );
+    });
+  }
+
+  async function eliminarCostoFijo(index: number) {
+    const cf = costosFijosEdit[index];
+    if (!cf) return;
+
+    if (!window.confirm(`¿Eliminar "${cf.concepto}"?`)) return;
+
+    if (cf.id) {
+      startFijosTransition(async () => {
+        const res = await eliminarCostoFijoAction(cf.id!);
+        if (res.error) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success("Costo fijo eliminado.");
+      });
+    }
+
+    setCostosFijosEdit(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function agregarFilaCostoFijo() {
+    setCostosFijosEdit(prev => [
+      ...prev,
+      { concepto: "", monto_mensual: "", _nuevo: true },
+    ]);
+  }
+
+  // ── Configuración (comisión, capacidad, costo minuto) ──
+  async function guardarConfiguracion() {
+    startConfigTransition(async () => {
+      const res = await guardarConfiguracionCosteoAction({
+        comision_pasarela: Number(comisionPasarela) || 0,
+        unidades_capacidad: Number(unidadesCapacidad) || 120,
+        costo_minuto: Number(costoMinuto) || 0.0833,
+      });
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success("Configuración de costeo guardada.");
+    });
   }
 
   const producto = useMemo(() => {
@@ -496,9 +684,19 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
                       <Plus className="h-3.5 w-3.5" /> Añadir componente de empaque
                     </button>
 
-                    <div className="flex justify-between rounded bg-blue-50/80 px-3 py-1.5 text-xs">
-                      <span className="text-blue-700">Comisión pasarela (estimada)</span>
-                      <span className="font-bold text-blue-800">S/ {costeo.costoOtrosDirectos.toFixed(2)}</span>
+                    <div className="flex justify-between items-end rounded bg-blue-50/80 px-3 py-2 text-xs gap-2">
+                      <span className="text-blue-700">Comisión pasarela</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-blue-500">S/</span>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={comisionPasarela}
+                          onChange={e => setComisionPasarela(e.target.value)}
+                          className="w-20 rounded border border-blue-300 bg-white px-2 py-1 text-center text-xs font-bold text-blue-800"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-between rounded bg-blue-100 px-3 py-2 text-sm font-bold">
@@ -517,24 +715,119 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
                 <div>
                   <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-amber-800">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[10px] font-black text-white">3</span>
-                    Mano de Obra Directa (S/ {costeo.costoManoObra.toFixed(2)}/porción)
+                    Mano de Obra Directa
                   </h4>
-                  <div className="space-y-1 text-xs">
-                    {costeo.manoObra.length > 0 ? (
-                      costeo.manoObra.map((m, i) => (
-                        <div key={i} className="flex justify-between rounded bg-amber-50 px-3 py-1.5">
-                          <span className="text-amber-700 capitalize">
-                            {m.fase} · {m.minutosActivos} min activos
-                            {m.minutosPasivos > 0 && ` (+${m.minutosPasivos} min pasivos, no cobrados)`}
-                          </span>
-                          <span className="font-bold text-amber-800">S/ {m.costoAsignado.toFixed(2)}</span>
+
+                  <div className="space-y-2">
+                    {manoObraEdit.map((mo, index) => (
+                      <div key={index} className="flex flex-wrap items-end gap-2 rounded-md border border-amber-100 bg-amber-50/60 p-2">
+                        <div className="min-w-[120px] flex-1">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-amber-600">Fase</label>
+                          <input
+                            list="fases-mano-obra"
+                            value={mo.fase}
+                            onChange={e => {
+                              const newMO = [...manoObraEdit];
+                              newMO[index] = { ...mo, fase: e.target.value };
+                              setManoObraEdit(newMO);
+                            }}
+                            placeholder="Ej: decoración"
+                            className="w-full rounded border border-amber-300 bg-white px-2 py-1 text-xs"
+                          />
                         </div>
-                      ))
-                    ) : (
-                      <p className="rounded bg-amber-50 px-3 py-1.5 text-amber-600">
-                        Sin minutos registrados. Registra en Admin → Mano de Obra.
-                      </p>
-                    )}
+                        <div className="w-24">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-amber-600">Min activos</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={mo.minutos_activos}
+                            onChange={e => {
+                              const newMO = [...manoObraEdit];
+                              newMO[index] = { ...mo, minutos_activos: e.target.value };
+                              setManoObraEdit(newMO);
+                            }}
+                            className="w-full rounded border border-amber-300 bg-white px-2 py-1 text-center text-xs"
+                          />
+                        </div>
+                        <div className="w-24">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-amber-600">Min pasivos</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={mo.minutos_pasivos}
+                            onChange={e => {
+                              const newMO = [...manoObraEdit];
+                              newMO[index] = { ...mo, minutos_pasivos: e.target.value };
+                              setManoObraEdit(newMO);
+                            }}
+                            className="w-full rounded border border-amber-300 bg-white px-2 py-1 text-center text-xs"
+                            title="Minutos de horno/refrigeración: no se cobran como capacidad activa"
+                          />
+                        </div>
+                        <div className="flex items-end gap-1">
+                          <span className="pb-1.5 text-[10px] font-bold text-amber-700">
+                            S/ {((Number(mo.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833)).toFixed(2)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void guardarManoObra(index)}
+                            disabled={guardandoManoObra}
+                            className="rounded bg-amber-600 px-2 py-1.5 text-[10px] font-bold text-white hover:bg-amber-700 disabled:opacity-50"
+                          >
+                            {mo._nuevo ? "Agregar" : "Guardar"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void eliminarManoObra(index)}
+                            className="rounded p-1.5 text-red-500 hover:bg-red-50"
+                            aria-label="Eliminar fase"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <datalist id="fases-mano-obra">
+                      {FASES_MANO_OBRA.map(f => (
+                        <option key={f} value={f} />
+                      ))}
+                    </datalist>
+
+                    <button
+                      type="button"
+                      onClick={agregarFilaManoObra}
+                      className="flex items-center gap-1.5 rounded-md bg-amber-100 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-200"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Añadir fase de trabajo
+                    </button>
+
+                    <div className="flex flex-wrap items-end justify-between gap-2 rounded bg-amber-50 px-3 py-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-700">Costo por minuto:</span>
+                        <span className="text-[10px] text-amber-500">S/</span>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          min="0.001"
+                          value={costoMinuto}
+                          onChange={e => setCostoMinuto(e.target.value)}
+                          className="w-20 rounded border border-amber-300 bg-white px-2 py-1 text-center text-xs font-bold text-amber-800"
+                          title="Planilla mensual + cargas ÷ 60,000 minutos/mes"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-amber-800">
+                          Total: S/ {(
+                            manoObraEdit.reduce((t, m) =>
+                              t + (Number(m.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833), 0
+                            ) / Math.max(1, costeo.rendimiento)
+                          ).toFixed(2)}/porción
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -542,25 +835,103 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
                 <div>
                   <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[10px] font-black text-white">4</span>
-                    Costos Indirectos (S/ {costeo.costoIndirectosAsignado.toFixed(2)}/unidad)
+                    Costos Indirectos (fijos mensuales)
                   </h4>
-                  <div className="space-y-1 text-xs">
-                    {costeo.costosFijos.length > 0 ? (
-                      costeo.costosFijos.map((c, i) => (
-                        <div key={i} className="flex justify-between rounded bg-slate-100 px-3 py-1.5">
-                          <span className="text-slate-700">{c.concepto}</span>
-                          <span className="font-bold text-slate-800">S/ {c.montoMensual.toFixed(0)}/mes</span>
+
+                  <div className="space-y-2">
+                    {costosFijosEdit.map((cf, index) => (
+                      <div key={index} className="flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+                        <div className="min-w-[140px] flex-1">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-slate-600">Concepto</label>
+                          <input
+                            value={cf.concepto}
+                            onChange={e => {
+                              const newCF = [...costosFijosEdit];
+                              newCF[index] = { ...cf, concepto: e.target.value };
+                              setCostosFijosEdit(newCF);
+                            }}
+                            placeholder="Ej: Alquiler, Luz, Planilla"
+                            className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                          />
                         </div>
-                      ))
-                    ) : (
-                      <p className="rounded bg-slate-100 px-3 py-1.5 text-slate-500">
-                        Sin costos fijos configurados en la base. Configura en Admin → Costos Fijos.
-                      </p>
-                    )}
-                    <div className="mt-1.5 rounded bg-slate-800 px-3 py-2 text-white">
-                      <span className="text-xs">Tasa: S/ {costeo.totalFijosMensuales.toFixed(0)} ÷ {costeo.unidadesMensualesCapacidad} unidades/mes = </span>
-                      <span className="text-sm font-bold">S/ {costeo.costoIndirectosAsignado.toFixed(2)}/unidad</span>
+                        <div className="w-28">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-slate-600">Monto/mes (S/)</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={cf.monto_mensual}
+                            onChange={e => {
+                              const newCF = [...costosFijosEdit];
+                              newCF[index] = { ...cf, monto_mensual: e.target.value };
+                              setCostosFijosEdit(newCF);
+                            }}
+                            className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-center text-xs"
+                          />
+                        </div>
+                        <div className="flex items-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => void guardarCostoFijo(index)}
+                            disabled={guardandoFijos}
+                            className="rounded bg-slate-700 px-2 py-1.5 text-[10px] font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+                          >
+                            {cf._nuevo ? "Agregar" : "Guardar"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void eliminarCostoFijo(index)}
+                            className="rounded p-1.5 text-red-500 hover:bg-red-50"
+                            aria-label="Eliminar costo fijo"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={agregarFilaCostoFijo}
+                      className="flex items-center gap-1.5 rounded-md bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Añadir costo fijo mensual
+                    </button>
+
+                    <div className="flex flex-wrap items-end justify-between gap-3 rounded bg-slate-100 px-3 py-2.5 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-700">Capacidad productiva (unidades/mes):</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={unidadesCapacidad}
+                          onChange={e => setUnidadesCapacidad(e.target.value)}
+                          className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-center text-xs font-bold text-slate-700"
+                        />
+                      </div>
+                      <div className="text-right">
+                        <span className="text-slate-500">Total fijos: </span>
+                        <span className="font-bold text-slate-700">
+                          S/ {costosFijosEdit.reduce((t, c) => t + (Number(c.monto_mensual) || 0), 0).toFixed(0)}/mes
+                        </span>
+                        <span className="ml-3 text-slate-500">Asignado por unidad: </span>
+                        <span className="font-black text-slate-800">
+                          S/ {(
+                            costosFijosEdit.reduce((t, c) => t + (Number(c.monto_mensual) || 0), 0) /
+                            Math.max(1, Number(unidadesCapacidad) || 120)
+                          ).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => void guardarConfiguracion()}
+                      disabled={guardandoConfig}
+                      className="w-full rounded-lg bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700 disabled:opacity-50"
+                    >
+                      Guardar configuración de costeo
+                    </button>
                   </div>
                 </div>
               </div>

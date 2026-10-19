@@ -84,8 +84,11 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     return costeosIniciales[productoId] ?? null;
   }, [productoId, costeosIniciales]);
 
-  // Cargar empaques + mano de obra SOLO al cambiar de producto
-  // (no en cada re-render de costeo, para no sobrescribir ediciones)
+  const producto = useMemo(() => {
+    return productosExistentes.find(p => p.id === productoId) ?? null;
+  }, [productoId, productosExistentes]);
+
+  // Cargar TODO al cambiar de producto (una sola vez por producto)
   const productoSyncRef = useRef<string>("");
 
   useEffect(() => {
@@ -111,12 +114,6 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
         minutos_pasivos: String(m.minutosPasivos),
       }))
     );
-  }, [productoId, costeo]);
-
-  // Cargar costos fijos y configuración SOLO al cambiar de producto
-  useEffect(() => {
-    if (!costeo) return;
-    if (productoSyncRef.current && productoSyncRef.current !== productoId) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCostosFijosEdit(
@@ -125,7 +122,63 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
         monto_mensual: String(c.montoMensual),
       }))
     );
-  }, [costeo, productoId]);
+  }, [productoId, costeo]);
+
+  // ── Totales calculados en VIVO desde los valores editados ──
+  const totalesLocales = useMemo(() => {
+    if (!costeo) return null;
+
+    const costoIng = costeo.costoIngredientes;
+
+    const costoEmp = empaquesEdit.reduce(
+      (t, e) => t + (Number(e.cantidad) || 1) * (Number(e.costo_unitario) || 0),
+      0
+    );
+
+    const comision = Number(comisionPasarela) || 0;
+
+    const costoMO =
+      manoObraEdit.reduce(
+        (t, m) => t + (Number(m.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833),
+        0
+      ) / Math.max(1, costeo.rendimiento);
+
+    const costoVariable = costoIng + costoEmp + costoMO + comision;
+
+    const totalFijos = costosFijosEdit.reduce(
+      (t, c) => t + (Number(c.monto_mensual) || 0),
+      0
+    );
+    const capacidad = Math.max(1, Number(unidadesCapacidad) || 120);
+    const indirectos = totalFijos / capacidad;
+
+    const costoCompleto = costoVariable + indirectos;
+
+    const precio = Number(producto?.precio_venta) || 0;
+    const margenContribucion = precio - costoVariable;
+    const margenContribucionPct = precio > 0 ? (margenContribucion / precio) * 100 : 0;
+    const margenBrutoPct = precio > 0 ? ((precio - costoCompleto) / precio) * 100 : 0;
+
+    const margenObj = margenObjetivo;
+    const sugerido = margenObj < 100 ? costoCompleto / (1 - margenObj / 100) : 0;
+
+    return {
+      costoIng: Math.round(costoIng * 100) / 100,
+      costoEmp: Math.round(costoEmp * 100) / 100,
+      comision: Math.round(comision * 100) / 100,
+      costoMO: Math.round(costoMO * 100) / 100,
+      costoVariable: Math.round(costoVariable * 100) / 100,
+      totalFijos: Math.round(totalFijos),
+      capacidad,
+      indirectos: Math.round(indirectos * 100) / 100,
+      costoCompleto: Math.round(costoCompleto * 100) / 100,
+      margenContribucion: Math.round(margenContribucion * 100) / 100,
+      margenContribucionPct: Math.round(margenContribucionPct * 10) / 10,
+      margenBrutoPct: Math.round(margenBrutoPct * 10) / 10,
+      sugerido: Math.round(sugerido * 100) / 100,
+      minimo: Math.round(costoCompleto * 100) / 100,
+    };
+  }, [costeo, empaquesEdit, comisionPasarela, manoObraEdit, costoMinuto, costosFijosEdit, unidadesCapacidad, margenObjetivo, producto]);
 
   async function guardarEmpaque(index: number) {
     const emp = empaquesEdit[index];
@@ -316,59 +369,49 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     });
   }
 
-  const producto = useMemo(() => {
-    return productosExistentes.find(p => p.id === productoId) ?? null;
-  }, [productoId, productosExistentes]);
-
   const precioSugerido = useMemo(() => {
-    if (!costeo || costeo.costoCompletoUnitario <= 0) return 0;
+    if (!totalesLocales || totalesLocales.costoCompleto <= 0) return 0;
     const factor = 1 - margenObjetivo / 100;
-    return factor > 0 ? costeo.costoCompletoUnitario / factor : 0;
-  }, [costeo, margenObjetivo]);
+    return factor > 0 ? totalesLocales.costoCompleto / factor : 0;
+  }, [totalesLocales, margenObjetivo]);
 
   const precioMinimo = useMemo(() => {
-    if (!costeo) return 0;
-    return costeo.costoCompletoUnitario;
-  }, [costeo]);
+    if (!totalesLocales) return 0;
+    return totalesLocales.costoCompleto;
+  }, [totalesLocales]);
 
   function copiar() {
-    if (!costeo || !producto) return;
+    if (!totalesLocales || !costeo || !producto) return;
 
     const texto = `📊 COSTEO REAL — ${producto.nombre}
 ═══════════════════════════════════
 
 CAPA 1 · INGREDIENTES (receta FoodOS):
   Rinde: ${costeo.rendimiento} porciones
-  Costo ingredientes: S/ ${costeo.costoIngredientes.toFixed(2)}/porción
-${costeo.mermaAplicada.length > 0 ? `  Mermas: ${costeo.mermaAplicada.join(", ")}` : "  Sin mermas aplicadas"}
+  Costo ingredientes: S/ ${totalesLocales.costoIng.toFixed(2)}/porción
 
 CAPA 2 · EMPAQUES Y DIRECTOS:
-  Empaques: S/ ${costeo.costoEmpaques.toFixed(2)}
-  Otros directos (comisión): S/ ${(Number(comisionPasarela) || 0).toFixed(2)}
+  Empaques: S/ ${totalesLocales.costoEmp.toFixed(2)}
+  Comisión pasarela: S/ ${totalesLocales.comision.toFixed(2)}
 
 CAPA 3 · MANO DE OBRA DIRECTA:
-  Minutos activos: ${costeo.minutosActivosTotales}
-  Costo por minuto: S/ ${costeo.costoPorMinuto.toFixed(4)}
-  Costo asignado: S/ ${costeo.costoManoObra.toFixed(2)}/porción
+  Costo por minuto: S/ ${Number(costoMinuto).toFixed(4)}
+  Costo asignado: S/ ${totalesLocales.costoMO.toFixed(2)}/porción
 
 CAPA 4 · COSTOS INDIRECTOS:
-  Fijos mensuales: S/ ${costeo.totalFijosMensuales.toFixed(0)}
-  Capacidad: ${costeo.unidadesMensualesCapacidad} unidades/mes
-  Asignado por unidad: S/ ${costeo.costoIndirectosAsignado.toFixed(2)}
+  Fijos mensuales: S/ ${totalesLocales.totalFijos}
+  Capacidad: ${totalesLocales.capacidad} unidades/mes
+  Asignado por unidad: S/ ${totalesLocales.indirectos.toFixed(2)}
 
 ═══════════════════════════════════
-  COSTO VARIABLE: S/ ${costeo.costoVariableUnitario.toFixed(2)}
-  COSTO COMPLETO: S/ ${costeo.costoCompletoUnitario.toFixed(2)}
+  COSTO VARIABLE: S/ ${totalesLocales.costoVariable.toFixed(2)}
+  COSTO COMPLETO: S/ ${totalesLocales.costoCompleto.toFixed(2)}
   PRECIO ACTUAL: S/ ${Number(producto.precio_venta || 0).toFixed(2)}
-  MARGEN CONTRIBUCIÓN: S/ ${costeo.margenContribucion.toFixed(2)} (${costeo.margenContribucionPct}%)
-  MARGEN BRUTO: ${costeo.margenBrutoPct}%
+  MARGEN CONTRIBUCIÓN: S/ ${totalesLocales.margenContribucion.toFixed(2)} (${totalesLocales.margenContribucionPct}%)
+  MARGEN BRUTO: ${totalesLocales.margenBrutoPct}%
 ═══════════════════════════════════
   PRECIO MÍNIMO SOSTENIBLE: S/ ${precioMinimo.toFixed(2)}
-  PRECIO SUGERIDO (margen ${margenObjetivo}%): S/ ${precioSugerido.toFixed(2)}
-
-  ORIGEN DATOS: ${costeo.origenDatos}
-${costeo.datosFaltantes.length > 0 ? `\n  ⚠️ DATOS FALTANTES:\n  ${costeo.datosFaltantes.map(d => `- ${d}`).join("\n  ")}` : ""}
-${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}`).join("\n  ")}` : ""}`;
+  PRECIO SUGERIDO (margen ${margenObjetivo}%): S/ ${precioSugerido.toFixed(2)}`;
 
     navigator.clipboard.writeText(texto);
     toast.success("Costeo copiado al portapapeles.");
@@ -436,21 +479,21 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
         <>
           {/* Resumen ejecutivo */}
           <div className={`rounded-2xl border-2 p-6 shadow-md ${
-            costeo.margenBrutoPct > 40 ? "border-emerald-300 bg-emerald-50" :
-            costeo.margenBrutoPct > 20 ? "border-amber-300 bg-amber-50" :
+            (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "border-emerald-300 bg-emerald-50" :
+            (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "border-amber-300 bg-amber-50" :
             "border-red-300 bg-red-50"
           }`}>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
               <div className="text-center">
                 <p className="text-[11px] font-bold uppercase text-slate-500">Costo Variable</p>
                 <p className="text-2xl font-black text-slate-800">
-                  S/ {costeo.costoVariableUnitario.toFixed(2)}
+                  S/ {(totalesLocales?.costoVariable ?? 0).toFixed(2)}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-[11px] font-bold uppercase text-slate-500">Costo Completo</p>
                 <p className="text-2xl font-black text-slate-800">
-                  S/ {costeo.costoCompletoUnitario.toFixed(2)}
+                  S/ {(totalesLocales?.costoCompleto ?? 0).toFixed(2)}
                 </p>
               </div>
               <div className="text-center">
@@ -462,16 +505,16 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
               <div className="text-center">
                 <p className="text-[11px] font-bold uppercase text-slate-500">Margen Contribución</p>
                 <p className="text-2xl font-black text-blue-700">
-                  {costeo.margenContribucionPct}%
+                  {(totalesLocales?.margenContribucionPct ?? 0)}%
                 </p>
               </div>
               <div className={`rounded-xl p-2 ${
-                costeo.margenBrutoPct > 40 ? "bg-emerald-600" :
-                costeo.margenBrutoPct > 20 ? "bg-amber-500" : "bg-red-600"
+                (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "bg-emerald-600" :
+                (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "bg-amber-500" : "bg-red-600"
               }`}>
                 <p className="text-[11px] font-bold uppercase text-white/80">Margen Bruto</p>
                 <p className="text-3xl font-black text-white">
-                  {costeo.margenBrutoPct}%
+                  {(totalesLocales?.margenBrutoPct ?? 0)}%
                 </p>
               </div>
             </div>

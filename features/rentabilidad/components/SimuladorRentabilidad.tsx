@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useId, useMemo } from "react";
+import { useState, useId, useMemo, useTransition, useEffect } from "react";
 import {
-  Cake, Package, Users, Building2, Copy, RotateCcw,
-  TrendingUp, AlertTriangle, CheckCircle2, Info, Target,
-  ChevronDown, ChevronUp, Percent, DollarSign, Clock,
+  Cake, Copy, AlertTriangle, Info, Target,
+  ChevronDown, ChevronUp, Plus, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ProductoPreset } from "../types/rentabilidad.types";
 import type { DesgloseCosteo } from "../services/costeo-real.service";
+import {
+  guardarEmpaqueAction,
+  eliminarEmpaqueAction,
+} from "../actions/empaques.action";
 
 type Props = {
   productosExistentes: ProductoPreset[];
@@ -21,12 +24,102 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
   const [margenObjetivo, setMargenObjetivo] = useState(70);
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
 
+  // Estado editable de empaques
+  const [empaquesEdit, setEmpaquesEdit] = useState<
+    Array<{ id?: string; nombre: string; cantidad: string; costo_unitario: string; _nuevo?: boolean }>
+  >([]);
+  const [guardandoEmpaque, startEmpaqueTransition] = useTransition();
+
+  const CATEGORIAS_EMPAQUE = [
+    "Caja para Torta",
+    "Caja para Kekes",
+    "Caja para Galletas",
+    "Caja para Donas",
+    "Caja para Macarrones",
+    "Base rígida",
+    "Blonda",
+    "Sticker / Etiqueta",
+    "Cinta / Lazo",
+    "Bolsa de regalo",
+  ];
+
   const idProducto = useId();
   const idMargen = useId();
 
   const costeo = useMemo(() => {
     return costeosIniciales[productoId] ?? null;
   }, [productoId, costeosIniciales]);
+
+  // Cargar empaques al cambiar de producto
+  useEffect(() => {
+    if (!productoId || !costeo) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEmpaquesEdit(
+      costeo.empaques.map(e => ({
+        nombre: e.nombre,
+        cantidad: String(e.cantidad),
+        costo_unitario: String(e.costoUnitario),
+      }))
+    );
+  }, [productoId, costeo]);
+
+  async function guardarEmpaque(index: number) {
+    const emp = empaquesEdit[index];
+    if (!emp || !productoId) return;
+
+    startEmpaqueTransition(async () => {
+      const res = await guardarEmpaqueAction({
+        id: emp.id,
+        producto_id: productoId,
+        nombre: emp.nombre,
+        cantidad: Number(emp.cantidad) || 1,
+        costo_unitario: Number(emp.costo_unitario) || 0,
+      });
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success(
+        emp._nuevo
+          ? `"${emp.nombre}" agregado al producto.`
+          : `"${emp.nombre}" actualizado.`
+      );
+
+      setEmpaquesEdit(prev =>
+        prev.map((e, i) => (i === index ? { ...e, _nuevo: false } : e))
+      );
+    });
+  }
+
+  async function eliminarEmpaque(index: number) {
+    const emp = empaquesEdit[index];
+    if (!emp) return;
+
+    if (!window.confirm(`¿Eliminar "${emp.nombre}" de este producto?`)) return;
+
+    if (emp.id) {
+      startEmpaqueTransition(async () => {
+        const res = await eliminarEmpaqueAction(emp.id!);
+        if (res.error) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success("Empaque eliminado.");
+      });
+    }
+
+    setEmpaquesEdit(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function agregarFilaEmpaque() {
+    setEmpaquesEdit(prev => [
+      ...prev,
+      { nombre: "", cantidad: "1", costo_unitario: "", _nuevo: true },
+    ]);
+  }
 
   const producto = useMemo(() => {
     return productosExistentes.find(p => p.id === productoId) ?? null;
@@ -306,18 +399,116 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
                 <div>
                   <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-blue-800">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-black text-white">2</span>
-                    Empaques y Directos (S/ {(costeo.costoEmpaques + costeo.costoOtrosDirectos).toFixed(2)})
+                    Empaques y Directos
                   </h4>
-                  <div className="space-y-1 text-xs">
-                    {costeo.empaques.map((e, i) => (
-                      <div key={i} className="flex justify-between rounded bg-blue-50 px-3 py-1.5">
-                        <span className="text-blue-700">{e.nombre} × {e.cantidad}</span>
-                        <span className="font-bold text-blue-800">S/ {e.costoTotal.toFixed(2)}</span>
+
+                  <div className="space-y-2">
+                    {empaquesEdit.map((emp, index) => (
+                      <div key={index} className="flex flex-wrap items-end gap-2 rounded-md border border-blue-100 bg-blue-50/60 p-2">
+                        <div className="min-w-[160px] flex-1">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-blue-600">Componente</label>
+                          {emp._nuevo ? (
+                            <input
+                              list="categorias-empaque"
+                              value={emp.nombre}
+                              onChange={e => {
+                                const newEmpaques = [...empaquesEdit];
+                                newEmpaques[index] = { ...emp, nombre: e.target.value };
+                                setEmpaquesEdit(newEmpaques);
+                              }}
+                              placeholder="Ej: Caja para Torta"
+                              className="w-full rounded border border-blue-300 bg-white px-2 py-1 text-xs"
+                            />
+                          ) : (
+                            <input
+                              value={emp.nombre}
+                              onChange={e => {
+                                const newEmpaques = [...empaquesEdit];
+                                newEmpaques[index] = { ...emp, nombre: e.target.value };
+                                setEmpaquesEdit(newEmpaques);
+                              }}
+                              className="w-full rounded border border-blue-300 bg-white px-2 py-1 text-xs"
+                            />
+                          )}
+                        </div>
+                        <div className="w-20">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-blue-600">Cant.</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0.001"
+                            value={emp.cantidad}
+                            onChange={e => {
+                              const newEmpaques = [...empaquesEdit];
+                              newEmpaques[index] = { ...emp, cantidad: e.target.value };
+                              setEmpaquesEdit(newEmpaques);
+                            }}
+                            className="w-full rounded border border-blue-300 bg-white px-2 py-1 text-center text-xs"
+                          />
+                        </div>
+                        <div className="w-24">
+                          <label className="mb-0.5 block text-[10px] font-bold uppercase text-blue-600">Costo/und (S/)</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={emp.costo_unitario}
+                            onChange={e => {
+                              const newEmpaques = [...empaquesEdit];
+                              newEmpaques[index] = { ...emp, costo_unitario: e.target.value };
+                              setEmpaquesEdit(newEmpaques);
+                            }}
+                            className="w-full rounded border border-blue-300 bg-white px-2 py-1 text-center text-xs"
+                          />
+                        </div>
+                        <div className="flex items-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => void guardarEmpaque(index)}
+                            disabled={guardandoEmpaque}
+                            className="rounded bg-blue-600 px-2 py-1.5 text-[10px] font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {emp._nuevo ? "Agregar" : "Guardar"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void eliminarEmpaque(index)}
+                            className="rounded p-1.5 text-red-500 hover:bg-red-50"
+                            aria-label="Eliminar empaque"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
-                    <div className="flex justify-between rounded bg-blue-50/50 px-3 py-1.5">
+
+                    <datalist id="categorias-empaque">
+                      {CATEGORIAS_EMPAQUE.map(cat => (
+                        <option key={cat} value={cat} />
+                      ))}
+                    </datalist>
+
+                    <button
+                      type="button"
+                      onClick={agregarFilaEmpaque}
+                      className="flex items-center gap-1.5 rounded-md bg-blue-100 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-200"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Añadir componente de empaque
+                    </button>
+
+                    <div className="flex justify-between rounded bg-blue-50/80 px-3 py-1.5 text-xs">
                       <span className="text-blue-700">Comisión pasarela (estimada)</span>
                       <span className="font-bold text-blue-800">S/ {costeo.costoOtrosDirectos.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between rounded bg-blue-100 px-3 py-2 text-sm font-bold">
+                      <span className="text-blue-800">Total empaques y directos:</span>
+                      <span className="text-blue-900">
+                        S/ {(
+                          empaquesEdit.reduce((t, e) => t + (Number(e.cantidad) || 1) * (Number(e.costo_unitario) || 0), 0) +
+                          costeo.costoOtrosDirectos
+                        ).toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>

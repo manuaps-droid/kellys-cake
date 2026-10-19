@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId, useMemo, useTransition, useEffect } from "react";
+import { useState, useId, useMemo, useTransition, useEffect, useRef } from "react";
 import {
   Cake, Copy, AlertTriangle, Info, Target,
   ChevronDown, ChevronUp, Plus, Trash2,
@@ -84,9 +84,15 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     return costeosIniciales[productoId] ?? null;
   }, [productoId, costeosIniciales]);
 
-  // Cargar empaques + mano de obra al cambiar de producto
+  // Cargar empaques + mano de obra SOLO al cambiar de producto
+  // (no en cada re-render de costeo, para no sobrescribir ediciones)
+  const productoSyncRef = useRef<string>("");
+
   useEffect(() => {
     if (!productoId || !costeo) return;
+    if (productoSyncRef.current === productoId) return;
+
+    productoSyncRef.current = productoId;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEmpaquesEdit(
@@ -107,9 +113,10 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     );
   }, [productoId, costeo]);
 
-  // Cargar costos fijos y configuración al montar
+  // Cargar costos fijos y configuración SOLO al cambiar de producto
   useEffect(() => {
     if (!costeo) return;
+    if (productoSyncRef.current && productoSyncRef.current !== productoId) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCostosFijosEdit(
@@ -118,7 +125,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
         monto_mensual: String(c.montoMensual),
       }))
     );
-  }, [costeo]);
+  }, [costeo, productoId]);
 
   async function guardarEmpaque(index: number) {
     const emp = empaquesEdit[index];

@@ -7,7 +7,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { guardarReceta } from "../actions/receta-actions";
-import { MULTIPLICADOR_DEFAULT } from "@/features/rentabilidad/utils/costeo-directo";
 
 type IngredienteOpcion = { id: string; nombre: string; unidad_uso: string; costo_por_unidad_uso: number; porcentaje_merma_estandar: number };
 
@@ -81,10 +80,9 @@ export function RecetaEditor({
     if (result.error) {
       setErrorMsg(result.error);
     } else {
-      const costoConOverhead = costoUnitarioVisual * MULTIPLICADOR_DEFAULT;
       toast.success(
-        `¡Receta guardada! Costo de ingredientes: S/ ${costoUnitarioVisual.toFixed(2)}/porción. Con overhead (×${MULTIPLICADOR_DEFAULT}): S/ ${costoConOverhead.toFixed(2)}.`,
-        { duration: 6000 }
+        `¡Receta guardada! Costo de ingredientes: S/ ${costoUnitarioVisual.toFixed(2)}/porción. Ver el costo completo en Rentabilidad & Costos.`,
+        { duration: 5000 }
       );
     }
     setIsSubmitting(false);

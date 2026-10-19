@@ -337,7 +337,7 @@ ${costeo.mermaAplicada.length > 0 ? `  Mermas: ${costeo.mermaAplicada.join(", ")
 
 CAPA 2 · EMPAQUES Y DIRECTOS:
   Empaques: S/ ${costeo.costoEmpaques.toFixed(2)}
-  Otros directos (comisión): S/ ${costeo.costoOtrosDirectos.toFixed(2)}
+  Otros directos (comisión): S/ ${(Number(comisionPasarela) || 0).toFixed(2)}
 
 CAPA 3 · MANO DE OBRA DIRECTA:
   Minutos activos: ${costeo.minutosActivosTotales}
@@ -704,7 +704,7 @@ ${costeo.alertas.length > 0 ? `\n  ALERTAS:\n  ${costeo.alertas.map(a => `- ${a}
                       <span className="text-blue-900">
                         S/ {(
                           empaquesEdit.reduce((t, e) => t + (Number(e.cantidad) || 1) * (Number(e.costo_unitario) || 0), 0) +
-                          costeo.costoOtrosDirectos
+                          (Number(comisionPasarela) || 0)
                         ).toFixed(2)}
                       </span>
                     </div>

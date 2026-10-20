@@ -43,10 +43,10 @@ const values = [
 ];
 
 const timeline = [
-  { year: "2009", event: "Kellys Cake abre sus puertas en una pequeña cocina en Arequipa." },
-  { year: "2012", event: "Nuestra primera boda. 100 invitados, un pastel de 5 niveles y bastante café de por medio." },
-  { year: "2015", event: "Apostamos por las tortas personalizadas. El cliente se vuelve parte de la cocina." },
-  { year: "2021", event: "Nace nuestro sistema de personalización online para llegar a más mesas." },
+  { year: "2021", event: "Kellys Cake abre sus puertas en una pequeña cocina en Arequipa." },
+  { year: "2022", event: "Nuestra primera boda. 100 invitados, un pastel de 5 niveles y bastante café de por medio." },
+  { year: "2023", event: "Apostamos por las tortas personalizadas. El cliente se vuelve parte de la cocina." },
+  { year: "2024", event: "Nace nuestro sistema de personalización online para llegar a más mesas." },
   { year: "2026", event: "Pasamos las 6,000 familias. La cocina sigue con el mismo cariño del primer día." },
 ];
 
@@ -65,7 +65,7 @@ export function HeroSection() {
 
       <motion.div {...fadeIn} className="relative z-10 mx-auto max-w-4xl px-6 py-32">
         <span className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-400/80">
-          Pastelería de autor · Desde 2009
+          Pastelería de autor · Desde 2021
         </span>
 
         <h1 className="mt-8 font-playfair text-6xl font-bold leading-tight text-white md:text-7xl">
@@ -76,7 +76,7 @@ export function HeroSection() {
         </h1>
 
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-gray-300">
-          Llevamos más de 15 años diseñando las piezas centrales de las
+          Llevamos 5 años diseñando las piezas centrales de las
           celebraciones arequipeñas. Cada pastel es una obra única, hecha
           con técnica profesional, ingredientes certificados y el compromiso
           de entregarlo perfecto. Así trabajamos, así nos conocen.

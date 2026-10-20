@@ -13,7 +13,7 @@ const fadeIn = {
 };
 
 const stats = [
-  { value: "15+", label: "Años metidos en esto" },
+  { value: "5+", label: "Años metidos en esto" },
   { value: "6,000+", label: "Familias atendidas" },
   { value: "4,000+", label: "Pasteles entregados" },
   { value: "4.9", label: "Calificación promedio" },
@@ -180,7 +180,7 @@ export function StorySection() {
           </div>
 
           <div className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-6 shadow-xl">
-            <p className="font-playfair text-3xl font-bold text-[#D8B07A]">15+</p>
+            <p className="font-playfair text-3xl font-bold text-[#D8B07A]">5+</p>
             <p className="text-sm text-gray-500">
               años con algo
               <br />

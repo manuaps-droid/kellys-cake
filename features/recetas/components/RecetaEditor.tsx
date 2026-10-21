@@ -167,6 +167,7 @@ export function RecetaEditor({
               />
               <IngredienteAutocomplete
                 value={itemActual?.ingrediente_id ?? ""}
+                nombreSeleccionado={ingActual?.nombre}
                 onSelect={handleSeleccionado}
               />
             </div>

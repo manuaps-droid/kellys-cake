@@ -12,6 +12,7 @@ import {
 
 type Props = {
   value: string;
+  nombreSeleccionado?: string;
   onSelect: (ingrediente: IngredienteOpcionAutocomplete) => void;
   placeholder?: string;
 };
@@ -21,10 +22,11 @@ const CLASE_INPUT =
 
 export default function IngredienteAutocomplete({
   value,
+  nombreSeleccionado,
   onSelect,
   placeholder = "Escribe para buscar (ej: harina)…",
 }: Props) {
-  const [texto, setTexto] = useState("");
+  const [texto, setTexto] = useState(nombreSeleccionado ?? "");
   const [sugerencias, setSugerencias] = useState<
     IngredienteOpcionAutocomplete[]
   >([]);
@@ -42,6 +44,16 @@ export default function IngredienteAutocomplete({
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sincronizar el texto visible cuando cambia el ingrediente seleccionado
+  const ultimaSeleccionRef = useRef<string>("");
+
+  useEffect(() => {
+    if (nombreSeleccionado && ultimaSeleccionRef.current !== value) {
+      ultimaSeleccionRef.current = value;
+      setTexto(nombreSeleccionado);
+    }
+  }, [value, nombreSeleccionado]);
 
   const buscar = useCallback(async (consulta: string) => {
     setBuscando(true);

@@ -50,10 +50,11 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
   const [guardandoFijos, startFijosTransition] = useTransition();
 
   // Configuración editable
-  const [comisionPasarela, setComisionPasarela] = useState("2.00");
   const [unidadesCapacidad, setUnidadesCapacidad] = useState("120");
   const [costoMinuto, setCostoMinuto] = useState("0.0833");
   const [guardandoConfig, startConfigTransition] = useTransition();
+
+  const COMISION_PASARELA_PCT = 3.99; // Culqi: 3.99% del precio de venta
 
   const FASES_MANO_OBRA = [
     "preparacion",
@@ -137,7 +138,8 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       0
     );
 
-    const comision = Number(comisionPasarela) || 0;
+    const precioVentaParaComision = Number(producto?.precio_venta) || 0;
+    const comision = Math.round(precioVentaParaComision * (COMISION_PASARELA_PCT / 100) * 100) / 100;
 
     const costoMO =
       manoObraEdit.reduce(
@@ -180,7 +182,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       sugerido: Math.round(sugerido * 100) / 100,
       minimo: Math.round(costoCompleto * 100) / 100,
     };
-  }, [costeo, empaquesEdit, comisionPasarela, manoObraEdit, costoMinuto, costosFijosEdit, unidadesCapacidad, margenObjetivo, producto]);
+  }, [costeo, empaquesEdit, manoObraEdit, costoMinuto, costosFijosEdit, unidadesCapacidad, margenObjetivo, producto]);
 
   async function guardarEmpaque(index: number) {
     const emp = empaquesEdit[index];
@@ -357,7 +359,6 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
   async function guardarConfiguracion() {
     startConfigTransition(async () => {
       const res = await guardarConfiguracionCosteoAction({
-        comision_pasarela: Number(comisionPasarela) || 0,
         unidades_capacidad: Number(unidadesCapacidad) || 120,
         costo_minuto: Number(costoMinuto) || 0.0833,
       });
@@ -737,18 +738,15 @@ CAPA 4 · COSTOS INDIRECTOS:
                     </button>
 
                     <div className="flex justify-between items-end rounded bg-blue-50/80 px-3 py-2 text-xs gap-2">
-                      <span className="text-blue-700">Comisión pasarela</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-blue-500">S/</span>
-                        <input
-                          type="number"
-                          step="any"
-                          min="0"
-                          value={comisionPasarela}
-                          onChange={e => setComisionPasarela(e.target.value)}
-                          className="w-20 rounded border border-blue-300 bg-white px-2 py-1 text-center text-xs font-bold text-blue-800"
-                        />
-                      </div>
+                      <span className="text-blue-700">
+                        Comisión pasarela
+                        <span className="ml-1 text-[10px] text-blue-500">
+                          ({COMISION_PASARELA_PCT}% del precio)
+                        </span>
+                      </span>
+                      <span className="font-bold text-blue-800">
+                        S/ {(totalesLocales?.comision ?? 0).toFixed(2)}
+                      </span>
                     </div>
 
                     <div className="flex justify-between rounded bg-blue-100 px-3 py-2 text-sm font-bold">
@@ -756,7 +754,7 @@ CAPA 4 · COSTOS INDIRECTOS:
                       <span className="text-blue-900">
                         S/ {(
                           empaquesEdit.reduce((t, e) => t + (Number(e.cantidad) || 1) * (Number(e.costo_unitario) || 0), 0) +
-                          (Number(comisionPasarela) || 0)
+                          (totalesLocales?.comision ?? 0)
                         ).toFixed(2)}
                       </span>
                     </div>

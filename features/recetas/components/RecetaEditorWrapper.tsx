@@ -110,6 +110,7 @@ export default function RecetaEditorWrapper({
         ingredientesDisponibles={ingredientes}
         itemsIniciales={items}
         rendimientoInicial={rendimiento}
+        recetasDisponibles={recetasDisponibles}
       />
     </>
   );

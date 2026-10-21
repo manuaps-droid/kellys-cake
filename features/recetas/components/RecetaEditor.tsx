@@ -3,9 +3,11 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { recetaSchema, RecetaFormValues } from "../validations/receta-schema";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Copy, Loader2, X } from "lucide-react";
 import { guardarReceta } from "../actions/receta-actions";
+import { leerItemsDeRecetaAction } from "../actions/copiar-receta.action";
 import IngredienteAutocomplete from "@/features/ingredientes/components/IngredienteAutocomplete";
 import type { IngredienteOpcionAutocomplete } from "@/features/ingredientes/actions/ingrediente-actions";
 
@@ -22,6 +24,11 @@ type Props = {
   ingredientesDisponibles: IngredienteOpcion[];
   itemsIniciales?: ItemInicial[];
   rendimientoInicial?: number;
+  recetasDisponibles?: Array<{
+    id: string;
+    productoNombre: string;
+    rendimiento: number;
+  }>;
 };
 
 export function RecetaEditor({
@@ -29,11 +36,15 @@ export function RecetaEditor({
   ingredientesDisponibles,
   itemsIniciales = [],
   rendimientoInicial = 1,
+  recetasDisponibles = [],
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [ingredientesActualizados, setIngredientesActualizados] =
     useState<IngredienteOpcion[]>([]);
+  const [mostrarCopiar, setMostrarCopiar] = useState(false);
+  const [copiando, startCopiarTransition] = useTransition();
+  const [recetaSeleccionada, setRecetaSeleccionada] = useState<string>("");
 
   const ingredientes = [
     ...ingredientesActualizados,
@@ -47,7 +58,37 @@ export function RecetaEditor({
       ? itemsIniciales
       : [{ ingrediente_id: "", cantidad: 0, unidad: "", merma_porcentaje: 0 }];
 
-  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  function copiarReceta(recetaId: string) {
+    startCopiarTransition(async () => {
+      const { items, rendimiento } =
+        await leerItemsDeRecetaAction(recetaId);
+
+      if (items.length === 0) {
+        toast.error("No se pudieron leer los ingredientes de esa receta.");
+        return;
+      }
+
+      reset({
+        producto_id: productoId,
+        nombre: "Receta Principal",
+        rendimiento,
+        items: items.map((i) => ({
+          ingrediente_id: i.ingrediente_id,
+          cantidad: i.cantidad,
+          unidad: i.unidad,
+          merma_porcentaje: i.merma_porcentaje,
+        })),
+      });
+
+      setMostrarCopiar(false);
+      setRecetaSeleccionada("");
+      toast.success(
+        `${items.length} ingredientes copiados. Ajusta las cantidades o agrega más.`
+      );
+    });
+  }
+
+  const { register, control, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
     resolver: zodResolver(recetaSchema),
     defaultValues: {
       producto_id: productoId,
@@ -200,13 +241,87 @@ export function RecetaEditor({
           );
         })}
         
-        <button 
-          type="button" 
-          onClick={() => append({ ingrediente_id: "", cantidad: 0, unidad: "", merma_porcentaje: 0 })}
-          className="text-blue-600 font-medium text-sm hover:underline"
-        >
-          + Añadir otro ingrediente
-        </button>
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => append({ ingrediente_id: "", cantidad: 0, unidad: "", merma_porcentaje: 0 })}
+            className="text-blue-600 font-medium text-sm hover:underline"
+          >
+            + Añadir otro ingrediente
+          </button>
+
+          {recetasDisponibles.length > 0 && (
+            <span className="text-gray-300">|</span>
+          )}
+
+          {recetasDisponibles.length > 0 && !mostrarCopiar && (
+            <button
+              type="button"
+              onClick={() => setMostrarCopiar(true)}
+              className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copiar de otra receta
+            </button>
+          )}
+
+          {mostrarCopiar && (
+            <div className="w-full rounded-xl border-2 border-indigo-200 bg-indigo-50/60 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-indigo-900">
+                  Copiar ingredientes de otra receta
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMostrarCopiar(false);
+                    setRecetaSeleccionada("");
+                  }}
+                  className="rounded p-1 text-indigo-400 hover:bg-indigo-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mb-3 text-xs text-indigo-600">
+                Se reemplazarán todos los ingredientes actuales por los de la receta seleccionada.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {recetasDisponibles.map((rec) => (
+                  <button
+                    key={rec.id}
+                    type="button"
+                    onClick={() => setRecetaSeleccionada(rec.id)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                      recetaSeleccionada === rec.id
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-100"
+                    }`}
+                  >
+                    {rec.productoNombre}
+                    <span className="ml-1 font-normal opacity-60">
+                      ({rec.rendimiento})
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {recetaSeleccionada && (
+                <button
+                  type="button"
+                  onClick={() => copiarReceta(recetaSeleccionada)}
+                  disabled={copiando}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {copiando ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  Copiar {recetaSeleccionada ? "receta seleccionada" : ""}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t">

@@ -28,7 +28,7 @@ type Props = {
 
 export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }: Props) {
   const [productoId, setProductoId] = useState("");
-  const [margenObjetivo, setMargenObjetivo] = useState(70);
+  const [margenObjetivo, setMargenObjetivo] = useState(45);
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
 
   // Estado editable de empaques

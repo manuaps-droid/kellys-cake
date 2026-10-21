@@ -127,8 +127,8 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     );
   }, [productoId, costeo]);
 
-  // ── Totales calculados en VIVO desde los valores editados ──
-  const totalesLocales = useMemo(() => {
+  // ── Totales calculados en CADA render desde los valores editados ──
+  const totalesLocales = (() => {
     if (!costeo) return null;
 
     const costoIng = costeo.costoIngredientes;
@@ -182,7 +182,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       sugerido: Math.round(sugerido * 100) / 100,
       minimo: Math.round(costoCompleto * 100) / 100,
     };
-  }, [costeo, empaquesEdit, manoObraEdit, costoMinuto, costosFijosEdit, unidadesCapacidad, margenObjetivo, producto]);
+  })();
 
   async function guardarEmpaque(index: number) {
     const emp = empaquesEdit[index];
@@ -372,16 +372,14 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     });
   }
 
-  const precioSugerido = useMemo(() => {
-    if (!totalesLocales || totalesLocales.costoCompleto <= 0) return 0;
-    const factor = 1 - margenObjetivo / 100;
-    return factor > 0 ? totalesLocales.costoCompleto / factor : 0;
-  }, [totalesLocales, margenObjetivo]);
-
-  const precioMinimo = useMemo(() => {
-    if (!totalesLocales) return 0;
-    return totalesLocales.costoCompleto;
-  }, [totalesLocales]);
+  // ── Precio sugerido y mínimo (calculados directamente, sin useMemo) ──
+  const costoCompletoActual = totalesLocales?.costoCompleto ?? 0;
+  const margenFactor = 1 - margenObjetivo / 100;
+  const precioSugerido =
+    costoCompletoActual > 0 && margenFactor > 0
+      ? costoCompletoActual / margenFactor
+      : 0;
+  const precioMinimo = costoCompletoActual;
 
   function copiar() {
     if (!totalesLocales || !costeo || !producto) return;

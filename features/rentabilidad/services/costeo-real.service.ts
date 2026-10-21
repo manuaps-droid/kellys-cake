@@ -88,6 +88,30 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
   const alertas: string[] = [];
   const datosFaltantes: string[] = [];
 
+  // Leer configuración guardada (capacidad, costo por minuto)
+  const { data: configRow } = await supabase
+    .from("tienda_config")
+    .select("seccion, data")
+    .eq("seccion", "foodos_config_costeo")
+    .maybeSingle();
+
+  const configCosteo = (configRow?.data as Record<string, unknown>) ?? {};
+
+  const capacidadGuardada =
+    Number(configCosteo.unidades_capacidad) > 0
+      ? Number(configCosteo.unidades_capacidad)
+      : UNIDADES_CAPACIDAD_DEFAULT;
+
+  const costoMinutoGuardado =
+    Number(configCosteo.costo_minuto) > 0
+      ? Number(configCosteo.costo_minuto)
+      : COSTO_MINUTO_DEFAULT;
+
+  const comisionGuardada =
+    configCosteo.comision_pasarela != null
+      ? Number(configCosteo.comision_pasarela)
+      : null;
+
   // ── 1. Producto y receta activa ──
   const { data: producto } = await supabase
     .from("foodos_productos")
@@ -219,13 +243,13 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     minutos_pasivos: number;
   }) => {
     const minutosActivos = Number(m.minutos_activos) || 0;
-    const costoAsignado = minutosActivos * COSTO_MINUTO_DEFAULT;
+    const costoAsignado = minutosActivos * costoMinutoGuardado;
     return {
       id: m.id,
       fase: m.fase,
       minutosActivos,
       minutosPasivos: Number(m.minutos_pasivos) || 0,
-      costoMinuto: COSTO_MINUTO_DEFAULT,
+      costoMinuto: costoMinutoGuardado,
       costoAsignado: Math.round(costoAsignado * 100) / 100,
     };
   });
@@ -255,7 +279,7 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
   }));
 
   const totalFijosMensuales = costosFijos.reduce((t, c) => t + c.montoMensual, 0);
-  const unidadesMensualesCapacidad = UNIDADES_CAPACIDAD_DEFAULT;
+  const unidadesMensualesCapacidad = capacidadGuardada;
   const tasaIndirectosPorUnidad =
     unidadesMensualesCapacidad > 0
       ? totalFijosMensuales / unidadesMensualesCapacidad
@@ -313,7 +337,7 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     manoObra,
     costoManoObra: Math.round(costoManoObra * 100) / 100,
     minutosActivosTotales: manoObra.reduce((t, m) => t + m.minutosActivos, 0),
-    costoPorMinuto: COSTO_MINUTO_DEFAULT,
+    costoPorMinuto: costoMinutoGuardado,
     costosFijos,
     totalFijosMensuales,
     unidadesMensualesCapacidad,

@@ -125,6 +125,12 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
         monto_mensual: String(c.montoMensual),
       }))
     );
+
+    // Sincronizar capacidad y costo por minuto desde el servicio
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUnidadesCapacidad(String(costeo.unidadesMensualesCapacidad));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCostoMinuto(String(costeo.costoPorMinuto));
   }, [productoId, costeo]);
 
   // ── Totales calculados en CADA render desde los valores editados ──

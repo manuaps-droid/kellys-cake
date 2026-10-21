@@ -11,20 +11,27 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
-  title: "Toppers Personalizados en Impresión 3D para Tortas | Kelly's Cake",
+  title: "Toppers 3D e Impresiones Comestibles para Tortas | Kelly's Cake",
   description:
-    "Diseña y personaliza tu topper en impresión 3D con nombre o mensaje especial para coronar tu pastel. Fabricación de alta precisión en Arequipa.",
+    "Diseña toppers en impresión 3D con nombre para tu torta. También hacemos impresiones comestibles en papel de azúcar y papel de arroz. Alta precisión en Arequipa.",
   keywords: [
     "toppers personalizados 3d arequipa",
     "topper para torta impresion 3d",
     "cake topper feliz cumpleaños personalizado",
     "toppers con nombre para pastel",
     "toppers tematicos 3d arequipa",
+    "impresiones comestibles arequipa",
+    "impresiones comestibles para tortas",
+    "imprimir papel de azucar arequipa",
+    "papel de arroz comestible arequipa",
+    "impresion 3d pasteleria arequipa",
+    "figuras 3d para tortas arequipa",
+    "topper 3d con nombre arequipa",
   ],
   openGraph: {
-    title: "Toppers Personalizados en Impresión 3D | Kelly's Cake Arequipa",
+    title: "Toppers 3D e Impresiones Comestibles | Kelly's Cake Arequipa",
     description:
-      "El toque final para tu pastel: toppers personalizados elaborados en impresión 3D de alta definición.",
+      "Toppers en impresión 3D y impresiones comestibles en papel de azúcar. Personaliza tu pastel con nosotros.",
     type: "website",
     locale: "es_PE",
   },
@@ -95,14 +102,15 @@ export default async function DisenarTopperPage() {
         <section className="relative overflow-hidden bg-kc-charcoal pt-10 pb-20">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <p className="text-xs font-semibold tracking-[0.3em] text-kc-rose-gold uppercase">
-              Kelly&apos;s Cake · Toppers en Impresión 3D
+              Kelly's Cake · Toppers 3D e Impresiones Comestibles
             </p>
             <h1 className="mt-3 font-[family-name:var(--font-playfair)] text-5xl font-semibold text-kc-cream lg:text-6xl">
               Diseña tu topper
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-kc-blush">
               Escoge el diseño que más te guste, escribe el nombre y nosotros lo
-              fabricamos en impresión 3D listo para coronar tu pastel.
+              fabricamos en impresión 3D listo para coronar tu pastel. También
+              realizamos impresiones comestibles en papel de azúcar y papel de arroz.
             </p>
           </div>
         </section>

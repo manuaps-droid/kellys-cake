@@ -21,7 +21,7 @@ const SITE_URL =
 export const metadata: Metadata = {
   title: "Tortas Personalizadas en Arequipa | Kelly's Cake",
   description:
-    "Diseña y ordena tortas personalizadas de autor en Arequipa: pasteles para cumpleaños y bodas, toppers 3D con tu nombre, área pet y delivery a domicilio. Paga con Yape o Plin y agenda tu entrega online.",
+    "Diseña y ordena tortas personalizadas de autor en Arequipa: pasteles para cumpleaños y bodas, toppers 3D con tu nombre, impresiones comestibles en papel de azúcar, área pet y delivery. Paga con Yape o Plin.",
   keywords: [
     "tortas personalizadas",
     "tortas personalizadas arequipa",
@@ -37,6 +37,12 @@ export const metadata: Metadata = {
     "toppers personalizados 3d arequipa",
     "bocaditos para eventos arequipa",
     "tortas para perros arequipa",
+    "impresiones comestibles arequipa",
+    "impresiones comestibles para tortas",
+    "imprimir papel de azucar arequipa",
+    "papel de arroz comestible arequipa",
+    "impresion 3d toppers tortas arequipa",
+    "figuras 3d para pasteleria arequipa",
   ],
   alternates: {
     canonical: "/",
@@ -119,7 +125,8 @@ export default async function Home() {
     },
     ...(horarios.length > 0 ? { openingHours: horarios } : {}),
     ...(socials.length > 0 ? { sameAs: socials } : {}),
-    servesCuisine: "Pastelería de autor",
+    servesCuisine:
+      "Pastelería de autor, toppers en impresión 3D e impresiones comestibles en papel de azúcar",
     description:
       tienda?.descripcion ??
       "Pastelería de autor en Arequipa: tortas personalizadas para cumpleaños y bodas, toppers 3D, pastelería pet y delivery a domicilio.",

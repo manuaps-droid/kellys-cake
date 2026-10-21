@@ -12,6 +12,7 @@ export type EmpaqueItem = {
 };
 
 export type ManoObraItem = {
+  id: string;
   fase: string;
   minutosActivos: number;
   minutosPasivos: number;
@@ -20,6 +21,7 @@ export type ManoObraItem = {
 };
 
 export type CostoFijoItem = {
+  id: string;
   concepto: string;
   montoMensual: number;
 };
@@ -206,11 +208,12 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
   // ── 4. Mano de obra directa ──
   const { data: manoObraDB } = await supabase
     .from("foodos_mano_obra")
-    .select("fase, minutos_activos, minutos_pasivos")
+    .select("id, fase, minutos_activos, minutos_pasivos")
     .eq("producto_id", productoId)
     .eq("activo", true);
 
   const manoObra: ManoObraItem[] = (manoObraDB ?? []).map((m: {
+    id: string;
     fase: string;
     minutos_activos: number;
     minutos_pasivos: number;
@@ -218,6 +221,7 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     const minutosActivos = Number(m.minutos_activos) || 0;
     const costoAsignado = minutosActivos * COSTO_MINUTO_DEFAULT;
     return {
+      id: m.id,
       fase: m.fase,
       minutosActivos,
       minutosPasivos: Number(m.minutos_pasivos) || 0,
@@ -237,13 +241,15 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
   // ── 5. Costos fijos/indirectos ──
   const { data: costosFijosDB } = await supabase
     .from("foodos_costos_fijos")
-    .select("concepto, monto_mensual")
+    .select("id, concepto, monto_mensual")
     .eq("activo", true);
 
   const costosFijos: CostoFijoItem[] = (costosFijosDB ?? []).map((c: {
+    id: string;
     concepto: string;
     monto_mensual: number;
   }) => ({
+    id: c.id,
     concepto: c.concepto,
     montoMensual: Number(c.monto_mensual) || 0,
   }));

@@ -109,6 +109,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setManoObraEdit(
       costeo.manoObra.map(m => ({
+        id: m.id,
         fase: m.fase,
         minutos_activos: String(m.minutosActivos),
         minutos_pasivos: String(m.minutosPasivos),
@@ -118,6 +119,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCostosFijosEdit(
       costeo.costosFijos.map(c => ({
+        id: c.id,
         concepto: c.concepto,
         monto_mensual: String(c.montoMensual),
       }))

@@ -484,47 +484,137 @@ CAPA 4 · COSTOS INDIRECTOS:
 
       {costeo && producto && (
         <>
-          {/* Resumen ejecutivo */}
-          <div className={`rounded-2xl border-2 p-6 shadow-md ${
-            (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "border-emerald-300 bg-emerald-50" :
-            (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "border-amber-300 bg-amber-50" :
-            "border-red-300 bg-red-50"
+          {/* ─── HERO: Diagnóstico del producto ─── */}
+          <div className={`rounded-3xl border-2 p-6 shadow-lg sm:p-8 ${
+            (totalesLocales?.margenBrutoPct ?? 0) > 40
+              ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white"
+              : (totalesLocales?.margenBrutoPct ?? 0) > 20
+                ? "border-amber-300 bg-gradient-to-br from-amber-50 to-white"
+                : "border-red-300 bg-gradient-to-br from-red-50 to-white"
           }`}>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-              <div className="text-center">
-                <p className="text-[11px] font-bold uppercase text-slate-500">Costo Variable</p>
-                <p className="text-2xl font-black text-slate-800">
-                  S/ {(totalesLocales?.costoVariable ?? 0).toFixed(2)}
-                </p>
+            <div className="mb-6 text-center">
+              <p className={`text-sm font-semibold ${
+                (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "text-emerald-700"
+                : (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "text-amber-700"
+                : "text-red-700"
+              }`}>
+                {producto.nombre}
+              </p>
+              <div className={`mx-auto mt-2 inline-flex items-center gap-3 rounded-2xl px-8 py-4 shadow-xl ${
+                (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "bg-emerald-600"
+                : (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "bg-amber-500"
+                : "bg-red-600"
+              }`}>
+                <span className="text-5xl font-black text-white sm:text-7xl">
+                  {(totalesLocales?.margenBrutoPct ?? 0)}%
+                </span>
               </div>
-              <div className="text-center">
-                <p className="text-[11px] font-bold uppercase text-slate-500">Costo Completo</p>
-                <p className="text-2xl font-black text-slate-800">
-                  S/ {(totalesLocales?.costoCompleto ?? 0).toFixed(2)}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-[11px] font-bold uppercase text-slate-500">Precio Actual</p>
-                <p className="text-2xl font-black text-slate-800">
+              <p className={`mt-3 text-sm font-medium ${
+                (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "text-emerald-800"
+                : (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "text-amber-800"
+                : "text-red-800"
+              }`}>
+                {(totalesLocales?.margenBrutoPct ?? 0) > 40
+                  ? "✅ Margen saludable — este producto es rentable"
+                  : (totalesLocales?.margenBrutoPct ?? 0) > 20
+                    ? "⚠️ Margen ajustado — revisa tus costos o sube el precio"
+                    : "🚨 Margen crítico — a este precio pierdes dinero"
+                }
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Precio venta</p>
+                <p className="mt-1 text-xl font-black text-slate-800">
                   S/ {Number(producto.precio_venta || 0).toFixed(2)}
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-[11px] font-bold uppercase text-slate-500">Margen Contribución</p>
-                <p className="text-2xl font-black text-blue-700">
-                  {(totalesLocales?.margenContribucionPct ?? 0)}%
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Costo variable</p>
+                <p className="mt-1 text-xl font-black text-slate-800">
+                  S/ {(totalesLocales?.costoVariable ?? 0).toFixed(2)}
                 </p>
               </div>
-              <div className={`rounded-xl p-2 ${
-                (totalesLocales?.margenBrutoPct ?? 0) > 40 ? "bg-emerald-600" :
-                (totalesLocales?.margenBrutoPct ?? 0) > 20 ? "bg-amber-500" : "bg-red-600"
-              }`}>
-                <p className="text-[11px] font-bold uppercase text-white/80">Margen Bruto</p>
-                <p className="text-3xl font-black text-white">
-                  {(totalesLocales?.margenBrutoPct ?? 0)}%
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Costo completo</p>
+                <p className="mt-1 text-xl font-black text-slate-800">
+                  S/ {(totalesLocales?.costoCompleto ?? 0).toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Ganancia real</p>
+                <p className={`mt-1 text-xl font-black ${
+                  (totalesLocales?.margenContribucion ?? 0) > 0 ? "text-emerald-700" : "text-red-700"
+                }`}>
+                  S/ {(totalesLocales?.margenContribucion ?? 0).toFixed(2)}
                 </p>
               </div>
             </div>
+
+            {totalesLocales && totalesLocales.costoCompleto > 0 && (
+              <div className="mt-6">
+                <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  ¿A dónde se va cada sol de la venta?
+                </p>
+                <div className="flex h-12 overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+                  {(() => {
+                    const total = Number(producto.precio_venta) || 1;
+                    const pct = (v: number) => Math.max(0, Math.min(100, (v / total) * 100));
+                    const ganancia = Math.max(0, total - totalesLocales.costoCompleto);
+                    return (
+                      <>
+                        <div
+                          className="flex items-center justify-center bg-emerald-600 text-[10px] font-bold text-white transition-all"
+                          style={{ width: `${pct(totalesLocales.costoIng)}%` }}
+                          title={`Ingredientes: S/ ${totalesLocales.costoIng}`}
+                        >
+                          {pct(totalesLocales.costoIng) > 8 && `${pct(totalesLocales.costoIng).toFixed(0)}%`}
+                        </div>
+                        <div
+                          className="flex items-center justify-center bg-blue-500 text-[10px] font-bold text-white"
+                          style={{ width: `${pct(totalesLocales.costoEmp + totalesLocales.comision)}%` }}
+                          title={`Empaques + comisión: S/ ${(totalesLocales.costoEmp + totalesLocales.comision).toFixed(2)}`}
+                        >
+                          {pct(totalesLocales.costoEmp + totalesLocales.comision) > 8 && `${pct(totalesLocales.costoEmp + totalesLocales.comision).toFixed(0)}%`}
+                        </div>
+                        <div
+                          className="flex items-center justify-center bg-amber-500 text-[10px] font-bold text-white"
+                          style={{ width: `${pct(totalesLocales.costoMO)}%` }}
+                          title={`Mano de obra: S/ ${totalesLocales.costoMO}`}
+                        >
+                          {pct(totalesLocales.costoMO) > 8 && `${pct(totalesLocales.costoMO).toFixed(0)}%`}
+                        </div>
+                        <div
+                          className="flex items-center justify-center bg-slate-600 text-[10px] font-bold text-white"
+                          style={{ width: `${pct(totalesLocales.indirectos)}%` }}
+                          title={`Indirectos: S/ ${totalesLocales.indirectos}`}
+                        >
+                          {pct(totalesLocales.indirectos) > 8 && `${pct(totalesLocales.indirectos).toFixed(0)}%`}
+                        </div>
+                        <div
+                          className={`flex items-center justify-center text-[10px] font-bold text-white ${
+                            ganancia > 0 ? "bg-emerald-800" : "bg-red-800"
+                          }`}
+                          style={{ width: `${pct(ganancia)}%` }}
+                          title={`Ganancia: S/ ${ganancia.toFixed(2)}`}
+                        >
+                          {pct(ganancia) > 8 && ganancia > 0 ? "💰" : ganancia <= 0 ? "❌" : ""}
+                          {pct(ganancia) > 8 && `${pct(ganancia).toFixed(0)}%`}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-[10px] font-medium text-slate-500">
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-600" /> Ingredientes</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /> Empaques + comisión</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Mano de obra</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-slate-600" /> Indirectos</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-800" /> Tu ganancia</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Alertas y datos faltantes */}

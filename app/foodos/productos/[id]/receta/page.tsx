@@ -1,4 +1,4 @@
-import { RecetaEditor } from "@/features/recetas/components/RecetaEditor";
+import RecetaEditorWrapper from "@/features/recetas/components/RecetaEditorWrapper";
 import { getIngredientes } from "@/features/ingredientes/queries/get-ingredientes";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -28,10 +28,10 @@ export default async function RecetaPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // Cargar la receta existente con sus ingredientes
+  // Cargar la receta existente
   const { data: recetaExistente } = await supabase
     .from('recetas')
-    .select('id, nombre, rendimiento, costo_total, costo_unitario')
+    .select('id, rendimiento')
     .eq('producto_id', id)
     .eq('es_activa', true)
     .single();
@@ -62,6 +62,25 @@ export default async function RecetaPage({ params }: { params: Promise<{ id: str
     }));
   }
 
+  // Cargar otras recetas para copiar
+  const { data: otrasRecetasRaw } = await supabase
+    .from('recetas')
+    .select('id, rendimiento, producto:producto_id (nombre)')
+    .eq('es_activa', true)
+    .neq('producto_id', id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  const recetasDisponibles = (otrasRecetasRaw ?? [])
+    .filter((r) => r.producto != null)
+    .map((r) => ({
+      id: r.id as string,
+      productoNombre: (Array.isArray(r.producto)
+        ? (r.producto as Array<{ nombre: string }>)[0]?.nombre
+        : (r.producto as { nombre: string })?.nombre) ?? "Receta",
+      rendimiento: Number(r.rendimiento) || 1,
+    }));
+
   const ingredientesDisponibles = ingredientes.map(i => ({
     id: i.id,
     nombre: i.nombre,
@@ -72,24 +91,15 @@ export default async function RecetaPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Receta: {producto.nombre}</h1>
-        <p className="text-gray-500">
-          {itemsIniciales.length > 0
-            ? "Edita las cantidades o agrega/quita ingredientes. El costo se recalcula al guardar."
-            : "Añade ingredientes para descubrir el costo exacto."}
-        </p>
-        {producto.precio_costo != null && producto.precio_costo > 0 && (
-          <p className="mt-1 text-sm text-blue-600 font-medium">
-            Costo actual: S/ {Number(producto.precio_costo).toFixed(2)} por porción
-          </p>
-        )}
-      </div>
-      <RecetaEditor
+      <RecetaEditorWrapper
         productoId={id}
-        ingredientesDisponibles={ingredientesDisponibles}
+        productoNombre={producto.nombre}
+        productoPrecioVenta={Number(producto.precio_venta) || 0}
+        productoPrecioCosto={Number(producto.precio_costo) || 0}
+        ingredientes={ingredientesDisponibles}
         itemsIniciales={itemsIniciales}
         rendimientoInicial={rendimientoInicial}
+        recetasDisponibles={recetasDisponibles}
       />
     </div>
   );

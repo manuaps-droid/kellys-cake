@@ -65,21 +65,27 @@ export default async function RecetaPage({ params }: { params: Promise<{ id: str
   // Cargar otras recetas para copiar
   const { data: otrasRecetasRaw } = await supabase
     .from('recetas')
-    .select('id, rendimiento, producto:producto_id (nombre)')
+    .select('id, rendimiento, producto_id')
     .eq('es_activa', true)
     .neq('producto_id', id)
     .order('created_at', { ascending: false })
     .limit(20);
 
-  const recetasDisponibles = (otrasRecetasRaw ?? [])
-    .filter((r) => r.producto != null)
-    .map((r) => ({
+  // Buscar los nombres de los productos por ID
+  const recetasDisponibles = [];
+  for (const r of otrasRecetasRaw ?? []) {
+    const { data: prod } = await supabase
+      .from('foodos_productos')
+      .select('nombre')
+      .eq('id', r.producto_id)
+      .maybeSingle();
+
+    recetasDisponibles.push({
       id: r.id as string,
-      productoNombre: (Array.isArray(r.producto)
-        ? (r.producto as Array<{ nombre: string }>)[0]?.nombre
-        : (r.producto as { nombre: string })?.nombre) ?? "Receta",
+      productoNombre: prod?.nombre ?? "Receta sin nombre",
       rendimiento: Number(r.rendimiento) || 1,
-    }));
+    });
+  }
 
   const ingredientesDisponibles = ingredientes.map(i => ({
     id: i.id,

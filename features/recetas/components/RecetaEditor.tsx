@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { recetaSchema, RecetaFormValues } from "../validations/receta-schema";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { guardarReceta } from "../actions/receta-actions";
+import IngredienteAutocomplete from "@/features/ingredientes/components/IngredienteAutocomplete";
+import type { IngredienteOpcionAutocomplete } from "@/features/ingredientes/actions/ingrediente-actions";
 
 type IngredienteOpcion = { id: string; nombre: string; unidad_uso: string; costo_por_unidad_uso: number; porcentaje_merma_estandar: number };
 
@@ -31,6 +32,15 @@ export function RecetaEditor({
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [ingredientesActualizados, setIngredientesActualizados] =
+    useState<IngredienteOpcion[]>([]);
+
+  const ingredientes = [
+    ...ingredientesActualizados,
+    ...ingredientesDisponibles.filter(
+      (d) => !ingredientesActualizados.some((u) => u.id === d.id)
+    ),
+  ];
 
   const itemsPorDefecto =
     itemsIniciales.length > 0
@@ -109,7 +119,7 @@ export function RecetaEditor({
         
         {fields.map((field, index) => {
           const itemActual = (watchedItems || [])[index];
-          const ingActual = ingredientesDisponibles.find(i => i.id === itemActual?.ingrediente_id);
+          const ingActual = ingredientes.find(i => i.id === itemActual?.ingrediente_id);
 
           // Costo por línea: cantidad × costo unitario (ajustado por merma)
           const costoLinea = (() => {
@@ -121,8 +131,27 @@ export function RecetaEditor({
             return (cantidad / factorMerma) * ingActual.costo_por_unidad_uso;
           })();
 
+          function handleSeleccionado(nuevoIng: IngredienteOpcionAutocomplete) {
+            setValue(`items.${index}.ingrediente_id` as const, nuevoIng.id);
+            setValue(`items.${index}.unidad` as const, nuevoIng.unidad_uso);
+
+            if (!ingredientes.some(i => i.id === nuevoIng.id)) {
+              setIngredientesActualizados(prev => [
+                ...prev,
+                {
+                  id: nuevoIng.id,
+                  nombre: nuevoIng.nombre,
+                  unidad_uso: nuevoIng.unidad_uso,
+                  costo_por_unidad_uso: nuevoIng.costo_por_unidad_uso,
+                  porcentaje_merma_estandar: nuevoIng.porcentaje_merma_estandar,
+                },
+              ]);
+            }
+          }
+
           return (
-          <div key={field.id} className="flex gap-4 items-end bg-gray-50 p-3 rounded-md border">
+          <div key={field.id} className="bg-gray-50 p-3 rounded-md border space-y-2">
+            <div className="flex gap-4 items-end">
             <div className="flex-1">
               <label className="block text-xs font-medium text-gray-500 uppercase">
                 Ingrediente
@@ -132,19 +161,14 @@ export function RecetaEditor({
                   </span>
                 )}
               </label>
-              <select
+              <input
+                type="hidden"
                 {...register(`items.${index}.ingrediente_id` as const)}
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm"
-                onChange={(e) => {
-                  const ing = ingredientesDisponibles.find(i => i.id === e.target.value);
-                  if(ing) setValue(`items.${index}.unidad` as const, ing.unidad_uso);
-                }}
-              >
-                <option value="">Seleccionar...</option>
-                {ingredientesDisponibles.map(ing => (
-                  <option key={ing.id} value={ing.id}>{ing.nombre}</option>
-                ))}
-              </select>
+              />
+              <IngredienteAutocomplete
+                value={itemActual?.ingrediente_id ?? ""}
+                onSelect={handleSeleccionado}
+              />
             </div>
             
             <div className="w-32">
@@ -170,6 +194,7 @@ export function RecetaEditor({
             </div>
 
             <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700 p-2 font-bold">X</button>
+            </div>
           </div>
           );
         })}

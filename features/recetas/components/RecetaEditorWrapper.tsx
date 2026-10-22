@@ -100,8 +100,14 @@ export default function RecetaEditorWrapper({
           onClick={() => setMostrarCopiar(true)}
           className="mb-4 text-xs font-semibold text-indigo-600 hover:underline"
         >
-          📋 Copiar ingredientes de otra receta
+          📋 Copiar ingredientes de otra receta ({recetasDisponibles.length} disponibles)
         </button>
+      )}
+
+      {recetasDisponibles.length === 0 && (
+        <p className="mb-4 text-[10px] text-gray-400">
+          Debug: 0 recetas disponibles para copiar
+        </p>
       )}
 
       <RecetaEditor

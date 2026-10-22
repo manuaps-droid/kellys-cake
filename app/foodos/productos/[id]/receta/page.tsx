@@ -2,6 +2,8 @@ import RecetaEditorWrapper from "@/features/recetas/components/RecetaEditorWrapp
 import { getIngredientes } from "@/features/ingredientes/queries/get-ingredientes";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 export default async function RecetaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ingredientes = await getIngredientes();

@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2, PackagePlus } from "lucide-react";
+import { Plus, Trash2, Loader2, PackagePlus, Copy, X } from "lucide-react";
 
 import type { ProductoTiendaItem } from "../queries/get-productos-tienda";
 import { crearProductoConReceta } from "../actions/producto-actions";
@@ -13,6 +13,9 @@ import {
   crearIngredienteRapidoAction,
   type IngredienteOpcionAutocomplete,
 } from "@/features/ingredientes/actions/ingrediente-actions";
+import {
+  leerItemsDeRecetaAction,
+} from "@/features/recetas/actions/copiar-receta.action";
 
 type Fila = {
   uid: string;
@@ -381,8 +384,25 @@ function FilaIngrediente({
 
 export function ProductoDesdeCatalogo({
   productos,
+  recetasDisponibles = [],
+  ingredientesBase = [],
 }: {
   productos: ProductoTiendaItem[];
+  recetasDisponibles?: Array<{
+    id: string;
+    productoNombre: string;
+    rendimiento: number;
+  }>;
+  ingredientesBase?: Array<{
+    id: string;
+    nombre: string;
+    unidad_uso: string;
+    unidad_compra: string;
+    costo_unitario: number;
+    factor_conversion: number;
+    costo_por_unidad_uso: number;
+    porcentaje_merma_estandar: number;
+  }>;
 }) {
   const router = useRouter();
 
@@ -406,6 +426,51 @@ export function ProductoDesdeCatalogo({
 
   const [filas, setFilas] = useState<Fila[]>([nuevaFila()]);
   const [enviando, setEnviando] = useState(false);
+
+  // Copiar receta
+  const [mostrarCopiarReceta, setMostrarCopiarReceta] = useState(false);
+  const [recetaSeleccionada, setRecetaSeleccionada] = useState("");
+  const [copiandoReceta, startCopiarRecetaTransition] = useTransition();
+
+  function copiarReceta(recetaId: string) {
+    startCopiarRecetaTransition(async () => {
+      const { items } = await leerItemsDeRecetaAction(recetaId);
+
+      if (items.length === 0) {
+        toast.error("No se pudieron leer los ingredientes de esa receta.");
+        return;
+      }
+
+      const nuevasFilas: Fila[] = items.map((item) => {
+        const ing = ingredientesBase.find((i) => i.id === item.ingrediente_id);
+
+        return {
+          uid: `f${++contadorFilas}`,
+          ingrediente: ing
+            ? {
+                id: ing.id,
+                nombre: ing.nombre,
+                unidad_uso: ing.unidad_uso,
+                unidad_compra: ing.unidad_compra,
+                costo_unitario: ing.costo_unitario,
+                factor_conversion: ing.factor_conversion,
+                costo_por_unidad_uso: ing.costo_por_unidad_uso,
+                porcentaje_merma_estandar: ing.porcentaje_merma_estandar,
+              }
+            : null,
+          cantidad: String(item.cantidad),
+          mermaExtra: String(item.merma_porcentaje || 0),
+        };
+      });
+
+      setFilas(nuevasFilas);
+      setMostrarCopiarReceta(false);
+      setRecetaSeleccionada("");
+      toast.success(
+        `${items.length} ingredientes copiados. Ajusta las cantidades o agrega más.`
+      );
+    });
+  }
 
   const productosVisibles = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
@@ -725,14 +790,86 @@ export function ProductoDesdeCatalogo({
                 autocompleta; si no, lo registras aquí mismo con su precio.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setFilas((prev) => [...prev, nuevaFila()])}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4" /> Añadir ingrediente
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setFilas((prev) => [...prev, nuevaFila()])}
+                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4" /> Añadir ingrediente
+              </button>
+
+              {recetasDisponibles.length > 0 && (
+                <>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setMostrarCopiarReceta(!mostrarCopiarReceta)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100"
+                  >
+                    <Copy className="h-4 w-4" /> Copiar de otra receta
+                  </button>
+                </>
+              )}
+            </div>
           </div>
+
+          {mostrarCopiarReceta && recetasDisponibles.length > 0 && (
+            <div className="mb-4 rounded-xl border-2 border-indigo-200 bg-indigo-50/60 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-indigo-900">
+                  Copiar ingredientes de otra receta
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMostrarCopiarReceta(false);
+                    setRecetaSeleccionada("");
+                  }}
+                  className="rounded p-1 text-indigo-400 hover:bg-indigo-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mb-3 text-xs text-indigo-600">
+                Se reemplazarán los ingredientes actuales por los de la receta seleccionada.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {recetasDisponibles.map((rec) => (
+                  <button
+                    key={rec.id}
+                    type="button"
+                    onClick={() => setRecetaSeleccionada(rec.id)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                      recetaSeleccionada === rec.id
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-100"
+                    }`}
+                  >
+                    {rec.productoNombre}
+                    <span className="ml-1 font-normal opacity-60">
+                      ({rec.rendimiento})
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {recetaSeleccionada && (
+                <button
+                  type="button"
+                  onClick={() => copiarReceta(recetaSeleccionada)}
+                  disabled={copiandoReceta}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {copiandoReceta ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  Copiar receta seleccionada
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             {filas.map((fila) => (

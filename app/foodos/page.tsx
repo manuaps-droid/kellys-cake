@@ -1,6 +1,8 @@
 import { getProductos } from "@/features/productos/queries/get-productos";
 import Link from "next/link";
 import { TrendingUp, ArrowRight, AlertTriangle, Sparkles, ChefHat, CheckCircle2 } from "lucide-react";
+import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
+import RentabilidadPromedioCard from "@/features/rentabilidad/components/RentabilidadPromedioCard";
 
 export default async function AdminDashboard() {
   const productos = await getProductos();
@@ -8,6 +10,46 @@ export default async function AdminDashboard() {
   const productosConReceta = productos?.filter((p) => p.precio_costo && p.precio_costo > 0) || [];
   const rentables = productosConReceta.filter((p) => (p.margen_porcentaje || 0) > 50);
   const alertaMargen = productosConReceta.filter((p) => (p.margen_porcentaje || 0) < 30);
+
+  // ── Rentabilidad promedio real (costeo 4 capas de productos con receta activa) ──
+  const conCosteo: Array<{
+    nombre: string;
+    margen: number;
+    costoCompleto: number;
+    precio: number;
+    d: NonNullable<Awaited<ReturnType<typeof calcularCosteoReal>>>;
+  }> = [];
+
+  for (const p of productos ?? []) {
+    const d = await calcularCosteoReal(p.id);
+    if (!d) continue;
+    conCosteo.push({
+      nombre: String(p.nombre ?? ""),
+      margen: d.margenBrutoPct,
+      costoCompleto: d.costoCompletoUnitario,
+      precio: Number(p.precio_venta) || 0,
+      d,
+    });
+  }
+
+  const nCosteo = conCosteo.length;
+  const promedios =
+    nCosteo > 0
+      ? {
+          margenBrutoPct: conCosteo.reduce((t, x) => t + x.d.margenBrutoPct, 0) / nCosteo,
+          costoIngredientes: conCosteo.reduce((t, x) => t + x.d.costoIngredientes, 0) / nCosteo,
+          costoEmpaques: conCosteo.reduce((t, x) => t + x.d.costoEmpaques, 0) / nCosteo,
+          costoManoObra: conCosteo.reduce((t, x) => t + x.d.costoManoObra, 0) / nCosteo,
+          costoIndirectos: conCosteo.reduce((t, x) => t + x.d.costoIndirectosAsignado, 0) / nCosteo,
+          costoVariable: conCosteo.reduce((t, x) => t + x.d.costoVariableUnitario, 0) / nCosteo,
+          costoCompleto: conCosteo.reduce((t, x) => t + x.costoCompleto, 0) / nCosteo,
+          precioVenta: conCosteo.reduce((t, x) => t + x.precio, 0) / nCosteo,
+        }
+      : null;
+
+  const saludables = conCosteo.filter((x) => x.margen > 40).length;
+  const enAlerta = conCosteo.filter((x) => x.margen > 20 && x.margen <= 40).length;
+  const criticos = conCosteo.filter((x) => x.margen <= 20).length;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -51,12 +93,27 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Métricas Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 gap-6 ${nCosteo > 0 ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
         <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Productos en Catálogo</h3>
           <p className="text-3xl font-black text-gray-900 mt-2">{productos?.length || 0}</p>
           <span className="text-xs text-gray-400 mt-1 block">Registrados en FoodOS</span>
         </div>
+        {promedios && (
+          <RentabilidadPromedioCard
+            promedios={promedios}
+            totalConReceta={nCosteo}
+            saludables={saludables}
+            alerta={enAlerta}
+            criticos={criticos}
+            productos={conCosteo.map((x) => ({
+              nombre: x.nombre,
+              margen: x.margen,
+              costoCompleto: x.costoCompleto,
+              precio: x.precio,
+            }))}
+          />
+        )}
         <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Recetas Completadas</h3>
           <p className="text-3xl font-black text-blue-600 mt-2">{productosConReceta.length}</p>

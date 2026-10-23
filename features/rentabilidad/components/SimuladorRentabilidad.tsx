@@ -91,6 +91,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
 
   // Cargar TODO al cambiar de producto (una sola vez por producto)
   const productoSyncRef = useRef<string>("");
+  const configSyncRef = useRef(false);
 
   useEffect(() => {
     if (!productoId || !costeo) return;
@@ -126,11 +127,16 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       }))
     );
 
-    // Sincronizar capacidad y costo por minuto desde el servicio
+    // Sincronizar capacidad desde el servicio (por producto)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUnidadesCapacidad(String(costeo.unidadesMensualesCapacidad));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCostoMinuto(String(costeo.costoPorMinuto));
+
+    // Costo por minuto: global, solo se inicializa UNA VEZ (no por producto)
+    if (!configSyncRef.current) {
+      configSyncRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCostoMinuto(String(costeo.costoPorMinuto));
+    }
   }, [productoId, costeo]);
 
   // ── Totales calculados en CADA render desde los valores editados ──

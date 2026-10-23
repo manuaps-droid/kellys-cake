@@ -432,6 +432,97 @@ CAPA 4 · COSTOS INDIRECTOS:
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* ─── RESUMEN GENERAL: promedio de todos los productos ─── */}
+      {(() => {
+        const conReceta = productosExistentes.filter((p) => costeosIniciales[p.id]);
+        if (conReceta.length === 0) return null;
+
+        const promedios = conReceta.map((p) => {
+          const c = costeosIniciales[p.id]!;
+          const precio = p.precio_venta ?? 0;
+          const margen = precio > 0 ? ((precio - c.costoCompletoUnitario) / precio) * 100 : 0;
+          return { nombre: p.nombre, margen: Math.round(margen * 10) / 10, costo: c.costoCompletoUnitario, precio };
+        });
+
+        const margenPromedio = promedios.reduce((t, p) => t + p.margen, 0) / promedios.length;
+        const costoPromedio = promedios.reduce((t, p) => t + p.costo, 0) / promedios.length;
+        const precioPromedio = promedios.reduce((t, p) => t + p.precio, 0) / promedios.length;
+
+        const saludables = promedios.filter((p) => p.margen > 40).length;
+        const alerta = promedios.filter((p) => p.margen > 20 && p.margen <= 40).length;
+        const criticos = promedios.filter((p) => p.margen <= 20).length;
+
+        return (
+          <div className={`rounded-3xl border-2 p-6 shadow-lg ${
+            margenPromedio > 40
+              ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white"
+              : margenPromedio > 20
+                ? "border-amber-300 bg-gradient-to-br from-amber-50 to-white"
+                : "border-red-300 bg-gradient-to-br from-red-50 to-white"
+          }`}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-black text-slate-900">
+                📊 Resumen General — Rentabilidad Promedio
+              </h2>
+              <span className="text-xs font-medium text-slate-400">
+                {conReceta.length} producto(s) con receta activa
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <div className={`rounded-2xl p-4 text-center shadow-md ${
+                margenPromedio > 40 ? "bg-emerald-600" : margenPromedio > 20 ? "bg-amber-500" : "bg-red-600"
+              }`}>
+                <p className="text-[10px] font-bold uppercase text-white/80">Margen Promedio</p>
+                <p className="text-4xl font-black text-white">
+                  {Math.round(margenPromedio * 10) / 10}%
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                <p className="text-[10px] font-bold uppercase text-slate-400">Costo Promedio</p>
+                <p className="text-xl font-black text-slate-800">S/ {costoPromedio.toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                <p className="text-[10px] font-bold uppercase text-slate-400">Precio Promedio</p>
+                <p className="text-xl font-black text-slate-800">S/ {precioPromedio.toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                <p className="text-[10px] font-bold uppercase text-slate-400">Salud del Negocio</p>
+                <p className="text-xs font-bold text-slate-700">
+                  <span className="text-emerald-600">✅ {saludables} saludables</span><br />
+                  <span className="text-amber-600">⚠️ {alerta} en alerta</span><br />
+                  <span className="text-red-600">🚨 {criticos} críticos</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Mini-ranking de productos */}
+            <div className="mt-4 space-y-1">
+              {promedios.sort((a, b) => b.margen - a.margen).map((p) => (
+                <div
+                  key={p.nombre}
+                  className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-1.5 text-xs"
+                >
+                  <span className="font-medium text-slate-700 truncate max-w-[50%]">{p.nombre}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-slate-500">S/ {p.precio.toFixed(2)}</span>
+                    <span className={`rounded-full px-2 py-0.5 font-bold ${
+                      p.margen > 40
+                        ? "bg-emerald-100 text-emerald-700"
+                        : p.margen > 20
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-red-100 text-red-700"
+                    }`}>
+                      {p.margen}%
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>

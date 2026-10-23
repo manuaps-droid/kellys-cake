@@ -11,13 +11,12 @@ export default async function AdminDashboard() {
   const rentables = productosConReceta.filter((p) => (p.margen_porcentaje || 0) > 50);
   const alertaMargen = productosConReceta.filter((p) => (p.margen_porcentaje || 0) < 30);
 
-  // ── Rentabilidad promedio real (costeo 4 capas de productos con receta activa) ──
+  // ── Rentabilidad promedio real (productos con receta activa) ──
   const conCosteo: Array<{
     nombre: string;
     margen: number;
     costoCompleto: number;
     precio: number;
-    d: NonNullable<Awaited<ReturnType<typeof calcularCosteoReal>>>;
   }> = [];
 
   for (const p of productos ?? []) {
@@ -28,24 +27,12 @@ export default async function AdminDashboard() {
       margen: d.margenBrutoPct,
       costoCompleto: d.costoCompletoUnitario,
       precio: Number(p.precio_venta) || 0,
-      d,
     });
   }
 
   const nCosteo = conCosteo.length;
-  const promedios =
-    nCosteo > 0
-      ? {
-          margenBrutoPct: conCosteo.reduce((t, x) => t + x.d.margenBrutoPct, 0) / nCosteo,
-          costoIngredientes: conCosteo.reduce((t, x) => t + x.d.costoIngredientes, 0) / nCosteo,
-          costoEmpaques: conCosteo.reduce((t, x) => t + x.d.costoEmpaques, 0) / nCosteo,
-          costoManoObra: conCosteo.reduce((t, x) => t + x.d.costoManoObra, 0) / nCosteo,
-          costoIndirectos: conCosteo.reduce((t, x) => t + x.d.costoIndirectosAsignado, 0) / nCosteo,
-          costoVariable: conCosteo.reduce((t, x) => t + x.d.costoVariableUnitario, 0) / nCosteo,
-          costoCompleto: conCosteo.reduce((t, x) => t + x.costoCompleto, 0) / nCosteo,
-          precioVenta: conCosteo.reduce((t, x) => t + x.precio, 0) / nCosteo,
-        }
-      : null;
+  const margenPromedio =
+    nCosteo > 0 ? conCosteo.reduce((t, x) => t + x.margen, 0) / nCosteo : null;
 
   const saludables = conCosteo.filter((x) => x.margen > 40).length;
   const enAlerta = conCosteo.filter((x) => x.margen > 20 && x.margen <= 40).length;
@@ -99,19 +86,14 @@ export default async function AdminDashboard() {
           <p className="text-3xl font-black text-gray-900 mt-2">{productos?.length || 0}</p>
           <span className="text-xs text-gray-400 mt-1 block">Registrados en FoodOS</span>
         </div>
-        {promedios && (
+        {margenPromedio != null && (
           <RentabilidadPromedioCard
-            promedios={promedios}
+            margenPromedio={margenPromedio}
             totalConReceta={nCosteo}
             saludables={saludables}
             alerta={enAlerta}
             criticos={criticos}
-            productos={conCosteo.map((x) => ({
-              nombre: x.nombre,
-              margen: x.margen,
-              costoCompleto: x.costoCompleto,
-              precio: x.precio,
-            }))}
+            productos={conCosteo}
           />
         )}
         <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200">

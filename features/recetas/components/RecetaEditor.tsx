@@ -8,6 +8,10 @@ import { toast } from "sonner";
 import { Copy, Loader2, X } from "lucide-react";
 import { guardarReceta } from "../actions/receta-actions";
 import { leerItemsDeRecetaAction } from "../actions/copiar-receta.action";
+import {
+  guardarPrecioVentaAction,
+  guardarNombreProductoAction,
+} from "@/features/rentabilidad/actions/costeo-config.action";
 import IngredienteAutocomplete from "@/features/ingredientes/components/IngredienteAutocomplete";
 import type { IngredienteOpcionAutocomplete } from "@/features/ingredientes/actions/ingrediente-actions";
 
@@ -21,6 +25,10 @@ type ItemInicial = {
 };
 type Props = {
   productoId: string;
+  productoNombre: string;
+  onNombreChange: (v: string) => void;
+  productoPrecioVenta: string;
+  onPrecioChange: (v: string) => void;
   ingredientesDisponibles: IngredienteOpcion[];
   itemsIniciales?: ItemInicial[];
   rendimientoInicial?: number;
@@ -33,6 +41,10 @@ type Props = {
 
 export function RecetaEditor({
   productoId,
+  productoNombre,
+  onNombreChange,
+  productoPrecioVenta,
+  onPrecioChange,
   ingredientesDisponibles,
   itemsIniciales = [],
   rendimientoInicial = 1,
@@ -124,17 +136,48 @@ export function RecetaEditor({
 
   const costoUnitarioVisual = rendimientoWatch > 0 ? costoTotalVisual / rendimientoWatch : 0;
 
+  // Margen en vivo con el precio de venta editado
+  const precioVentaVisual = Number(productoPrecioVenta) || 0;
+  const margenVisual = precioVentaVisual - costoUnitarioVisual;
+  const margenPctVisual =
+    precioVentaVisual > 0 ? (margenVisual / precioVentaVisual) * 100 : 0;
+
   const onSubmit = async (data: RecetaFormValues) => {
     setIsSubmitting(true);
     setErrorMsg(null);
     const result = await guardarReceta(data);
+
     if (result.error) {
       setErrorMsg(result.error);
     } else {
-      toast.success(
-        `¡Receta guardada! Costo de ingredientes: S/ ${costoUnitarioVisual.toFixed(2)}/porción. Ver el costo completo en Rentabilidad & Costos.`,
-        { duration: 5000 }
-      );
+      // Guardar también los datos del producto (nombre y precio editados)
+      const nombreTrim = productoNombre.trim();
+      let datosError: string | null = null;
+
+      if (nombreTrim.length >= 2) {
+        const rNombre = await guardarNombreProductoAction({
+          producto_id: productoId,
+          nombre: nombreTrim,
+        });
+        if (rNombre.error) datosError = rNombre.error;
+      }
+
+      const rPrecio = await guardarPrecioVentaAction({
+        producto_id: productoId,
+        precio_venta: precioVentaVisual,
+      });
+      if (rPrecio.error) datosError = rPrecio.error;
+
+      if (datosError) {
+        toast.warning(
+          `Receta guardada, pero: ${datosError}`
+        );
+      } else {
+        toast.success(
+          `¡Receta y datos del producto guardados! Costo S/ ${costoUnitarioVisual.toFixed(2)}/porción · Margen ${margenPctVisual.toFixed(1)}%`,
+          { duration: 5000 }
+        );
+      }
     }
     setIsSubmitting(false);
   };
@@ -144,14 +187,55 @@ export function RecetaEditor({
       {errorMsg && <div className="bg-red-50 text-red-700 p-4 rounded mb-4">{errorMsg}</div>}
       {errors.items && <div className="bg-red-50 text-red-700 p-2 rounded text-sm mb-4">{errors.items?.message as string}</div>}
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Rendimiento (Porciones / Unidades)</label>
-          <input type="number" step="0.1" {...register("rendimiento")} className="mt-1 block w-full rounded-md border border-gray-300 p-2" />
-        </div>
-        <div className="bg-blue-50 p-3 rounded-md border border-blue-100 flex flex-col justify-center items-end">
-          <p className="text-sm text-blue-700 font-semibold">Costo Estimado Unitario</p>
-          <p className="text-2xl font-bold text-blue-900">S/ {costoUnitarioVisual.toFixed(2)}</p>
+      {/* Datos del producto (editables aunque la receta ya esté grabada) */}
+      <div className="rounded-lg border border-gray-200 bg-gray-50/60 p-4">
+        <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">
+          Datos del producto
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">Nombre del producto</label>
+            <input
+              value={productoNombre}
+              onChange={(e) => onNombreChange(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Precio de venta (S/)</label>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={productoPrecioVenta}
+              onChange={(e) => onPrecioChange(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Rendimiento (porciones)</label>
+            <input type="number" step="0.1" {...register("rendimiento")} className="mt-1 block w-full rounded-md border border-gray-300 p-2" />
+          </div>
+          <div className="sm:col-span-2">
+            <div className="grid h-full grid-cols-3 items-center gap-3">
+              <div className="rounded-md bg-blue-50 p-3 text-center">
+                <p className="text-[10px] font-bold uppercase text-blue-600">Costo unitario</p>
+                <p className="text-lg font-black text-blue-900">S/ {costoUnitarioVisual.toFixed(2)}</p>
+              </div>
+              <div className="rounded-md bg-emerald-50 p-3 text-center">
+                <p className="text-[10px] font-bold uppercase text-emerald-600">Margen</p>
+                <p className={`text-lg font-black ${margenVisual >= 0 ? "text-emerald-900" : "text-red-700"}`}>
+                  S/ {margenVisual.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-md bg-slate-100 p-3 text-center">
+                <p className="text-[10px] font-bold uppercase text-slate-600">% Margen</p>
+                <p className={`text-lg font-black ${margenPctVisual >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                  {margenPctVisual.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

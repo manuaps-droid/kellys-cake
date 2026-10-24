@@ -42,7 +42,6 @@ export default function RecetaEditorWrapper({
   productoId,
   productoNombre,
   productoPrecioVenta,
-  productoPrecioCosto,
   ingredientes,
   itemsIniciales,
   rendimientoInicial,
@@ -52,6 +51,13 @@ export default function RecetaEditorWrapper({
   const [rendimiento, setRendimiento] = useState(rendimientoInicial);
   const [mostrarCopiar, setMostrarCopiar] = useState(
     itemsIniciales.length === 0 && recetasDisponibles.length > 0
+  );
+
+  // Datos del producto editables (nombre y precio) — viven aquí para
+  // sobrevivir al remount del editor al copiar recetas.
+  const [nombreEdit, setNombreEdit] = useState(productoNombre);
+  const [precioEdit, setPrecioEdit] = useState(
+    productoPrecioVenta > 0 ? String(productoPrecioVenta) : ""
   );
 
   function handleCopiar(
@@ -74,18 +80,13 @@ export default function RecetaEditorWrapper({
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          Receta: {productoNombre}
+          Receta: {nombreEdit}
         </h1>
         <p className="text-gray-500">
           {items.length > 0
             ? "Edita las cantidades o agrega/quita ingredientes. El costo se recalcula al guardar."
             : "Añade ingredientes para descubrir el costo exacto."}
         </p>
-        {productoPrecioCosto > 0 && (
-          <p className="mt-1 text-sm text-blue-600 font-medium">
-            Costo actual: S/ {productoPrecioCosto.toFixed(2)} por porción
-          </p>
-        )}
       </div>
 
       {mostrarCopiar && (
@@ -113,6 +114,10 @@ export default function RecetaEditorWrapper({
       <RecetaEditor
         key={`receta-${items.length}-${rendimiento}`}
         productoId={productoId}
+        productoNombre={nombreEdit}
+        onNombreChange={setNombreEdit}
+        productoPrecioVenta={precioEdit}
+        onPrecioChange={setPrecioEdit}
         ingredientesDisponibles={ingredientes}
         itemsIniciales={items}
         rendimientoInicial={rendimiento}

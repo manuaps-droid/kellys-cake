@@ -254,6 +254,35 @@ export async function guardarPrecioVentaAction(input: {
 
     revalidatePath("/foodos/rentabilidad");
     revalidatePath("/foodos");
+    revalidatePath(`/foodos/productos/${input.producto_id}/receta`);
+    return { success: true };
+  } catch {
+    return { error: "Error interno del servidor." };
+  }
+}
+
+export async function guardarNombreProductoAction(input: {
+  producto_id: string;
+  nombre: string;
+}) {
+  try {
+    const { supabase } = await getFoodOSSession();
+
+    const nombre = (input.nombre ?? "").trim();
+    if (nombre.length < 2) {
+      return { error: "El nombre del producto es demasiado corto." };
+    }
+
+    const { error } = await supabase
+      .from("foodos_productos")
+      .update({ nombre })
+      .eq("id", input.producto_id);
+
+    if (error) return { error: "No se pudo actualizar el nombre." };
+
+    revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
+    revalidatePath(`/foodos/productos/${input.producto_id}/receta`);
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };

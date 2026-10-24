@@ -1,5 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export type FilaMesKpi = {
+  mes: string;
+  etiqueta: string;
+  ventas: number;
+  utilidad: number | null;
+};
+
 export type DatosKpisFinancieros = {
   ventasMes: number;
   costosFijos: Array<{ id: string; concepto: string; monto: number }>;
@@ -14,6 +21,7 @@ export type DatosKpisFinancieros = {
   roe: number | null;
   peUnidades: number | null;
   peSoles: number | null;
+  serieMensual: FilaMesKpi[];
 };
 
 type AporteReceta = {
@@ -108,6 +116,48 @@ export async function getKpisFinancieros(
       ? totalCostosFijos / (mcPctProm / 100)
       : null;
 
+  // ── Serie mensual: ventas por mes (últimos 6 meses, hora Lima) ──
+  const MESES_ABREV = [
+    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+    "Jul", "Ago", "Set", "Oct", "Nov", "Dic",
+  ];
+  const N_MESES = 6;
+
+  const ventasPorMes = new Map<string, number>();
+  for (const p of (pedidosRows ?? []) as Array<{
+    total: number | null;
+    created_at: string | null;
+  }>) {
+    const clave = String(p.created_at ?? "").slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(clave)) continue;
+    ventasPorMes.set(clave, (ventasPorMes.get(clave) ?? 0) + Number(p.total ?? 0));
+  }
+
+  const [anioStr, mesStr] = mesActual.split("-").map(Number);
+  const serieMensual: FilaMesKpi[] = [];
+
+  for (let i = N_MESES - 1; i >= 0; i--) {
+    let m = mesStr - i;
+    let a = anioStr;
+    while (m <= 0) {
+      m += 12;
+      a -= 1;
+    }
+    const clave = `${a}-${String(m).padStart(2, "0")}`;
+    const ventas = ventasPorMes.get(clave) ?? 0;
+    const utilidad =
+      conPrecio.length > 0
+        ? ventas * (mcPctProm / 100) - totalCostosFijos
+        : null;
+
+    serieMensual.push({
+      mes: clave,
+      etiqueta: MESES_ABREV[m - 1],
+      ventas: Math.round(ventas * 100) / 100,
+      utilidad: utilidad != null ? Math.round(utilidad * 100) / 100 : null,
+    });
+  }
+
   return {
     ventasMes: Math.round(ventasMes * 100) / 100,
     costosFijos,
@@ -122,5 +172,6 @@ export async function getKpisFinancieros(
     roe: roe != null ? Math.round(roe * 10) / 10 : null,
     peUnidades: peUnidades != null ? Math.round(peUnidades * 10) / 10 : null,
     peSoles: peSoles != null ? Math.round(peSoles * 100) / 100 : null,
+    serieMensual,
   };
 }

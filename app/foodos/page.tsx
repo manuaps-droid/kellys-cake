@@ -121,6 +121,7 @@ export default async function AdminDashboard() {
           costosFijos={kpis.costosFijos}
           inversion={kpis.inversion}
           patrimonio={kpis.patrimonio}
+          serieMensual={kpis.serieMensual}
         />
         <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
           <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Productos Estrella (Margen &gt; 50%)</h3>

@@ -9,6 +9,7 @@ import {
   eliminarCostoFijoAction,
   guardarConfiguracionKpisAction,
 } from "@/features/rentabilidad/actions/costeo-config.action";
+import type { FilaMesKpi } from "@/features/kpis/services/kpis-financieros.service";
 
 export type KpisFinancieros = {
   ros: number | null;
@@ -25,6 +26,7 @@ type Props = {
   costosFijos: Array<{ id: string; concepto: string; monto: number }>;
   inversion: number;
   patrimonio: number;
+  serieMensual: FilaMesKpi[];
 };
 
 type Fila = {
@@ -38,6 +40,7 @@ export default function KpisFinancierosCard({
   costosFijos,
   inversion,
   patrimonio,
+  serieMensual,
 }: Props) {
   const [expandido, setExpandido] = useState(false);
   const [filas, setFilas] = useState<Fila[]>(costosFijos);
@@ -74,6 +77,12 @@ export default function KpisFinancierosCard({
 
   const arribaPE =
     kpis.peSoles != null && kpis.ventasMes >= kpis.peSoles && kpis.peSoles > 0;
+
+  const maxBarra = Math.max(
+    ...serieMensual.map((m) => m.ventas),
+    kpis.peSoles ?? 0,
+    1
+  );
 
   const agregarFila = () =>
     setFilas((prev) => [...prev, { concepto: "", monto: 0 }]);
@@ -216,6 +225,84 @@ export default function KpisFinancierosCard({
                   : "⚠️ Aún no alcanzas el punto de equilibrio"}
               </p>
             )}
+          </div>
+
+          {/* Ventas por mes */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-kc-mocha mb-2">
+              Ventas por mes · últimos 6 meses
+            </p>
+            <div className="rounded-xl bg-kc-sand/60 p-3">
+              <div className="relative h-28">
+                {kpis.peSoles != null && kpis.peSoles > 0 && (
+                  <>
+                    <div
+                      className="absolute inset-x-0 border-t border-dashed border-kc-rose-gold"
+                      style={{ bottom: `${(kpis.peSoles / maxBarra) * 100}%` }}
+                    />
+                    <span
+                      className="absolute right-0 -translate-y-[130%] rounded bg-kc-rose-gold px-1 text-[8px] font-bold text-kc-deep"
+                      style={{ bottom: `${(kpis.peSoles / maxBarra) * 100}%` }}
+                    >
+                      PE S/ {Math.round(kpis.peSoles)}
+                    </span>
+                  </>
+                )}
+                <div className="flex h-full items-end justify-between gap-2">
+                  {serieMensual.map((m) => (
+                    <div
+                      key={m.mes}
+                      className="flex h-full flex-1 flex-col items-center justify-end"
+                    >
+                      <div
+                        className={`w-full max-w-10 rounded-t-md transition-all ${
+                          kpis.peSoles != null && kpis.peSoles > 0
+                            ? m.ventas >= kpis.peSoles
+                              ? "bg-emerald-500"
+                              : m.ventas > 0
+                                ? "bg-amber-400"
+                                : "bg-kc-sand"
+                            : m.ventas > 0
+                              ? "bg-kc-rose-gold"
+                              : "bg-kc-sand"
+                        }`}
+                        style={{
+                          height: `${Math.max(m.ventas > 0 ? 4 : 2, (m.ventas / maxBarra) * 100)}%`,
+                        }}
+                        title={`${m.mes}: S/ ${m.ventas}${
+                          m.utilidad != null ? ` · Utilidad est. S/ ${m.utilidad}` : ""
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-1.5 flex justify-between gap-2">
+                {serieMensual.map((m) => (
+                  <span
+                    key={m.mes}
+                    className="flex-1 text-center text-[9px] font-bold text-kc-mocha"
+                  >
+                    {m.etiqueta}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-[9px] font-semibold text-kc-mocha">
+                {kpis.peSoles != null && kpis.peSoles > 0 && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" /> sobre PE
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" /> bajo PE
+                    </span>
+                  </>
+                )}
+                <span className="flex items-center gap-1">
+                  <span className="w-3 border-t border-dashed border-kc-rose-gold" /> punto de equilibrio
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Tabla de costos fijos */}

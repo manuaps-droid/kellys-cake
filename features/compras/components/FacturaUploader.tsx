@@ -27,28 +27,39 @@ export function FacturaUploader({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [pdfNombre, setPdfNombre] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback(
     async (file: File) => {
-      // Validar que sea imagen
-      if (!file.type.startsWith("image/")) {
-        setError("Solo se aceptan imágenes (JPG, PNG, WEBP)");
+      const esPdf =
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf");
+
+      // Validar que sea imagen o PDF
+      if (!esPdf && !file.type.startsWith("image/")) {
+        setError("Solo se aceptan imágenes (JPG, PNG, WEBP) o documentos PDF");
         return;
       }
 
-      // Validar tamaño (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError("La imagen es muy grande. Máximo 10MB.");
+      // Validar tamaño (max 8MB, mismo límite que la API)
+      if (file.size > 8 * 1024 * 1024) {
+        setError("El archivo es muy grande. Máximo 8MB.");
         return;
       }
 
-      // Preview
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
+      // Preview (solo imágenes; los PDFs muestran su nombre)
+      setPdfNombre(null);
+      if (esPdf) {
+        setPreview(null);
+        setPdfNombre(file.name);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => setPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+      }
 
       // Enviar a la API
       setIsLoading(true);
@@ -129,11 +140,11 @@ export function FacturaUploader({
           className="hidden"
         />
 
-        {/* Input estándar para galería / archivos */}
+        {/* Input estándar para galería / archivos (imágenes y PDF) */}
         <input
           ref={galleryInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,application/pdf,.pdf"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -156,19 +167,25 @@ export function FacturaUploader({
                 className="mx-auto mt-4 max-h-48 rounded-xl shadow-md opacity-60 object-contain"
               />
             )}
+            {pdfNombre && (
+              <div className="mx-auto mt-4 flex w-fit items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 shadow-sm opacity-80">
+                <span>📄</span>
+                <span className="max-w-56 truncate">{pdfNombre}</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
             <div className="text-5xl sm:text-6xl">📸</div>
             <div>
               <p className="text-base sm:text-lg font-bold text-gray-800">
-                Sube una foto de tu factura o boleta
+                Sube una foto o PDF de tu factura o boleta
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">
                 Apunta con buena luz al detalle de productos y precios
               </p>
               <p className="text-[11px] text-gray-400 mt-1">
-                JPG, PNG o WEBP · Máximo 10MB
+                JPG, PNG, WEBP o PDF · Máximo 8MB
               </p>
             </div>
 

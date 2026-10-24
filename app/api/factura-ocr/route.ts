@@ -58,22 +58,26 @@ export async function POST(req: Request) {
     // 2. Validar tamaño y tipo de archivo
     if (file.size > MAX_OCR_SIZE) {
       return NextResponse.json(
-        { error: "La imagen excede el límite de 8 MB permitidos." },
+        { error: "El archivo excede el límite de 8 MB permitidos." },
         { status: 400 }
       );
     }
 
-    if (!ALLOWED_OCR_TYPES.includes(file.type)) {
+    // Inferir MIME por extensión si el navegador no lo reporta (PDFs de escritorio)
+    const mimeType =
+      file.type ||
+      (file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "");
+
+    if (!ALLOWED_OCR_TYPES.includes(mimeType)) {
       return NextResponse.json(
         { error: "Formato no válido. Solo se permiten imágenes (JPEG, PNG, WebP) o documentos PDF." },
         { status: 400 }
       );
     }
 
-    // Convertir imagen a base64
+    // Convertir a base64
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
-    const mimeType = file.type || "image/jpeg";
 
     // Prompt especializado para facturas peruanas
     const prompt = `Eres un experto en leer facturas y boletas de venta peruanas de proveedores de insumos de pastelería y panadería.

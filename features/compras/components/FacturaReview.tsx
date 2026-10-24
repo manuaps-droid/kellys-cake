@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { registrarCompra } from "../actions/compra-actions";
 import { registrarIngresoStock } from "@/features/inventario/actions/inventario-actions";
+import { crearIngredienteRapidoAction } from "@/features/ingredientes/actions/ingrediente-actions";
 
 type OcrItem = {
   nombre: string;
@@ -57,6 +59,21 @@ export function FacturaReview({
     almacenes.find(a => a.es_principal)?.id || almacenes[0]?.id || ""
   );
 
+  // Copia local de ingredientes: los creados en pantalla se agregan aquí
+  // para que queden seleccionables en todos los ítems de la factura.
+  const [ingredientesLocal, setIngredientesLocal] = useState<Ingrediente[]>(ingredientes);
+
+  // Creación de ingrediente nuevo desde la factura
+  const [creandoIndex, setCreandoIndex] = useState<number | null>(null);
+  const [nuevoIng, setNuevoIng] = useState({
+    nombre: "",
+    unidad_compra: "unidad",
+    unidad_uso: "unidad",
+    factor_conversion: "1",
+    costo_unitario: "0",
+  });
+  const [creando, startCreandoTransition] = useTransition();
+
   const [cabecera, setCabecera] = useState({
     proveedor: data.proveedor || "",
     numero_factura: data.numero_factura || "",
@@ -71,7 +88,7 @@ export function FacturaReview({
     0
   );
 
-  const updateItem = (index: number, field: keyof OcrItem, value: any) => {
+  const updateItem = (index: number, field: keyof OcrItem, value: string | number) => {
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -104,13 +121,60 @@ export function FacturaReview({
 
   const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
+    if (creandoIndex === index) setCreandoIndex(null);
   };
+
+  function abrirCrearIngrediente(index: number) {
+    const item = items[index];
+    setNuevoIng({
+      nombre: item.nombre || "",
+      unidad_compra: item.unidad || "unidad",
+      unidad_uso: item.unidad || "unidad",
+      factor_conversion: "1",
+      costo_unitario: String(
+        item.precio_unitario ??
+        (item.cantidad > 0 ? item.precio_total / item.cantidad : 0)
+      ),
+    });
+    setCreandoIndex(index);
+  }
+
+  function crearYVincular(index: number) {
+    startCreandoTransition(async () => {
+      const res = await crearIngredienteRapidoAction({
+        nombre: nuevoIng.nombre.trim(),
+        unidad_compra: nuevoIng.unidad_compra.trim() || "unidad",
+        unidad_uso:
+          nuevoIng.unidad_uso.trim() ||
+          nuevoIng.unidad_compra.trim() ||
+          "unidad",
+        factor_conversion: Number(nuevoIng.factor_conversion) || 1,
+        costo_unitario: Number(nuevoIng.costo_unitario) || 0,
+        porcentaje_rendimiento: 100,
+        porcentaje_merma_estandar: 0,
+      });
+
+      if (!res.success || !res.ingrediente) {
+        toast.error(res.error ?? "No se pudo crear el ingrediente.");
+        return;
+      }
+
+      const creado = res.ingrediente;
+      setIngredientesLocal((prev) => [
+        ...prev,
+        { id: creado.id, nombre: creado.nombre },
+      ]);
+      updateItem(index, "ingrediente_id", creado.id);
+      setCreandoIndex(null);
+      toast.success(`"${creado.nombre}" creado y vinculado a este ítem.`);
+    });
+  }
 
   const handleSubmit = async () => {
     const sinVincular = items.filter((i) => !i.ingrediente_id);
     if (sinVincular.length > 0) {
       setError(
-        "Vincula todos los ítems con un ingrediente del sistema antes de guardar. Los ítems sin vincular están marcados en rojo."
+        "Vincula todos los ítems con un ingrediente del sistema antes de guardar. Los ítems sin vincular están marcados en rojo — o usa el botón '+ Crear ingrediente nuevo' para registrarlos en esta misma pantalla."
       );
       return;
     }
@@ -262,45 +326,58 @@ export function FacturaReview({
 
         <div className="divide-y divide-gray-100">
           {items.map((item, index) => (
-            <div
-              key={index}
-              className={`px-6 py-4 flex gap-3 items-end ${
-                !item.ingrediente_id ? "bg-red-50/50" : ""
-              }`}
-            >
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase">
-                  Producto (factura)
-                </label>
-                <input
-                  type="text"
-                  value={item.nombre}
-                  onChange={(e) => updateItem(index, "nombre", e.target.value)}
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                />
-              </div>
+            <Fragment key={index}>
+              <div
+                className={`px-6 py-4 flex flex-wrap gap-3 items-end ${
+                  !item.ingrediente_id ? "bg-red-50/50" : ""
+                }`}
+              >
+                <div className="flex-1 min-w-32">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase">
+                    Producto (factura)
+                  </label>
+                  <input
+                    type="text"
+                    value={item.nombre}
+                    onChange={(e) => updateItem(index, "nombre", e.target.value)}
+                    className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                  />
+                </div>
 
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-blue-600 uppercase">
-                  Vincular con ingrediente ↓
-                </label>
-                <select
-                  value={item.ingrediente_id || ""}
-                  onChange={(e) => updateItem(index, "ingrediente_id", e.target.value)}
-                  className={`mt-1 w-full rounded-md border p-2 text-sm ${
-                    !item.ingrediente_id
-                      ? "border-red-400 bg-red-50"
-                      : "border-blue-300 bg-blue-50 font-semibold"
-                  }`}
-                >
-                  <option value="">-- Seleccionar ingrediente --</option>
-                  {ingredientes.map((ing) => (
-                    <option key={ing.id} value={ing.id}>
-                      {ing.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="flex-1 min-w-40">
+                  <label className="block text-[10px] font-bold text-blue-600 uppercase">
+                    Vincular con ingrediente ↓
+                  </label>
+                  <select
+                    value={item.ingrediente_id || ""}
+                    onChange={(e) => updateItem(index, "ingrediente_id", e.target.value)}
+                    className={`mt-1 w-full rounded-md border p-2 text-sm ${
+                      !item.ingrediente_id
+                        ? "border-red-400 bg-red-50"
+                        : "border-blue-300 bg-blue-50 font-semibold"
+                    }`}
+                  >
+                    <option value="">-- Seleccionar ingrediente --</option>
+                    {ingredientesLocal.map((ing) => (
+                      <option key={ing.id} value={ing.id}>
+                        {ing.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  {!item.ingrediente_id && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        creandoIndex === index
+                          ? setCreandoIndex(null)
+                          : abrirCrearIngrediente(index)
+                      }
+                      className="mt-1 inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                    >
+                      + Crear ingrediente nuevo
+                    </button>
+                  )}
+                </div>
 
               <div className="w-20">
                 <label className="block text-[10px] font-bold text-gray-400 uppercase">Cant. (Stock+)</label>
@@ -353,7 +430,88 @@ export function FacturaReview({
               >
                 ✕
               </button>
-            </div>
+              </div>
+
+              {/* Panel: crear ingrediente nuevo para este ítem */}
+              {creandoIndex === index && (
+                <div className="px-6 py-4 bg-emerald-50/70 border-t border-emerald-100">
+                  <p className="text-xs font-bold text-emerald-800 mb-2">
+                    Crear ingrediente nuevo — se vinculará automáticamente a este ítem
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase">Nombre</label>
+                      <input
+                        type="text"
+                        value={nuevoIng.nombre}
+                        onChange={(e) => setNuevoIng((p) => ({ ...p, nombre: e.target.value }))}
+                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase">Unidad compra</label>
+                      <input
+                        type="text"
+                        value={nuevoIng.unidad_compra}
+                        onChange={(e) => setNuevoIng((p) => ({ ...p, unidad_compra: e.target.value }))}
+                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase">Costo/unidad (S/)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={nuevoIng.costo_unitario}
+                        onChange={(e) => setNuevoIng((p) => ({ ...p, costo_unitario: e.target.value }))}
+                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase">Unidad de uso</label>
+                      <input
+                        type="text"
+                        value={nuevoIng.unidad_uso}
+                        onChange={(e) => setNuevoIng((p) => ({ ...p, unidad_uso: e.target.value }))}
+                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase">Factor conversión</label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0.0001"
+                        value={nuevoIng.factor_conversion}
+                        onChange={(e) => setNuevoIng((p) => ({ ...p, factor_conversion: e.target.value }))}
+                        className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => crearYVincular(index)}
+                      disabled={creando}
+                      className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      {creando ? "Creando..." : "Crear y vincular"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCreandoIndex(null)}
+                      className="text-gray-500 text-sm font-medium hover:text-gray-700"
+                    >
+                      Cancelar
+                    </button>
+                    <span className="text-[10px] text-emerald-700/70">
+                      La unidad de compra con factor 1 = el costo de la factura por unidad
+                    </span>
+                  </div>
+                </div>
+              )}
+            </Fragment>
           ))}
         </div>
 

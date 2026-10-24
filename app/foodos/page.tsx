@@ -3,6 +3,8 @@ import Link from "next/link";
 import { TrendingUp, ArrowRight, AlertTriangle, Sparkles, CheckCircle2 } from "lucide-react";
 import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
 import RentabilidadPromedioCard from "@/features/rentabilidad/components/RentabilidadPromedioCard";
+import KpisFinancierosCard from "@/features/kpis/components/KpisFinancierosCard";
+import { getKpisFinancieros } from "@/features/kpis/services/kpis-financieros.service";
 
 export default async function AdminDashboard() {
   const productos = await getProductos();
@@ -17,16 +19,21 @@ export default async function AdminDashboard() {
     margen: number;
     costoCompleto: number;
     precio: number;
+    mcPct: number;
+    mcUnit: number;
   }> = [];
 
   for (const p of productos ?? []) {
     const d = await calcularCosteoReal(p.id);
     if (!d) continue;
+    const precio = Number(p.precio_venta) || 0;
     conCosteo.push({
       nombre: String(p.nombre ?? ""),
       margen: d.margenBrutoPct,
       costoCompleto: d.costoCompletoUnitario,
-      precio: Number(p.precio_venta) || 0,
+      precio,
+      mcPct: d.margenContribucionPct,
+      mcUnit: d.margenContribucion,
     });
   }
 
@@ -37,6 +44,9 @@ export default async function AdminDashboard() {
   const saludables = conCosteo.filter((x) => x.margen > 40).length;
   const enAlerta = conCosteo.filter((x) => x.margen > 20 && x.margen <= 40).length;
   const criticos = conCosteo.filter((x) => x.margen <= 20).length;
+
+  // ── KPIs financieros: ROS, ROI, ROE y punto de equilibrio ──
+  const kpis = await getKpisFinancieros(conCosteo);
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -96,11 +106,20 @@ export default async function AdminDashboard() {
             productos={conCosteo}
           />
         )}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Recetas Completadas</h3>
-          <p className="text-3xl font-bold text-kc-rose-gold mt-2">{productosConReceta.length}</p>
-          <span className="text-xs text-kc-rose-gold/80 font-medium mt-1 block">Con costeo de ingredientes</span>
-        </div>
+        <KpisFinancierosCard
+          kpis={{
+            ros: kpis.ros,
+            roi: kpis.roi,
+            roe: kpis.roe,
+            peUnidades: kpis.peUnidades,
+            peSoles: kpis.peSoles,
+            ventasMes: kpis.ventasMes,
+            utilidadMes: kpis.utilidadMes,
+          }}
+          costosFijos={kpis.costosFijos}
+          inversion={kpis.inversion}
+          patrimonio={kpis.patrimonio}
+        />
         <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
           <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Productos Estrella (Margen &gt; 50%)</h3>
           <p className="text-3xl font-bold text-emerald-600 mt-2">{rentables.length}</p>

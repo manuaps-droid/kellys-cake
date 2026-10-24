@@ -114,6 +114,7 @@ export async function guardarCostoFijoAction(input: CostoFijoInput) {
     }
 
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };
@@ -131,6 +132,7 @@ export async function eliminarCostoFijoAction(id: string) {
 
     if (error) return { error: "No se pudo eliminar." };
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };
@@ -178,6 +180,49 @@ export async function guardarConfiguracionCosteoAction(input: {
 
     if (error) return { error: "No se pudo guardar la configuración." };
     revalidatePath("/foodos/rentabilidad");
+    return { success: true };
+  } catch {
+    return { error: "Error interno del servidor." };
+  }
+}
+
+// ============================================================
+// KPIs FINANCIEROS: inversión (ROI) y patrimonio (ROE)
+// ============================================================
+
+export async function guardarConfiguracionKpisAction(input: {
+  inversion_total?: number;
+  patrimonio?: number;
+}) {
+  try {
+    const { supabase } = await getFoodOSSession();
+
+    const { data: row } = await supabase
+      .from("tienda_config")
+      .select("seccion, data")
+      .eq("seccion", "foodos_config_kpis")
+      .maybeSingle();
+
+    const actual = (row?.data as Record<string, unknown>) ?? {};
+
+    const nuevo: Record<string, unknown> = { ...actual };
+
+    if (input.inversion_total != null) {
+      nuevo.inversion_total = Math.max(0, Number(input.inversion_total) || 0);
+    }
+    if (input.patrimonio != null) {
+      nuevo.patrimonio = Math.max(0, Number(input.patrimonio) || 0);
+    }
+
+    const { error } = await supabase
+      .from("tienda_config")
+      .upsert(
+        { seccion: "foodos_config_kpis", data: nuevo },
+        { onConflict: "seccion" }
+      );
+
+    if (error) return { error: "No se pudo guardar la configuración de KPIs." };
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };

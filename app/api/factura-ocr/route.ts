@@ -165,10 +165,24 @@ Responde SOLAMENTE con el JSON, sin texto adicional.`;
     if (!geminiResponse.ok) {
       const errText = await geminiResponse.text();
       console.error("Error de Gemini API:", errText);
-      return NextResponse.json(
-        { error: "Error al procesar la imagen con IA. Verifica tu API Key." },
-        { status: 502 }
-      );
+
+      let detalle =
+        "Error al procesar la imagen con IA. Intenta de nuevo en unos minutos.";
+      if (geminiResponse.status === 401 || geminiResponse.status === 403) {
+        detalle =
+          "Tu GEMINI_API_KEY es inválida o expiró. Genera una clave permanente en aistudio.google.com/apikey (no un token de sesión) y actualízala en .env.local.";
+      } else if (geminiResponse.status === 429) {
+        detalle =
+          "Llegaste al límite gratuito de Gemini por ahora. Espera unos minutos e intenta de nuevo.";
+      } else if (geminiResponse.status === 404) {
+        detalle =
+          "El modelo de IA no está disponible en tu región o cuenta. Revisa tu acceso a Google AI Studio.";
+      } else if (geminiResponse.status === 400) {
+        detalle =
+          "La IA no pudo procesar este archivo. Prueba con una foto más nítida o un PDF más simple.";
+      }
+
+      return NextResponse.json({ error: detalle }, { status: 502 });
     }
 
     const geminiData = await geminiResponse.json();

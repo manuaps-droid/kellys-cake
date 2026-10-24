@@ -6,6 +6,8 @@ import RentabilidadPromedioCard from "@/features/rentabilidad/components/Rentabi
 import KpisFinancierosCard from "@/features/kpis/components/KpisFinancierosCard";
 import { getKpisFinancieros } from "@/features/kpis/services/kpis-financieros.service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const productos = await getProductos();
 

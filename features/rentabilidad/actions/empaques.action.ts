@@ -87,6 +87,7 @@ export async function guardarEmpaqueAction(input: EmpaqueInput) {
     }
 
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };
@@ -108,6 +109,7 @@ export async function eliminarEmpaqueAction(id: string) {
     if (error) return { error: "No se pudo eliminar el empaque." };
 
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };

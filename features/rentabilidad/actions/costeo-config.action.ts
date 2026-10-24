@@ -50,6 +50,7 @@ export async function guardarManoObraAction(input: ManoObraInput) {
     }
 
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };
@@ -67,6 +68,7 @@ export async function eliminarManoObraAction(id: string) {
 
     if (error) return { error: "No se pudo eliminar." };
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };
@@ -180,6 +182,7 @@ export async function guardarConfiguracionCosteoAction(input: {
 
     if (error) return { error: "No se pudo guardar la configuración." };
     revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
     return { success: true };
   } catch {
     return { error: "Error interno del servidor." };

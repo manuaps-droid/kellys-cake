@@ -46,6 +46,21 @@ export default function KpisFinancierosCard({
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
+  // Resincroniza el estado cuando el servidor envía datos nuevos
+  // (tras router.refresh). Evita filas sin ID que se duplicarían al
+  // guardar de nuevo y garantiza que la tabla muestre datos reales.
+  const [prevProps, setPrevProps] = useState({ costosFijos, inversion, patrimonio });
+  if (
+    costosFijos !== prevProps.costosFijos ||
+    inversion !== prevProps.inversion ||
+    patrimonio !== prevProps.patrimonio
+  ) {
+    setPrevProps({ costosFijos, inversion, patrimonio });
+    setFilas(costosFijos);
+    setInv(inversion > 0 ? String(inversion) : "");
+    setPat(patrimonio > 0 ? String(patrimonio) : "");
+  }
+
   const pct = (v: number | null) =>
     v == null ? "—" : `${(Math.round(v * 10) / 10).toLocaleString("es-PE")}%`;
 
@@ -101,10 +116,11 @@ export default function KpisFinancierosCard({
 
       if (errores === 0) {
         toast.success("KPIs y costos fijos actualizados");
-        router.refresh();
       } else {
         toast.error("Algunos cambios no se pudieron guardar");
       }
+      // Siempre refrescar: el servidor recalcula el punto de equilibrio
+      router.refresh();
     });
 
   return (

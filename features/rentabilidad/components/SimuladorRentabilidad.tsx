@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useId, useMemo, useTransition, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Cake, Copy, AlertTriangle, Info, Target,
   ChevronDown, ChevronUp, Plus, Trash2,
@@ -19,6 +20,8 @@ import {
   guardarCostoFijoAction,
   eliminarCostoFijoAction,
   guardarConfiguracionCosteoAction,
+  guardarPrecioVentaAction,
+  guardarRendimientoAction,
 } from "../actions/costeo-config.action";
 
 type Props = {
@@ -53,6 +56,12 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
   const [unidadesCapacidad, setUnidadesCapacidad] = useState("120");
   const [costoMinuto, setCostoMinuto] = useState("0.0833");
   const [guardandoConfig, startConfigTransition] = useTransition();
+
+  // Precio por unidad y rendimiento de la receta (editables)
+  const [precioEdit, setPrecioEdit] = useState("");
+  const [rendimientoEdit, setRendimientoEdit] = useState("1");
+  const [guardandoDatos, startDatosTransition] = useTransition();
+  const router = useRouter();
 
   const COMISION_PASARELA_PCT = 3.99; // Culqi: 3.99% del precio de venta
 
@@ -99,7 +108,6 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
 
     productoSyncRef.current = productoId;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEmpaquesEdit(
       costeo.empaques.map(e => ({
         nombre: e.nombre,
@@ -108,7 +116,6 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       }))
     );
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setManoObraEdit(
       costeo.manoObra.map(m => ({
         id: m.id,
@@ -118,7 +125,6 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       }))
     );
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCostosFijosEdit(
       costeo.costosFijos.map(c => ({
         id: c.id,
@@ -128,36 +134,43 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     );
 
     // Sincronizar capacidad desde el servicio (por producto)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUnidadesCapacidad(String(costeo.unidadesMensualesCapacidad));
+
+    // Precio y rendimiento editables del producto/receta activa
+    setPrecioEdit(String(producto?.precio_venta ?? ""));
+    setRendimientoEdit(String(costeo.rendimiento));
 
     // Costo por minuto: global, solo se inicializa UNA VEZ (no por producto)
     if (!configSyncRef.current) {
       configSyncRef.current = true;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCostoMinuto(String(costeo.costoPorMinuto));
+        setCostoMinuto(String(costeo.costoPorMinuto));
     }
-  }, [productoId, costeo]);
+  }, [productoId, costeo, producto]);
 
   // ── Totales calculados en CADA render desde los valores editados ──
   const totalesLocales = (() => {
     if (!costeo) return null;
 
-    const costoIng = costeo.costoIngredientes;
+    // Rendimiento editable: re-escala el costo de ingredientes por unidad
+    const rendimientoLocal = Math.max(1, Number(rendimientoEdit) || 1);
+    const costoIng =
+      costeo.rendimiento > 0
+        ? (costeo.costoIngredientes * costeo.rendimiento) / rendimientoLocal
+        : costeo.costoIngredientes;
 
     const costoEmp = empaquesEdit.reduce(
       (t, e) => t + (Number(e.cantidad) || 1) * (Number(e.costo_unitario) || 0),
       0
     );
 
-    const precioVentaParaComision = Number(producto?.precio_venta) || 0;
+    const precioVentaParaComision = Number(precioEdit) || 0;
     const comision = Math.round(precioVentaParaComision * (COMISION_PASARELA_PCT / 100) * 100) / 100;
 
     const costoMO =
       manoObraEdit.reduce(
         (t, m) => t + (Number(m.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833),
         0
-      ) / Math.max(1, costeo.rendimiento);
+      ) / rendimientoLocal;
 
     const costoVariable = costoIng + costoEmp + costoMO + comision;
 
@@ -170,7 +183,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
 
     const costoCompleto = costoVariable + indirectos;
 
-    const precio = Number(producto?.precio_venta) || 0;
+    const precio = Number(precioEdit) || 0;
     const margenContribucion = precio - costoVariable;
     const margenContribucionPct = precio > 0 ? (margenContribucion / precio) * 100 : 0;
     const margenBrutoPct = precio > 0 ? ((precio - costoCompleto) / precio) * 100 : 0;
@@ -195,6 +208,39 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
       minimo: Math.round(costoCompleto * 100) / 100,
     };
   })();
+
+  // ── Guardar precio por unidad y rendimiento de la receta ──
+  function guardarPrecioProducto() {
+    if (!productoId) return;
+    startDatosTransition(async () => {
+      const res = await guardarPrecioVentaAction({
+        producto_id: productoId,
+        precio_venta: Number(precioEdit) || 0,
+      });
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Precio por unidad actualizado");
+      router.refresh();
+    });
+  }
+
+  function guardarRendimientoReceta() {
+    if (!productoId) return;
+    startDatosTransition(async () => {
+      const res = await guardarRendimientoAction({
+        producto_id: productoId,
+        rendimiento: Math.max(1, Number(rendimientoEdit) || 1),
+      });
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Rendimiento de la receta actualizado");
+      router.refresh();
+    });
+  }
 
   async function guardarEmpaque(index: number) {
     const emp = empaquesEdit[index];
@@ -400,7 +446,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
 ═══════════════════════════════════
 
 CAPA 1 · INGREDIENTES (receta FoodOS):
-  Rinde: ${costeo.rendimiento} porciones
+  Rinde: ${Math.max(1, Number(rendimientoEdit) || 1)} porciones
   Costo ingredientes: S/ ${totalesLocales.costoIng.toFixed(2)}/porción
 
 CAPA 2 · EMPAQUES Y DIRECTOS:
@@ -419,7 +465,7 @@ CAPA 4 · COSTOS INDIRECTOS:
 ═══════════════════════════════════
   COSTO VARIABLE: S/ ${totalesLocales.costoVariable.toFixed(2)}
   COSTO COMPLETO: S/ ${totalesLocales.costoCompleto.toFixed(2)}
-  PRECIO ACTUAL: S/ ${Number(producto.precio_venta || 0).toFixed(2)}
+  PRECIO ACTUAL: S/ ${(Number(precioEdit) || 0).toFixed(2)}
   MARGEN CONTRIBUCIÓN: S/ ${totalesLocales.margenContribucion.toFixed(2)} (${totalesLocales.margenContribucionPct}%)
   MARGEN BRUTO: ${totalesLocales.margenBrutoPct}%
 ═══════════════════════════════════
@@ -620,12 +666,49 @@ CAPA 4 · COSTOS INDIRECTOS:
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Precio venta</p>
-                <p className="mt-1 text-xl font-black text-slate-800">
-                  S/ {Number(producto.precio_venta || 0).toFixed(2)}
-                </p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Precio por unidad</p>
+                <div className="mt-1 flex items-center justify-center gap-1">
+                  <span className="text-sm font-bold text-slate-400">S/</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={precioEdit}
+                    onChange={(e) => setPrecioEdit(e.target.value)}
+                    className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-center text-lg font-black text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={guardarPrecioProducto}
+                  disabled={guardandoDatos}
+                  className="mt-2 w-full rounded-lg bg-slate-900 py-1 text-[10px] font-bold text-white hover:bg-slate-700 disabled:opacity-50"
+                >
+                  Guardar
+                </button>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Rinde (porciones)</p>
+                <div className="mt-1 flex items-center justify-center gap-1">
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    value={rendimientoEdit}
+                    onChange={(e) => setRendimientoEdit(e.target.value)}
+                    className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-center text-lg font-black text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={guardarRendimientoReceta}
+                  disabled={guardandoDatos}
+                  className="mt-2 w-full rounded-lg bg-slate-900 py-1 text-[10px] font-bold text-white hover:bg-slate-700 disabled:opacity-50"
+                >
+                  Guardar
+                </button>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Costo variable</p>
@@ -656,7 +739,7 @@ CAPA 4 · COSTOS INDIRECTOS:
                 </p>
                 <div className="flex h-12 overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
                   {(() => {
-                    const total = Number(producto.precio_venta) || 1;
+                    const total = Number(precioEdit) || 1;
                     const pct = (v: number) => Math.max(0, Math.min(100, (v / total) * 100));
                     const ganancia = Math.max(0, total - totalesLocales.costoCompleto);
                     return (

@@ -231,3 +231,68 @@ export async function guardarConfiguracionKpisAction(input: {
     return { error: "Error interno del servidor." };
   }
 }
+
+// ============================================================
+// PRECIO DE VENTA Y RENDIMIENTO DE RECETA (desde el simulador)
+// ============================================================
+
+export async function guardarPrecioVentaAction(input: {
+  producto_id: string;
+  precio_venta: number;
+}) {
+  try {
+    const { supabase } = await getFoodOSSession();
+
+    const precio = Math.max(0, Number(input.precio_venta) || 0);
+
+    const { error } = await supabase
+      .from("foodos_productos")
+      .update({ precio_venta: precio })
+      .eq("id", input.producto_id);
+
+    if (error) return { error: "No se pudo actualizar el precio de venta." };
+
+    revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
+    return { success: true };
+  } catch {
+    return { error: "Error interno del servidor." };
+  }
+}
+
+export async function guardarRendimientoAction(input: {
+  producto_id: string;
+  rendimiento: number;
+}) {
+  try {
+    const { supabase } = await getFoodOSSession();
+
+    const rendimiento = Math.max(1, Number(input.rendimiento) || 1);
+
+    const { data: receta } = await supabase
+      .from("recetas")
+      .select("id, costo_total")
+      .eq("producto_id", input.producto_id)
+      .eq("es_activa", true)
+      .single();
+
+    if (!receta) return { error: "Este producto no tiene receta activa." };
+
+    const { error } = await supabase
+      .from("recetas")
+      .update({
+        rendimiento,
+        costo_unitario:
+          Math.round(((Number(receta.costo_total) || 0) / rendimiento) * 10000) / 10000,
+      })
+      .eq("id", (receta as { id: string }).id);
+
+    if (error) return { error: "No se pudo actualizar el rendimiento." };
+
+    revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
+    return { success: true };
+  } catch {
+    return { error: "Error interno del servidor." };
+  }
+}

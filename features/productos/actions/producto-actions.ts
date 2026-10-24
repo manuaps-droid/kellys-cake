@@ -138,5 +138,39 @@ export async function crearProductoConReceta(input: {
   }
 }
 
+/**
+ * Elimina un producto de FoodOS junto con su receta.
+ * receta_items y costeo (empaques, mano de obra) van en cascada.
+ * No afecta los productos de la tienda web.
+ */
+export async function eliminarProductoAction(productoId: string) {
+  try {
+    const { supabase } = await getFoodOSSession();
+
+    const { error: errorReceta } = await supabase
+      .from("recetas")
+      .delete()
+      .eq("producto_id", productoId);
+
+    if (errorReceta) {
+      return { error: "No se pudo eliminar la receta del producto." };
+    }
+
+    const { error } = await supabase
+      .from("foodos_productos")
+      .delete()
+      .eq("id", productoId);
+
+    if (error) return { error: "No se pudo eliminar el producto." };
+
+    revalidatePath("/foodos/productos");
+    revalidatePath("/foodos/rentabilidad");
+    revalidatePath("/foodos");
+    return { success: true };
+  } catch {
+    return { error: "Error interno del servidor." };
+  }
+}
+
 
 

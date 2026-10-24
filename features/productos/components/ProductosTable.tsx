@@ -1,5 +1,6 @@
 ﻿import { getProductos } from "../queries/get-productos";
 import Link from "next/link";
+import EliminarProductoButton from "./EliminarProductoButton";
 
 export async function ProductosTable() {
   const productos = await getProductos();
@@ -40,9 +41,12 @@ export async function ProductosTable() {
                     ) : <span className="text-gray-400">-</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link href={`/foodos/productos/${prod.id}/receta`} className="text-blue-600 hover:text-blue-900 font-bold">
-                      {costo > 0 ? 'Editar Receta' : '+ Crear Receta'}
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link href={`/foodos/productos/${prod.id}/receta`} className="text-blue-600 hover:text-blue-900 font-bold">
+                        {costo > 0 ? 'Editar Receta' : '+ Crear Receta'}
+                      </Link>
+                      <EliminarProductoButton productoId={prod.id} nombre={prod.nombre} />
+                    </div>
                   </td>
                 </tr>
               )

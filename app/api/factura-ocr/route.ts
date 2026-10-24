@@ -107,85 +107,113 @@ IMPORTANTE:
 
 Responde SOLAMENTE con el JSON, sin texto adicional.`;
 
-    // Llamada a Gemini Flash API
-    const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey;
+    // Llamada a Gemini: cascada de modelos. Si el principal está con alta
+    // demanda (503) o fue retirado (404), se intenta el siguiente.
+    const MODELOS_GEMINI = [
+      "gemini-3.8-flash", // Última generación
+      "gemini-3.7-flash",
+      "gemini-3.6-flash", // Estable verificado
+    ];
 
-    const geminiResponse = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                inline_data: {
-                  mime_type: mimeType,
-                  data: base64,
-                },
+    const geminiBody = {
+      contents: [
+        {
+          parts: [
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64,
               },
-              { text: prompt },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              error: { type: "STRING", nullable: true },
-              proveedor: { type: "STRING", nullable: true },
-              ruc: { type: "STRING", nullable: true },
-              numero_factura: { type: "STRING", nullable: true },
-              fecha: { type: "STRING", nullable: true },
-              items: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    nombre: { type: "STRING" },
-                    cantidad: { type: "NUMBER" },
-                    unidad: { type: "STRING" },
-                    precio_unitario: { type: "NUMBER" },
-                    precio_total: { type: "NUMBER" },
-                  },
-                  required: ["nombre", "cantidad", "precio_total"],
-                },
-              },
-              subtotal: { type: "NUMBER", nullable: true },
-              igv: { type: "NUMBER", nullable: true },
-              total: { type: "NUMBER", nullable: true },
             },
-            required: ["items"],
-          },
+            { text: prompt },
+          ],
         },
-      }),
-    });
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            error: { type: "STRING", nullable: true },
+            proveedor: { type: "STRING", nullable: true },
+            ruc: { type: "STRING", nullable: true },
+            numero_factura: { type: "STRING", nullable: true },
+            fecha: { type: "STRING", nullable: true },
+            items: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  nombre: { type: "STRING" },
+                  cantidad: { type: "NUMBER" },
+                  unidad: { type: "STRING" },
+                  precio_unitario: { type: "NUMBER" },
+                  precio_total: { type: "NUMBER" },
+                },
+                required: ["nombre", "cantidad", "precio_total"],
+              },
+            },
+            subtotal: { type: "NUMBER", nullable: true },
+            igv: { type: "NUMBER", nullable: true },
+            total: { type: "NUMBER", nullable: true },
+          },
+          required: ["items"],
+        },
+      },
+    };
 
-    if (!geminiResponse.ok) {
+    type GeminiRespuesta = {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+
+    let geminiData: GeminiRespuesta | null = null;
+    let ultimoEstado = 0;
+
+    for (const modelo of MODELOS_GEMINI) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`;
+
+      const geminiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(geminiBody),
+      });
+
+      if (geminiResponse.ok) {
+        geminiData = (await geminiResponse.json()) as GeminiRespuesta;
+        break;
+      }
+
       const errText = await geminiResponse.text();
-      console.error("Error de Gemini API:", errText);
+      console.error(`Error de Gemini (${modelo}):`, errText);
+      ultimoEstado = geminiResponse.status;
 
+      // 404 (retirado) y 503 (alta demanda) justifican probar el siguiente
+      if (geminiResponse.status !== 404 && geminiResponse.status !== 503) break;
+    }
+
+    if (!geminiData) {
       let detalle =
         "Error al procesar la imagen con IA. Intenta de nuevo en unos minutos.";
-      if (geminiResponse.status === 401 || geminiResponse.status === 403) {
+      if (ultimoEstado === 401 || ultimoEstado === 403) {
         detalle =
           "Tu GEMINI_API_KEY es inválida o expiró. Genera una clave permanente en aistudio.google.com/apikey (no un token de sesión) y actualízala en .env.local.";
-      } else if (geminiResponse.status === 429) {
+      } else if (ultimoEstado === 429) {
         detalle =
           "Llegaste al límite gratuito de Gemini por ahora. Espera unos minutos e intenta de nuevo.";
-      } else if (geminiResponse.status === 404) {
+      } else if (ultimoEstado === 404) {
         detalle =
-          "El modelo de IA no está disponible en tu región o cuenta. Revisa tu acceso a Google AI Studio.";
-      } else if (geminiResponse.status === 400) {
+          "Los modelos de IA no están disponibles para tu cuenta. Revisa tu acceso a Google AI Studio.";
+      } else if (ultimoEstado === 503) {
+        detalle =
+          "Los modelos de IA están con alta demanda en este momento. Espera unos minutos e intenta de nuevo.";
+      } else if (ultimoEstado === 400) {
         detalle =
           "La IA no pudo procesar este archivo. Prueba con una foto más nítida o un PDF más simple.";
       }
 
       return NextResponse.json({ error: detalle }, { status: 502 });
     }
-
-    const geminiData = await geminiResponse.json();
 
     // Extraer el texto JSON de la respuesta de Gemini
     const responseText =

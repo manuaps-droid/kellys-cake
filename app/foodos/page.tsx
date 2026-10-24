@@ -1,6 +1,6 @@
 import { getProductos } from "@/features/productos/queries/get-productos";
 import Link from "next/link";
-import { TrendingUp, ArrowRight, AlertTriangle, Sparkles, ChefHat, CheckCircle2 } from "lucide-react";
+import { TrendingUp, ArrowRight, AlertTriangle, Sparkles, CheckCircle2 } from "lucide-react";
 import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
 import RentabilidadPromedioCard from "@/features/rentabilidad/components/RentabilidadPromedioCard";
 
@@ -43,36 +43,36 @@ export default async function AdminDashboard() {
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Resumen Operativo & Financiero</h1>
-          <p className="text-gray-500 text-sm mt-1">Monitorea la rentabilidad real de tus recetas y la salud de tu negocio.</p>
+          <h1 className="text-3xl font-bold text-kc-charcoal tracking-tight">Resumen Operativo & Financiero</h1>
+          <p className="text-kc-mocha text-sm mt-1">Monitorea la rentabilidad real de tus recetas y la salud de tu negocio.</p>
         </div>
         <Link
           href="/foodos/rentabilidad"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-md text-sm transition"
+          className="inline-flex items-center gap-2 bg-kc-charcoal hover:bg-kc-deep text-kc-cream font-bold px-4 py-2.5 rounded-xl shadow-md text-sm transition border border-kc-gold/30"
         >
-          <TrendingUp className="w-4 h-4" />
+          <TrendingUp className="w-4 h-4 text-kc-gold" />
           <span>Simulador de Rentabilidad</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
 
       {/* Banner Destacado del Simulador de Rentabilidad */}
-      <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-r from-kc-charcoal via-[#3B241A] to-kc-deep text-kc-cream rounded-2xl p-6 shadow-lg border border-kc-gold/25 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-kc-gold/15 text-kc-gold text-xs font-bold border border-kc-gold/30">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Nuevo Motor Financiero</span>
           </div>
-          <h2 className="text-xl md:text-2xl font-black">
+          <h2 className="text-xl md:text-2xl font-bold">
             Auditoría de Precios, Costos Fijos & Punto de Equilibrio
           </h2>
-          <p className="text-slate-300 text-xs md:text-sm leading-relaxed">
+          <p className="text-kc-cream/70 text-xs md:text-sm leading-relaxed">
             Ingresa tus costos fijos y variables, elige entre márgenes sugeridos (70-75%) o escribe tu margen deseado. Audita Food Cost (≤30%), Labor Cost (≤25%), ROS, ROE y ROI en tiempo real.
           </p>
         </div>
         <Link
           href="/foodos/rentabilidad"
-          className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-5 py-3 rounded-xl transition shadow-lg text-xs md:text-sm whitespace-nowrap"
+          className="inline-flex items-center gap-2 bg-kc-gold hover:bg-kc-rose-gold text-kc-deep font-extrabold px-5 py-3 rounded-xl transition shadow-lg text-xs md:text-sm whitespace-nowrap"
         >
           <span>Abrir Calculadora</span>
           <ArrowRight className="w-4 h-4" />
@@ -81,10 +81,10 @@ export default async function AdminDashboard() {
 
       {/* Métricas Principales */}
       <div className={`grid grid-cols-1 gap-6 ${nCosteo > 0 ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Productos en Catálogo</h3>
-          <p className="text-3xl font-black text-gray-900 mt-2">{productos?.length || 0}</p>
-          <span className="text-xs text-gray-400 mt-1 block">Registrados en FoodOS</span>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Productos en Catálogo</h3>
+          <p className="text-3xl font-bold text-kc-charcoal mt-2">{productos?.length || 0}</p>
+          <span className="text-xs text-kc-mocha/70 mt-1 block">Registrados en FoodOS</span>
         </div>
         {margenPromedio != null && (
           <RentabilidadPromedioCard
@@ -96,22 +96,22 @@ export default async function AdminDashboard() {
             productos={conCosteo}
           />
         )}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Recetas Completadas</h3>
-          <p className="text-3xl font-black text-blue-600 mt-2">{productosConReceta.length}</p>
-          <span className="text-xs text-blue-500 font-medium mt-1 block">Con costeo de ingredientes</span>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Recetas Completadas</h3>
+          <p className="text-3xl font-bold text-kc-rose-gold mt-2">{productosConReceta.length}</p>
+          <span className="text-xs text-kc-rose-gold/80 font-medium mt-1 block">Con costeo de ingredientes</span>
         </div>
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Productos Estrella (Margen &gt; 50%)</h3>
-          <p className="text-3xl font-black text-emerald-600 mt-2">{rentables.length}</p>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Productos Estrella (Margen &gt; 50%)</h3>
+          <p className="text-3xl font-bold text-emerald-600 mt-2">{rentables.length}</p>
           <span className="text-xs text-emerald-600 font-medium mt-1 block">Margen bruto altamente rentable</span>
         </div>
       </div>
 
       {/* Alertas y Módulo AI */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 p-6">
-          <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-xs border border-kc-blush/40 p-6">
+          <h3 className="text-base font-bold text-kc-charcoal mb-4 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <span>Alertas de Rentabilidad en Catálogo</span>
           </h3>
@@ -121,10 +121,10 @@ export default async function AdminDashboard() {
               <span>Todos tus productos costados tienen un margen saludable superior al 30%.</span>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-kc-sand">
               {alertaMargen.map((p) => (
                 <li key={p.id} className="py-3 flex justify-between items-center">
-                  <span className="font-semibold text-gray-800 text-sm">{p.nombre}</span>
+                  <span className="font-semibold text-kc-charcoal text-sm">{p.nombre}</span>
                   <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-extrabold">
                     {p.margen_porcentaje?.toFixed(1)}% Margen
                   </span>
@@ -134,17 +134,17 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 p-6 flex flex-col justify-center items-center text-center">
-          <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-3">
+        <div className="bg-white rounded-2xl shadow-xs border border-kc-blush/40 p-6 flex flex-col justify-center items-center text-center">
+          <div className="w-14 h-14 bg-kc-sand rounded-2xl flex items-center justify-center text-2xl mb-3">
             🤖
           </div>
-          <h3 className="text-base font-bold text-gray-900">AI Copilot Gastronómico</h3>
-          <p className="text-gray-500 text-xs md:text-sm mt-1.5 max-w-sm leading-relaxed">
+          <h3 className="text-base font-bold text-kc-charcoal">AI Copilot Gastronómico</h3>
+          <p className="text-kc-mocha text-xs md:text-sm mt-1.5 max-w-sm leading-relaxed">
             Te sugiere optimizaciones de insumos para reducir el Food Cost y calcular el impacto en tu Punto de Equilibrio.
           </p>
           <Link
             href="/foodos/copilot"
-            className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+            className="mt-4 text-xs font-bold text-kc-rose-gold hover:text-kc-charcoal inline-flex items-center gap-1"
           >
             <span>Consultar Copilot</span>
             <ArrowRight className="w-3.5 h-3.5" />

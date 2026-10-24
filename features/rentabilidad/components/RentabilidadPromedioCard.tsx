@@ -48,17 +48,17 @@ export default function RentabilidadPromedioCard({
       <button
         type="button"
         onClick={() => setExpandido(!expandido)}
-        className="w-full p-6 text-left transition hover:bg-slate-50"
+        className="w-full p-6 text-left transition hover:bg-kc-sand/50"
       >
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+            <TrendingUp className="w-3.5 h-3.5 text-kc-rose-gold" />
             Rentabilidad Promedio
           </h3>
           {expandido ? (
-            <ChevronUp className="w-4 h-4 text-blue-400" />
+            <ChevronUp className="w-4 h-4 text-kc-mocha/70" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-blue-400" />
+            <ChevronDown className="w-4 h-4 text-kc-mocha/70" />
           )}
         </div>
         <p className={`text-3xl font-black mt-2 ${color}`}>
@@ -91,7 +91,7 @@ export default function RentabilidadPromedioCard({
               .map((p) => (
                 <div
                   key={p.nombre}
-                  className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-[11px]"
+                  className="flex items-center justify-between rounded-lg bg-kc-sand/60 px-3 py-1.5 text-[11px]"
                 >
                   <span className="font-medium text-gray-700 truncate max-w-[50%]">
                     {p.nombre}

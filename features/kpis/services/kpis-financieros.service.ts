@@ -22,6 +22,8 @@ export type DatosKpisFinancieros = {
   peUnidades: number | null;
   peSoles: number | null;
   serieMensual: FilaMesKpi[];
+  mesEtiqueta: string;
+  esProvisional: boolean;
 };
 
 type AporteReceta = {
@@ -116,6 +118,43 @@ export async function getKpisFinancieros(
       ? totalCostosFijos / (mcPctProm / 100)
       : null;
 
+  // ══════════════════════════════════════════════════════════════
+  // AJUSTE PROVISIONAL — SETIEMBRE 2026 (ELIMINAR ESTE BLOQUE PARA
+  // VOLVER AL CÁLCULO AUTOMÁTICO CUANDO SE SOLICITE)
+  // Ventas y compras reales del mes no registradas en pedidos.
+  // ══════════════════════════════════════════════════════════════
+  const AJUSTE_PROVISIONAL = {
+    activo: true,
+    mes: "2026-09",
+    etiqueta: "Setiembre 2026 (provisional)",
+    ventasSinIgv: 15908,
+    comprasSinIgv: 12527,
+  };
+
+  const utilidadProvisional =
+    AJUSTE_PROVISIONAL.ventasSinIgv - AJUSTE_PROVISIONAL.comprasSinIgv;
+
+  const esProvisional = AJUSTE_PROVISIONAL.activo;
+  const ventasMesFinal = esProvisional ? AJUSTE_PROVISIONAL.ventasSinIgv : ventasMes;
+  const utilidadFinal = esProvisional ? utilidadProvisional : utilidadMes;
+  const rosFinal = esProvisional
+    ? AJUSTE_PROVISIONAL.ventasSinIgv > 0
+      ? (utilidadProvisional / AJUSTE_PROVISIONAL.ventasSinIgv) * 100
+      : null
+    : ros;
+  const roiFinal = esProvisional
+    ? inversion > 0
+      ? ((utilidadProvisional * 12) / inversion) * 100
+      : null
+    : roi;
+  const roeFinal = esProvisional
+    ? patrimonio > 0
+      ? ((utilidadProvisional * 12) / patrimonio) * 100
+      : null
+    : roe;
+  const mesEtiqueta = esProvisional ? AJUSTE_PROVISIONAL.etiqueta : mesActual;
+  // ════════════════════ FIN AJUSTE PROVISIONAL ══════════════════
+
   // ── Serie mensual: ventas por mes (últimos 6 meses, hora Lima) ──
   const MESES_ABREV = [
     "Ene", "Feb", "Mar", "Abr", "May", "Jun",
@@ -144,34 +183,43 @@ export async function getKpisFinancieros(
       a -= 1;
     }
     const clave = `${a}-${String(m).padStart(2, "0")}`;
-    const ventas = ventasPorMes.get(clave) ?? 0;
-    const utilidad =
-      conPrecio.length > 0
+
+    const esMesAjustado = esProvisional && clave === AJUSTE_PROVISIONAL.mes;
+    const ventas = esMesAjustado
+      ? AJUSTE_PROVISIONAL.ventasSinIgv
+      : ventasPorMes.get(clave) ?? 0;
+    const utilidad = esMesAjustado
+      ? utilidadProvisional
+      : conPrecio.length > 0
         ? ventas * (mcPctProm / 100) - totalCostosFijos
         : null;
 
     serieMensual.push({
       mes: clave,
-      etiqueta: MESES_ABREV[m - 1],
+      etiqueta: esMesAjustado
+        ? `${MESES_ABREV[m - 1]} *`
+        : MESES_ABREV[m - 1],
       ventas: Math.round(ventas * 100) / 100,
       utilidad: utilidad != null ? Math.round(utilidad * 100) / 100 : null,
     });
   }
 
   return {
-    ventasMes: Math.round(ventasMes * 100) / 100,
+    ventasMes: Math.round(ventasMesFinal * 100) / 100,
     costosFijos,
     totalCostosFijos,
     inversion,
     patrimonio,
     mcPctProm,
     mcUnitProm,
-    utilidadMes: utilidadMes != null ? Math.round(utilidadMes * 100) / 100 : null,
-    ros: ros != null ? Math.round(ros * 10) / 10 : null,
-    roi: roi != null ? Math.round(roi * 10) / 10 : null,
-    roe: roe != null ? Math.round(roe * 10) / 10 : null,
+    utilidadMes: utilidadFinal != null ? Math.round(utilidadFinal * 100) / 100 : null,
+    ros: rosFinal != null ? Math.round(rosFinal * 10) / 10 : null,
+    roi: roiFinal != null ? Math.round(roiFinal * 10) / 10 : null,
+    roe: roeFinal != null ? Math.round(roeFinal * 10) / 10 : null,
     peUnidades: peUnidades != null ? Math.round(peUnidades * 10) / 10 : null,
     peSoles: peSoles != null ? Math.round(peSoles * 100) / 100 : null,
     serieMensual,
+    mesEtiqueta,
+    esProvisional,
   };
 }

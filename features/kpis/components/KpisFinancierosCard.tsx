@@ -19,6 +19,8 @@ export type KpisFinancieros = {
   peSoles: number | null;
   ventasMes: number;
   utilidadMes: number | null;
+  mesEtiqueta: string;
+  esProvisional: boolean;
 };
 
 type Props = {
@@ -193,9 +195,16 @@ export default function KpisFinancierosCard({
         <div className="border-t border-kc-blush/30 px-5 pb-5 space-y-4">
           {/* Resumen del mes */}
           <div className="pt-3 rounded-xl bg-kc-sand/60 p-3 text-[11px] space-y-1">
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-kc-mocha">Ventas del mes</span>
-              <span className="font-bold text-kc-charcoal">{soles(kpis.ventasMes)}</span>
+              <span className="flex items-center gap-1.5">
+                {kpis.esProvisional && (
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-black text-amber-700">
+                    {kpis.mesEtiqueta}
+                  </span>
+                )}
+                <span className="font-bold text-kc-charcoal">{soles(kpis.ventasMes)}</span>
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-kc-mocha">Utilidad estimada del mes</span>
@@ -409,10 +418,9 @@ export default function KpisFinancierosCard({
           </button>
 
           <p className="text-[10px] text-kc-mocha/70 leading-relaxed">
-            Punto de equilibrio = costos fijos ÷ margen de contribución promedio.
-            ROI y ROE anualizados con la utilidad estimada del mes (ventas ×
-            margen de contribución − costos fijos). Llena inversión y patrimonio
-            para activarlos.
+            {kpis.esProvisional
+              ? "Ajuste provisional: utilidad del mes = ventas − compras sin IGV (S/ 15,908 − S/ 12,527)."
+              : "Punto de equilibrio = costos fijos ÷ margen de contribución promedio. ROI y ROE anualizados con la utilidad estimada del mes (ventas × margen de contribución − costos fijos). Llena inversión y patrimonio para activarlos."}
           </p>
         </div>
       )}

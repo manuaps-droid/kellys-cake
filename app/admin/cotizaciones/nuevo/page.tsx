@@ -9,6 +9,7 @@ import CotizacionEditor from "@/features/cotizaciones/components/CotizacionEdito
 import { descripcionToItems } from "@/features/cotizaciones/lib/parse-items";
 
 import type { CotizacionItem } from "@/features/cotizaciones/types/cotizacion.types";
+import type { DetallesSolicitud } from "@/features/cotizaciones/components/CotizacionEditor";
 
 type Props = {
   searchParams: Promise<{
@@ -20,7 +21,7 @@ type Props = {
 function withIds(items: unknown[]): CotizacionItem[] {
   return items.map((raw, index) => ({
     ...(raw as CotizacionItem),
-    id: (raw as CotizacionItem).id ?? `item-${index}-${Date.now()}`,
+    id: (raw as CotizacionItem).id ?? `item-${index}`,
   }));
 }
 
@@ -36,11 +37,14 @@ export default async function NuevaCotizacionPage({ searchParams }: Props) {
   let clienteNombre = "Cliente";
   let initialItems: CotizacionItem[] = [];
   let existing: { id: string; items: unknown } | null = null;
+  let detalles: DetallesSolicitud | undefined;
 
   if (cateringId) {
     const { data: catering } = await supabase
       .from("cotizaciones_catering")
-      .select("id, nombre, descripcion")
+      .select(
+        "id, nombre, descripcion, email, celular, tipo_evento, fecha_evento, num_invitados, presupuesto, notas_admin"
+      )
       .eq("id", cateringId)
       .single();
 
@@ -64,11 +68,22 @@ export default async function NuevaCotizacionPage({ searchParams }: Props) {
     initialItems = rawItems.length
       ? withIds(rawItems)
       : descripcionToItems(catering.descripcion ?? "");
+
+    detalles = {
+      tipoEvento: catering.tipo_evento ?? null,
+      fechaEvento: catering.fecha_evento ?? null,
+      numInvitados: Number(catering.num_invitados) || null,
+      email: catering.email ?? null,
+      celular: catering.celular ?? null,
+      presupuesto: catering.presupuesto ?? null,
+      descripcion: catering.descripcion ?? null,
+      notasAdmin: catering.notas_admin ?? null,
+    };
   } else if (proyectoId) {
     const { data: proyecto } = await supabase
       .from("proyectos_personalizados")
       .select(
-        "id, descripcion, presupuesto, clientes ( nombre )"
+        "id, descripcion, presupuesto, fecha_evento, personas, clientes ( nombre, correo, celular )"
       )
       .eq("id", proyectoId)
       .single();
@@ -113,7 +128,7 @@ export default async function NuevaCotizacionPage({ searchParams }: Props) {
       ? withIds(rawItems)
       : [
           {
-            id: `item-proyecto-${Date.now()}`,
+            id: "item-proyecto-0",
             tipo: "pastel",
             nombre: "Pastel personalizado",
             descripcion: proyecto.descripcion ?? "",
@@ -122,6 +137,17 @@ export default async function NuevaCotizacionPage({ searchParams }: Props) {
             imagen: imagenProyecto,
           },
         ];
+
+    detalles = {
+      tipoEvento: "otro",
+      fechaEvento: proyecto.fecha_evento ?? null,
+      numInvitados: Number(proyecto.personas) || null,
+      email: clienteData?.correo ?? null,
+      celular: clienteData?.celular ?? null,
+      presupuesto: null,
+      descripcion: proyecto.descripcion ?? null,
+      notasAdmin: null,
+    };
   }
 
   return (
@@ -145,6 +171,7 @@ export default async function NuevaCotizacionPage({ searchParams }: Props) {
         clienteNombre={clienteNombre}
         initialItems={initialItems}
         existingId={existing?.id}
+        detalles={detalles}
       />
     </section>
   );

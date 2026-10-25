@@ -15,6 +15,34 @@ import type { CotizacionItem } from "../types/cotizacion.types";
 
 const WHATSAPP_BUSINESS = "945262379";
 
+export type DetallesSolicitud = {
+  tipoEvento: string | null;
+  fechaEvento: string | null;
+  numInvitados: number | null;
+  email: string | null;
+  celular: string | null;
+  presupuesto: string | null;
+  descripcion: string | null;
+  notasAdmin: string | null;
+};
+
+const TIPO_EVENTO_LABELS: Record<string, string> = {
+  cumpleanos: "🎂 Cumpleaños",
+  corporativo: "🏢 Corporativo",
+  otro: "🎉 Otro",
+};
+
+function fmtFechaEvento(fecha: string): string {
+  const d = new Date(`${fecha}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return fecha;
+  return d.toLocaleDateString("es-PE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function fmtSoles(n: number): string {
   return n.toLocaleString("es-PE", {
     style: "currency",
@@ -32,6 +60,7 @@ type Props = {
   clienteNombre: string;
   initialItems: CotizacionItem[];
   existingId?: string;
+  detalles?: DetallesSolicitud;
 };
 
 export default function CotizacionEditor({
@@ -40,9 +69,10 @@ export default function CotizacionEditor({
   clienteNombre,
   initialItems,
   existingId,
+  detalles,
 }: Props) {
   const [items, setItems] = useState<CotizacionItem[]>(initialItems);
-  const [notas, setNotas] = useState("");
+  const [notas, setNotas] = useState(detalles?.notasAdmin ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<{ numero: number; token: string } | null>(null);
 
@@ -180,6 +210,59 @@ export default function CotizacionEditor({
 
   return (
     <div className="space-y-6">
+      {/* Detalles de la solicitud original */}
+      {detalles && (
+        <div className="rounded-3xl border border-cake-gold/30 bg-cake-ivory p-6">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-cake-gold">
+            Detalles de la solicitud
+          </h2>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-4">
+            <div>
+              <p className="text-xs font-semibold uppercase text-gray-400">Evento</p>
+              <p className="mt-1 text-sm font-semibold text-gray-800">
+                {TIPO_EVENTO_LABELS[detalles.tipoEvento ?? ""] ?? detalles.tipoEvento ?? "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase text-gray-400">Fecha del evento</p>
+              <p className="mt-1 text-sm font-semibold text-gray-800">
+                {detalles.fechaEvento ? fmtFechaEvento(detalles.fechaEvento) : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase text-gray-400">Invitados</p>
+              <p className="mt-1 text-sm font-semibold text-gray-800">
+                {detalles.numInvitados ?? "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase text-gray-400">Presupuesto indicado</p>
+              <p className="mt-1 text-sm font-semibold text-gray-800">
+                {detalles.presupuesto || "—"}
+              </p>
+            </div>
+          </div>
+
+          {(detalles.email || detalles.celular) && (
+            <p className="mt-3 text-sm text-gray-600">
+              📞 Contacto: {detalles.email ?? "sin email"} · {detalles.celular ?? "sin celular"}
+            </p>
+          )}
+
+          {detalles.descripcion && (
+            <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase text-gray-400">
+                Lo que pidió el cliente
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                {detalles.descripcion}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="rounded-3xl border bg-white p-8">
         <div className="flex items-center justify-between gap-4">
           <div>

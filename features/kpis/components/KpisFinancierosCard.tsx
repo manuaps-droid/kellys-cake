@@ -19,6 +19,7 @@ export type KpisFinancieros = {
   peSoles: number | null;
   ventasMes: number;
   utilidadMes: number | null;
+  costosFijosMes: number;
   mesEtiqueta: string;
   esProvisional: boolean;
 };
@@ -162,7 +163,7 @@ export default function KpisFinancierosCard({
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase text-kc-mocha/70">
-              ROI anual
+              ROI {kpis.esProvisional ? "mes" : "anual"}
             </p>
             <p className={`text-lg font-bold leading-none ${colorValor(kpis.roi)}`}>
               {pct(kpis.roi)}
@@ -170,7 +171,7 @@ export default function KpisFinancierosCard({
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase text-kc-mocha/70">
-              ROE anual
+              ROE {kpis.esProvisional ? "mes" : "anual"}
             </p>
             <p className={`text-lg font-bold leading-none ${colorValor(kpis.roe)}`}>
               {pct(kpis.roe)}
@@ -212,6 +213,14 @@ export default function KpisFinancierosCard({
                 {soles(kpis.utilidadMes)}
               </span>
             </div>
+            {kpis.esProvisional && (
+              <div className="flex justify-between">
+                <span className="text-kc-mocha">Costos fijos del mes</span>
+                <span className="font-bold text-kc-charcoal">
+                  {soles(kpis.costosFijosMes)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-kc-mocha">Punto de equilibrio</span>
               <span className="font-bold text-kc-charcoal">
@@ -419,7 +428,7 @@ export default function KpisFinancierosCard({
 
           <p className="text-[10px] text-kc-mocha/70 leading-relaxed">
             {kpis.esProvisional
-              ? "Ajuste provisional: utilidad del mes = ventas − compras sin IGV (S/ 15,908 − S/ 12,527)."
+              ? "Ajuste provisional: utilidad = ventas − compras sin IGV (S/ 15,908 − S/ 12,527). ROI y ROE mensuales. Punto de equilibrio sobre costos fijos de S/ 3,300."
               : "Punto de equilibrio = costos fijos ÷ margen de contribución promedio. ROI y ROE anualizados con la utilidad estimada del mes (ventas × margen de contribución − costos fijos). Llena inversión y patrimonio para activarlos."}
           </p>
         </div>

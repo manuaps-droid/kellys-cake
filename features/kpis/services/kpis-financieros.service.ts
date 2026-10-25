@@ -122,6 +122,7 @@ export async function getKpisFinancieros(
   // AJUSTE PROVISIONAL — SETIEMBRE 2026 (ELIMINAR ESTE BLOQUE PARA
   // VOLVER AL CÁLCULO AUTOMÁTICO CUANDO SE SOLICITE)
   // Ventas y compras reales del mes no registradas en pedidos.
+  // ROI/ROE mensuales y costo fijo de S/ 3,300 (solo para demo).
   // ══════════════════════════════════════════════════════════════
   const AJUSTE_PROVISIONAL = {
     activo: true,
@@ -129,6 +130,7 @@ export async function getKpisFinancieros(
     etiqueta: "Setiembre 2026 (provisional)",
     ventasSinIgv: 15908,
     comprasSinIgv: 12527,
+    costoFijoMensual: 3300,
   };
 
   const utilidadProvisional =
@@ -142,16 +144,31 @@ export async function getKpisFinancieros(
       ? (utilidadProvisional / AJUSTE_PROVISIONAL.ventasSinIgv) * 100
       : null
     : ros;
+  // MENSUALES (sin anualizar ×12) en modo provisional
   const roiFinal = esProvisional
     ? inversion > 0
-      ? ((utilidadProvisional * 12) / inversion) * 100
+      ? (utilidadProvisional / inversion) * 100
       : null
     : roi;
   const roeFinal = esProvisional
     ? patrimonio > 0
-      ? ((utilidadProvisional * 12) / patrimonio) * 100
+      ? (utilidadProvisional / patrimonio) * 100
       : null
     : roe;
+  // Punto de equilibrio sobre el costo fijo provisional (S/ 3,300)
+  const totalCostosFijosFinal = esProvisional
+    ? AJUSTE_PROVISIONAL.costoFijoMensual
+    : totalCostosFijos;
+  const peUnidadesFinal = esProvisional
+    ? mcUnitProm > 0
+      ? AJUSTE_PROVISIONAL.costoFijoMensual / mcUnitProm
+      : null
+    : peUnidades;
+  const peSolesFinal = esProvisional
+    ? mcPctProm > 0
+      ? AJUSTE_PROVISIONAL.costoFijoMensual / (mcPctProm / 100)
+      : null
+    : peSoles;
   const mesEtiqueta = esProvisional ? AJUSTE_PROVISIONAL.etiqueta : mesActual;
   // ════════════════════ FIN AJUSTE PROVISIONAL ══════════════════
 
@@ -207,7 +224,7 @@ export async function getKpisFinancieros(
   return {
     ventasMes: Math.round(ventasMesFinal * 100) / 100,
     costosFijos,
-    totalCostosFijos,
+    totalCostosFijos: Math.round(totalCostosFijosFinal * 100) / 100,
     inversion,
     patrimonio,
     mcPctProm,
@@ -216,8 +233,8 @@ export async function getKpisFinancieros(
     ros: rosFinal != null ? Math.round(rosFinal * 10) / 10 : null,
     roi: roiFinal != null ? Math.round(roiFinal * 10) / 10 : null,
     roe: roeFinal != null ? Math.round(roeFinal * 10) / 10 : null,
-    peUnidades: peUnidades != null ? Math.round(peUnidades * 10) / 10 : null,
-    peSoles: peSoles != null ? Math.round(peSoles * 100) / 100 : null,
+    peUnidades: peUnidadesFinal != null ? Math.round(peUnidadesFinal * 10) / 10 : null,
+    peSoles: peSolesFinal != null ? Math.round(peSolesFinal * 100) / 100 : null,
     serieMensual,
     mesEtiqueta,
     esProvisional,

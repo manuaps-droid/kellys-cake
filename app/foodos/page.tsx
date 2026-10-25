@@ -117,6 +117,7 @@ export default async function AdminDashboard() {
             peSoles: kpis.peSoles,
             ventasMes: kpis.ventasMes,
             utilidadMes: kpis.utilidadMes,
+            costosFijosMes: kpis.totalCostosFijos,
             mesEtiqueta: kpis.mesEtiqueta,
             esProvisional: kpis.esProvisional,
           }}

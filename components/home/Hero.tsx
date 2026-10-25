@@ -114,11 +114,11 @@ export default function Hero() {
           </motion.div>
         </motion.div>
 
-        <div className="flex-1 w-full max-w-lg lg:max-w-none">
+        <div className="flex-1 w-full max-w-lg lg:max-w-xl">
           <div className="relative">
             <div className="absolute -inset-4 sm:-inset-8 rounded-[2.5rem] bg-gradient-to-br from-kc-blush/30 via-kc-rose-gold/20 to-kc-sand/30 blur-2xl transition-all duration-500" />
 
-            <div className="relative h-[320px] sm:h-[420px] lg:h-[500px] w-full overflow-hidden rounded-[2rem] bg-white/40 shadow-2xl shadow-kc-charcoal/20">
+            <div className="relative h-[280px] sm:h-[360px] lg:h-[420px] w-full overflow-hidden rounded-[2rem] bg-white/40 shadow-2xl shadow-kc-charcoal/20">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentImage}
@@ -133,7 +133,7 @@ export default function Hero() {
                     alt="Torta personalizada de autor de Kelly's Cake en Arequipa"
                     fill
                     priority
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 512px, 576px"
                     className="object-cover"
                   />
                 </motion.div>

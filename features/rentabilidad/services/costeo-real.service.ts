@@ -76,6 +76,7 @@ export type DesgloseCosteo = {
 // ================================================================
 
 export const COSTO_MINUTO_DEFAULT = 0.0833; // S/ 5,000 planilla ÷ 60,000 min/mes
+export const MINUTOS_MES_PRODUCTIVOS = 60000;
 export const UNIDADES_CAPACIDAD_DEFAULT = 120; // unidades vendibles/mes
 export const OTROS_DIRECTOS_DEFAULT = 2.0;
 
@@ -106,11 +107,6 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     Number(configCosteo.costo_minuto) > 0
       ? Number(configCosteo.costo_minuto)
       : COSTO_MINUTO_DEFAULT;
-
-  const comisionGuardada =
-    configCosteo.comision_pasarela != null
-      ? Number(configCosteo.comision_pasarela)
-      : null;
 
   // ── 1. Producto y receta activa ──
   const { data: producto } = await supabase
@@ -229,40 +225,8 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     datosFaltantes.push("Sin empaques registrados: usando estimación de S/ 0.50.");
   }
 
-  // ── 4. Mano de obra directa ──
-  const { data: manoObraDB } = await supabase
-    .from("foodos_mano_obra")
-    .select("id, fase, minutos_activos, minutos_pasivos")
-    .eq("producto_id", productoId)
-    .eq("activo", true);
-
-  const manoObra: ManoObraItem[] = (manoObraDB ?? []).map((m: {
-    id: string;
-    fase: string;
-    minutos_activos: number;
-    minutos_pasivos: number;
-  }) => {
-    const minutosActivos = Number(m.minutos_activos) || 0;
-    const costoAsignado = minutosActivos * costoMinutoGuardado;
-    return {
-      id: m.id,
-      fase: m.fase,
-      minutosActivos,
-      minutosPasivos: Number(m.minutos_pasivos) || 0,
-      costoMinuto: costoMinutoGuardado,
-      costoAsignado: Math.round(costoAsignado * 100) / 100,
-    };
-  });
-
-  const costoManoObra = manoObra.reduce((t, m) => t + m.costoAsignado, 0) / rendimiento;
-
-  if (manoObra.length === 0) {
-    datosFaltantes.push(
-      "Sin minutos de mano de obra registrados: no se está asignando planilla a este producto."
-    );
-  }
-
-  // ── 5. Costos fijos/indirectos ──
+  // ── 4. Costos fijos/indirectos (se leen primero: la fila "Planilla"
+  //      define el costo por minuto automático) ──
   const { data: costosFijosDB } = await supabase
     .from("foodos_costos_fijos")
     .select("id, concepto, monto_mensual")
@@ -285,6 +249,54 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
       ? totalFijosMensuales / unidadesMensualesCapacidad
       : 0;
   const costoIndirectosAsignado = tasaIndirectosPorUnidad;
+
+  // Costo por minuto: automático desde la planilla registrada en costos
+  // fijos. Si no hay fila de planilla, se usa el valor configurado.
+  const planillaRow = costosFijos.find((c) =>
+    /planilla|sueldo|n[oó]mina/i.test(c.concepto)
+  );
+  const costoMinutoEfectivo = planillaRow
+    ? planillaRow.montoMensual / MINUTOS_MES_PRODUCTIVOS
+    : costoMinutoGuardado;
+
+  // ── 5. Mano de obra directa ──
+  const { data: manoObraDB } = await supabase
+    .from("foodos_mano_obra")
+    .select("id, fase, minutos_activos, minutos_pasivos")
+    .eq("producto_id", productoId)
+    .eq("activo", true);
+
+  const manoObra: ManoObraItem[] = (manoObraDB ?? []).map((m: {
+    id: string;
+    fase: string;
+    minutos_activos: number;
+    minutos_pasivos: number;
+  }) => {
+    const minutosActivos = Number(m.minutos_activos) || 0;
+    const costoAsignado = minutosActivos * costoMinutoEfectivo;
+    return {
+      id: m.id,
+      fase: m.fase,
+      minutosActivos,
+      minutosPasivos: Number(m.minutos_pasivos) || 0,
+      costoMinuto: costoMinutoEfectivo,
+      costoAsignado: Math.round(costoAsignado * 100) / 100,
+    };
+  });
+
+  const costoManoObra = manoObra.reduce((t, m) => t + m.costoAsignado, 0) / rendimiento;
+
+  if (manoObra.length === 0) {
+    datosFaltantes.push(
+      "Sin minutos de mano de obra registrados: no se está asignando planilla a este producto."
+    );
+  }
+
+  if (planillaRow) {
+    alertas.push(
+      `Costo por minuto: S/ ${costoMinutoEfectivo.toFixed(4)} (auto — planilla S/ ${planillaRow.montoMensual.toFixed(0)} ÷ ${MINUTOS_MES_PRODUCTIVOS.toLocaleString("es-PE")} min/mes)`
+    );
+  }
 
   if (costosFijos.length === 0) {
     datosFaltantes.push(
@@ -337,7 +349,7 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     manoObra,
     costoManoObra: Math.round(costoManoObra * 100) / 100,
     minutosActivosTotales: manoObra.reduce((t, m) => t + m.minutosActivos, 0),
-    costoPorMinuto: costoMinutoGuardado,
+    costoPorMinuto: Math.round(costoMinutoEfectivo * 10000) / 10000,
     costosFijos,
     totalFijosMensuales,
     unidadesMensualesCapacidad,

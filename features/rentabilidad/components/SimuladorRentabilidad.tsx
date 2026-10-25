@@ -147,6 +147,17 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     }
   }, [productoId, costeo, producto]);
 
+  // ── Costo por minuto: automático desde la fila "Planilla" de costos fijos ──
+  const MINUTOS_MES_PRODUCTIVOS = 60000;
+  const planillaFija = costosFijosEdit.find((c) =>
+    /planilla|sueldo|n[oó]mina/i.test(c.concepto)
+  );
+  const costoMinutoAuto = planillaFija
+    ? (Number(planillaFija.monto_mensual) || 0) / MINUTOS_MES_PRODUCTIVOS
+    : null;
+  const costoMinutoEfectivo =
+    costoMinutoAuto ?? (Number(costoMinuto) || 0.0833);
+
   // ── Totales calculados en CADA render desde los valores editados ──
   const totalesLocales = (() => {
     if (!costeo) return null;
@@ -168,7 +179,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
 
     const costoMO =
       manoObraEdit.reduce(
-        (t, m) => t + (Number(m.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833),
+        (t, m) => t + (Number(m.minutos_activos) || 0) * costoMinutoEfectivo,
         0
       ) / rendimientoLocal;
 
@@ -418,7 +429,7 @@ export function SimuladorRentabilidad({ productosExistentes, costeosIniciales }:
     startConfigTransition(async () => {
       const res = await guardarConfiguracionCosteoAction({
         unidades_capacidad: Number(unidadesCapacidad) || 120,
-        costo_minuto: Number(costoMinuto) || 0.0833,
+        costo_minuto: costoMinutoEfectivo,
       });
 
       if (res.error) {
@@ -454,7 +465,7 @@ CAPA 2 · EMPAQUES Y DIRECTOS:
   Comisión pasarela: S/ ${totalesLocales.comision.toFixed(2)}
 
 CAPA 3 · MANO DE OBRA DIRECTA:
-  Costo por minuto: S/ ${Number(costoMinuto).toFixed(4)}
+  Costo por minuto: S/ ${costoMinutoEfectivo.toFixed(4)}
   Costo asignado: S/ ${totalesLocales.costoMO.toFixed(2)}/porción
 
 CAPA 4 · COSTOS INDIRECTOS:
@@ -1092,7 +1103,7 @@ CAPA 4 · COSTOS INDIRECTOS:
                         </div>
                         <div className="flex items-end gap-1">
                           <span className="pb-1.5 text-[10px] font-bold text-amber-700">
-                            S/ {((Number(mo.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833)).toFixed(2)}
+                            S/ {((Number(mo.minutos_activos) || 0) * costoMinutoEfectivo).toFixed(2)}
                           </span>
                           <button
                             type="button"
@@ -1129,24 +1140,41 @@ CAPA 4 · COSTOS INDIRECTOS:
                     </button>
 
                     <div className="flex flex-wrap items-end justify-between gap-2 rounded bg-amber-50 px-3 py-2 text-xs">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-amber-700">Costo por minuto:</span>
-                        <span className="text-[10px] text-amber-500">S/</span>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          min="0.001"
-                          value={costoMinuto}
-                          onChange={e => setCostoMinuto(e.target.value)}
-                          className="w-20 rounded border border-amber-300 bg-white px-2 py-1 text-center text-xs font-bold text-amber-800"
-                          title="Planilla mensual + cargas ÷ 60,000 minutos/mes"
-                        />
+                        {costoMinutoAuto != null ? (
+                          <>
+                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">AUTO</span>
+                            <span className="font-black text-amber-900">
+                              S/ {costoMinutoAuto.toFixed(4)}
+                            </span>
+                            <span className="text-[10px] text-amber-600">
+                              (planilla S/ {(Number(planillaFija!.monto_mensual) || 0).toLocaleString("es-PE", { maximumFractionDigits: 0 })} ÷ {MINUTOS_MES_PRODUCTIVOS.toLocaleString("es-PE")} min/mes)
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[10px] text-amber-500">S/</span>
+                            <input
+                              type="number"
+                              step="0.0001"
+                              min="0.001"
+                              value={costoMinuto}
+                              onChange={e => setCostoMinuto(e.target.value)}
+                              className="w-20 rounded border border-amber-300 bg-white px-2 py-1 text-center text-xs font-bold text-amber-800"
+                              title="Planilla mensual + cargas ÷ 60,000 minutos/mes"
+                            />
+                            <span className="text-[10px] text-amber-600">
+                              agrega un costo fijo llamado Planilla y se calculará automático
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-amber-800">
                           Total: S/ {(
                             manoObraEdit.reduce((t, m) =>
-                              t + (Number(m.minutos_activos) || 0) * (Number(costoMinuto) || 0.0833), 0
+                              t + (Number(m.minutos_activos) || 0) * costoMinutoEfectivo, 0
                             ) / Math.max(1, costeo.rendimiento)
                           ).toFixed(2)}/porción
                         </span>

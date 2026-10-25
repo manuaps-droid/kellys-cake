@@ -1,7 +1,12 @@
 import type { CustomizationData } from "../types/customization.types";
 
-const STORAGE_KEY =
-  "kellys-cake-customization";
+// Borrador del wizard de personalización.
+// Vive en sessionStorage: sobrevive a un refresh accidental a mitad
+// del proceso (misma pestaña), pero NO sobrevive al cerrar la pestaña
+// ni a una visita posterior. Así, al empezar el proceso otra vez —
+// tanto si se terminó (resetWizard lo limpia) como si se dejó a medio
+// camino — los campos arrancan limpios.
+const STORAGE_KEY = "kellys-cake-customization";
 
 export function saveWizard(
   data: CustomizationData
@@ -10,10 +15,14 @@ export function saveWizard(
     return;
   }
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(data)
-  );
+  try {
+    window.sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(data)
+    );
+  } catch {
+    // Modo privado o storage lleno: continuar sin borrador
+  }
 }
 
 export function loadWizard() {
@@ -21,14 +30,14 @@ export function loadWizard() {
     return null;
   }
 
-  const data =
-    localStorage.getItem(STORAGE_KEY);
-
-  if (!data) {
-    return null;
-  }
-
   try {
+    const data =
+      window.sessionStorage.getItem(STORAGE_KEY);
+
+    if (!data) {
+      return null;
+    }
+
     return JSON.parse(data);
   } catch {
     return null;
@@ -40,5 +49,11 @@ export function clearWizard() {
     return;
   }
 
-  localStorage.removeItem(STORAGE_KEY);
+  try {
+    window.sessionStorage.removeItem(STORAGE_KEY);
+    // Limpieza de posibles borradores antiguos de localStorage
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Silenciar en modo privado
+  }
 }

@@ -144,11 +144,25 @@ export default async function AdminDashboard() {
           ) : (
             <ul className="divide-y divide-kc-sand">
               {enRiesgo.map((m) => (
-                <li key={m.producto_id} className="py-3 flex justify-between items-center">
-                  <span className="font-semibold text-kc-charcoal text-sm">{m.nombre}</span>
-                  <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-extrabold">
-                    {m.margen_bruto_pct.toFixed(1)}% Margen
-                  </span>
+                <li key={m.producto_id} className="py-1">
+                  <Link
+                    href={`/foodos/productos/${m.producto_id}/receta`}
+                    className="group py-2 px-2 -mx-2 flex justify-between items-center rounded-lg transition hover:bg-kc-sand/60"
+                    title="Revisar y ajustar la receta"
+                  >
+                    <span className="font-semibold text-kc-charcoal text-sm group-hover:text-kc-rose-gold transition flex items-center gap-2">
+                      {m.nombre}
+                      <span className="text-[10px] font-bold text-kc-rose-gold opacity-0 group-hover:opacity-100 transition">
+                        Revisar receta →
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-extrabold">
+                        {m.margen_bruto_pct.toFixed(1)}% Margen
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-kc-mocha/50 group-hover:text-kc-rose-gold transition" />
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

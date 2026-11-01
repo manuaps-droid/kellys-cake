@@ -1,81 +1,40 @@
-import { getProductos } from "@/features/productos/queries/get-productos";
-import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
 import PrediccionDemandaPanel from "@/features/prediccion/components/PrediccionDemandaPanel";
+import { guardarPrediccionDemanda } from "@/features/prediccion/actions/prediccion-actions";
+import {
+  getMetricasProductos,
+} from "@/features/rentabilidad/services/metricas-producto.service";
+
+export const metadata = {
+  title: "Predicción de Demanda | FoodOS",
+  description:
+    "Proyección de ventas por producto con estadística simple y explicable.",
+};
+
+export const dynamic = "force-dynamic";
 
 export default async function PrediccionDemandaPage() {
-  const productos = await getProductos();
+  // ── Métricas en batch (config compartida + costeos paralelos) ──
+  const metricas = await getMetricasProductos(true);
 
-  const productosConCosteo = await Promise.all(
-    (productos ?? []).map(async (p) => {
-      const d = await calcularCosteoReal(p.id);
-      if (!d) return null;
-      return {
-        id: p.id,
-        nombre: p.nombre,
-        precio_costo: Number(p.precio_costo) || 0,
-        precio_venta: Number(p.precio_venta) || 0,
-        margen_porcentaje: d.margenBrutoPct,
-        seleccionado: false,
-      };
-    })
-  );
-
-  const productosValidos = productosConCosteo.filter(
-    (p) => p !== null
-  ) as Array<{
-    id: string;
-    nombre: string;
-    precio_costo: number;
-    precio_venta: number;
-    margen_porcentaje: number;
-    seleccionado: boolean;
-  }>;
-
-  async function handleCalcular(data: {
-    producto_ids: string[];
-    maquina_id?: string;
-    dias_proyectados: number;
-  }) {
-    // Aquí se podría llamar a una acción de predicción para vending
-    console.log("Calcular predicción:", data);
-  }
-
-  const margenPromedio =
-    productosValidos.length > 0
-      ? productosValidos.reduce((t, p) => t + p.margen_porcentaje, 0) /
-          productosValidos.length
-      : 0;
-  const costoCompletoPromedio =
-    productosValidos.length > 0
-      ? productosValidos.reduce((t, p) => t + p.precio_costo, 0) /
-          productosValidos.length
-      : 0;
-  const precioPromedio =
-    productosValidos.length > 0
-      ? productosValidos.reduce((t, p) => t + p.precio_venta, 0) /
-          productosValidos.length
-      : 0;
+  const productosValidos = metricas.metricas.map((m) => ({
+    id: m.producto_id,
+    nombre: m.nombre,
+    precio_costo: m.precio_costo,
+    precio_venta: m.precio_venta,
+    margen_porcentaje: m.margen_bruto_pct,
+    seleccionado: false,
+  }));
 
   const promedios = {
-    margenBrutoPct: Math.round(margenPromedio * 10) / 10,
+    margenBrutoPct: metricas.margenPromedio,
     costoIngredientes: 0,
     costoEmpaques: 0,
     costoManoObra: 0,
     costoIndirectos: 0,
     costoVariable: 0,
-    costoCompleto: Math.round(costoCompletoPromedio * 100) / 100,
-    precioVenta: Math.round(precioPromedio * 100) / 100,
+    costoCompleto: metricas.costoCompletoPromedio,
+    precioVenta: metricas.precioVentaPromedio,
   };
-
-  const saludables = productosValidos.filter(
-    (p) => p.margen_porcentaje > 40
-  ).length;
-  const alerta = productosValidos.filter(
-    (p) => p.margen_porcentaje > 20 && p.margen_porcentaje <= 40
-  ).length;
-  const criticos = productosValidos.filter(
-    (p) => p.margen_porcentaje <= 20
-  ).length;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -89,21 +48,12 @@ export default async function PrediccionDemandaPage() {
       <PrediccionDemandaPanel
         productos={productosValidos}
         maquinas={[]}
-        onCalcular={handleCalcular}
+        onCalcular={guardarPrediccionDemanda}
         calculando={false}
-        promedios={{
-          margenBrutoPct: promedios.margenBrutoPct,
-          costoIngredientes: promedios.costoIngredientes,
-          costoEmpaques: promedios.costoEmpaques,
-          costoManoObra: promedios.costoManoObra,
-          costoIndirectos: promedios.costoIndirectos,
-          costoVariable: promedios.costoVariable,
-          costoCompleto: promedios.costoCompleto,
-          precioVenta: promedios.precioVenta,
-        }}
-        saludables={saludables}
-        alerta={alerta}
-        criticos={criticos}
+        promedios={promedios}
+        saludables={metricas.saludables}
+        alerta={metricas.alerta}
+        criticos={metricas.criticos}
       />
     </div>
   );

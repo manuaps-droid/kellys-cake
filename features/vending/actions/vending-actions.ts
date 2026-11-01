@@ -10,10 +10,10 @@ export async function listarMaquinasVending() {
   try {
     const maquinas = await vendingService.listarMaquinas();
     return { success: true, maquinas };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al obtener máquinas.",
+      error: error instanceof Error ? error.message : "Error al obtener máquinas.",
     };
   }
 }
@@ -48,10 +48,10 @@ export async function crearMaquinaVending(input: {
 
     revalidatePath("/foodos/vending");
     return { success: true, maquina };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al crear la máquina.",
+      error: error instanceof Error ? error.message : "Error al crear la máquina.",
     };
   }
 }
@@ -63,10 +63,10 @@ export async function eliminarMaquinaVending(id: string) {
     await vendingService.eliminarMaquina(id);
     revalidatePath("/foodos/vending");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al eliminar la máquina.",
+      error: error instanceof Error ? error.message : "Error al eliminar la máquina.",
     };
   }
 }
@@ -87,10 +87,10 @@ export async function actualizarMaquinaVending(
     await vendingService.actualizarMaquina(id, datos);
     revalidatePath("/foodos/vending");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al actualizar la máquina.",
+      error: error instanceof Error ? error.message : "Error al actualizar la máquina.",
     };
   }
 }
@@ -119,10 +119,10 @@ export async function agregarInventarioVending(input: {
 
     revalidatePath("/foodos/vending");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al agregar inventario.",
+      error: error instanceof Error ? error.message : "Error al agregar inventario.",
     };
   }
 }
@@ -140,10 +140,10 @@ export async function actualizarCantidadInventarioVending(
     );
     revalidatePath("/foodos/vending");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al actualizar inventario.",
+      error: error instanceof Error ? error.message : "Error al actualizar inventario.",
     };
   }
 }
@@ -155,10 +155,10 @@ export async function eliminarInventarioVending(id: string) {
     await vendingService.eliminarInventario(id);
     revalidatePath("/foodos/vending");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al eliminar inventario.",
+      error: error instanceof Error ? error.message : "Error al eliminar inventario.",
     };
   }
 }
@@ -185,10 +185,10 @@ export async function registrarVentaVending(input: {
 
     revalidatePath("/foodos/vending");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al registrar la venta.",
+      error: error instanceof Error ? error.message : "Error al registrar la venta.",
     };
   }
 }
@@ -207,10 +207,10 @@ export async function listarVentasVending(
       fechaFin
     );
     return { success: true, ventas };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al obtener ventas.",
+      error: error instanceof Error ? error.message : "Error al obtener ventas.",
     };
   }
 }
@@ -221,10 +221,10 @@ export async function listarMaquinasConResumenVending() {
   try {
     const maquinas = await vendingService.listarMaquinasConResumen();
     return { success: true, maquinas };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || "Error al obtener máquinas con resumen.",
+      error: error instanceof Error ? error.message : "Error al obtener máquinas con resumen.",
     };
   }
 }

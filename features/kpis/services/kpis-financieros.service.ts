@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { claveMes, claveMesHace } from "@/lib/time";
 
 export type FilaMesKpi = {
   mes: string;
@@ -43,13 +44,16 @@ export async function getKpisFinancieros(
 ): Promise<DatosKpisFinancieros> {
   const supabase = createAdminClient();
 
-  // Ventas del mes actual (hora Lima, mismo criterio que Pulso del Negocio)
-  const lima = new Date(Date.now() - 5 * 60 * 60 * 1000);
-  const mesActual = lima.toISOString().slice(0, 7);
+  // Ventas del mes actual (hora Lima, mismo criterio que Pulso del Negocio).
+  // Query acotada: solo trae pedidos de la ventana de la serie mensual
+  // (6 meses) en lugar de TODO el historial de la tabla.
+  const mesActual = claveMes(new Date(Date.now() - 5 * 60 * 60 * 1000));
+  const inicioVentana = `${claveMesHace(6)}-01`;
   const { data: pedidosRows } = await supabase
     .from("pedidos")
     .select("total, created_at")
-    .neq("estado", "cancelado");
+    .neq("estado", "cancelado")
+    .gte("created_at", inicioVentana);
   const ventasMes = (pedidosRows ?? [])
     .filter((p: { created_at: string | null }) =>
       String(p.created_at ?? "").slice(0, 7) === mesActual

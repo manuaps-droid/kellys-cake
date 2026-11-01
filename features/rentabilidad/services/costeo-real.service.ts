@@ -84,29 +84,91 @@ export const OTROS_DIRECTOS_DEFAULT = 2.0;
 // SERVICIO PRINCIPAL: calcula el costeo real de un producto
 // ================================================================
 
-export async function calcularCosteoReal(productoId: string): Promise<DesgloseCosteo | null> {
-  const supabase = createAdminClient();
-  const alertas: string[] = [];
-  const datosFaltantes: string[] = [];
+export type ConfigCosteoPre = {
+  capacidad: number;
+  costoMinutoManual: number;
+  costosFijos: CostoFijoItem[];
+  totalFijosMensuales: number;
+};
 
-  // Leer configuración guardada (capacidad, costo por minuto)
-  const { data: configRow } = await supabase
-    .from("tienda_config")
-    .select("seccion, data")
-    .eq("seccion", "foodos_config_costeo")
-    .maybeSingle();
+/**
+ * Lee la configuración global de costeo UNA VEZ (2 queries).
+ * El batch de productos la comparte vía getConfigCosteo() → ahorra 2N queries.
+ */
+export async function getConfigCosteo(): Promise<ConfigCosteoPre> {
+  const supabase = createAdminClient();
+
+  const [{ data: configRow }, { data: fijosRows }] = await Promise.all([
+    supabase
+      .from("tienda_config")
+      .select("seccion, data")
+      .eq("seccion", "foodos_config_costeo")
+      .maybeSingle(),
+    supabase
+      .from("foodos_costos_fijos")
+      .select("id, concepto, monto_mensual")
+      .eq("activo", true),
+  ]);
 
   const configCosteo = (configRow?.data as Record<string, unknown>) ?? {};
 
-  const capacidadGuardada =
+  const capacidad =
     Number(configCosteo.unidades_capacidad) > 0
       ? Number(configCosteo.unidades_capacidad)
       : UNIDADES_CAPACIDAD_DEFAULT;
 
-  const costoMinutoGuardado =
+  const costoMinutoManual =
     Number(configCosteo.costo_minuto) > 0
       ? Number(configCosteo.costo_minuto)
       : COSTO_MINUTO_DEFAULT;
+
+  const costosFijos: CostoFijoItem[] = (fijosRows ?? []).map((c: {
+    id: string;
+    concepto: string;
+    monto_mensual: number;
+  }) => ({
+    id: c.id,
+    concepto: c.concepto,
+    montoMensual: Number(c.monto_mensual) || 0,
+  }));
+
+  return {
+    capacidad,
+    costoMinutoManual,
+    costosFijos,
+    totalFijosMensuales: costosFijos.reduce((t, c) => t + c.montoMensual, 0),
+  };
+}
+
+/**
+ * Batch de costeos completos: config compartida + costeos en paralelo.
+ * Devuelve el desglose íntegro por producto (para el simulador).
+ */
+export async function getCosteosCompletos(
+  productoIds: string[]
+): Promise<Record<string, DesgloseCosteo | null>> {
+  if (productoIds.length === 0) return {};
+  const config = await getConfigCosteo();
+  const resultados = await Promise.all(
+    productoIds.map(async (id) => ({
+      id,
+      desglose: await calcularCosteoReal(id, config),
+    }))
+  );
+  return Object.fromEntries(resultados.map((r) => [r.id, r.desglose]));
+}
+
+export async function calcularCosteoReal(
+  productoId: string,
+  config?: ConfigCosteoPre
+): Promise<DesgloseCosteo | null> {
+  const supabase = createAdminClient();
+  const alertas: string[] = [];
+  const datosFaltantes: string[] = [];
+
+  const cfg = config ?? (await getConfigCosteo());
+  const capacidadGuardada = cfg.capacidad;
+  const costoMinutoGuardado = cfg.costoMinutoManual;
 
   // ── 1. Producto y receta activa ──
   const { data: producto } = await supabase
@@ -225,22 +287,9 @@ export async function calcularCosteoReal(productoId: string): Promise<DesgloseCo
     datosFaltantes.push("Sin empaques registrados: usando estimación de S/ 0.50.");
   }
 
-  // ── 4. Costos fijos/indirectos (se leen primero: la fila "Planilla"
-  //      define el costo por minuto automático) ──
-  const { data: costosFijosDB } = await supabase
-    .from("foodos_costos_fijos")
-    .select("id, concepto, monto_mensual")
-    .eq("activo", true);
-
-  const costosFijos: CostoFijoItem[] = (costosFijosDB ?? []).map((c: {
-    id: string;
-    concepto: string;
-    monto_mensual: number;
-  }) => ({
-    id: c.id,
-    concepto: c.concepto,
-    montoMensual: Number(c.monto_mensual) || 0,
-  }));
+  // ── 4. Costos fijos/indirectos (compartidos del batch — ya leídos
+  //      en getConfigCosteo; la fila "Planilla" define el costo/minuto) ──
+  const costosFijos: CostoFijoItem[] = cfg.costosFijos;
 
   const totalFijosMensuales = costosFijos.reduce((t, c) => t + c.montoMensual, 0);
   const unidadesMensualesCapacidad = capacidadGuardada;

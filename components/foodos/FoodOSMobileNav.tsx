@@ -22,17 +22,39 @@ import {
   TrendingUp,
   Calculator,
   HeartPulse,
+  Type,
 } from "lucide-react";
+import {
+  FOODOS_MENU,
+  MENU_BADGE_CLASES,
+  MENU_BADGE_TEXTO,
+  type MenuItemConfig,
+} from "@/lib/foodos/menu.config";
 
-type Props = {
-  tieneLogistica: boolean;
-  tieneVentas: boolean;
+const ICONOS: Record<string, React.ComponentType<{ className?: string }>> = {
+  dashboard: LayoutDashboard,
+  pulso: HeartPulse,
+  prediccion: TrendingUp,
+  ingredientes: ShoppingCart,
+  productos: Layers,
+  escanear: Camera,
+  compras: ShoppingCart,
+  eventos: DollarSign,
+  rentabilidad: TrendingUp,
+  contapro: Calculator,
+  vending: Package,
+  copilot: Sparkles,
+  inventario: Package,
+  produccion: ChefHat,
+  pos: Receipt,
+  cotizador: FileSpreadsheet,
 };
 
-export default function FoodOSMobileNav({
-  tieneLogistica,
-  tieneVentas,
-}: Props) {
+type Props = {
+  modulosActivos: string[];
+};
+
+export default function FoodOSMobileNav({ modulosActivos }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
 
@@ -47,6 +69,8 @@ export default function FoodOSMobileNav({
       document.body.style.overflow = "unset";
     };
   }, [drawerOpen]);
+
+  const tieneModulo = (m?: string) => !m || modulosActivos.includes(m);
 
   const quickNavItems = [
     {
@@ -63,16 +87,16 @@ export default function FoodOSMobileNav({
       badge: "IA",
     },
     {
-      href: tieneLogistica ? "/foodos/produccion/nueva" : "/foodos/modulos",
-      label: "Producción",
-      icon: ChefHat,
-      isActive: pathname.startsWith("/foodos/produccion"),
+      href: "/foodos/prediccion",
+      label: "Predicción",
+      icon: TrendingUp,
+      isActive: pathname.startsWith("/foodos/prediccion"),
     },
     {
-      href: tieneVentas ? "/foodos/ventas" : "/foodos/modulos",
-      label: "POS",
-      icon: Receipt,
-      isActive: pathname.startsWith("/foodos/ventas"),
+      href: "/foodos/rentabilidad",
+      label: "Rentabilidad",
+      icon: Calculator,
+      isActive: pathname.startsWith("/foodos/rentabilidad"),
     },
     {
       type: "button" as const,
@@ -125,7 +149,7 @@ export default function FoodOSMobileNav({
           {quickNavItems.map((item, idx) => {
             const Icon = item.icon;
 
-            if (item.type === "button") {
+            if ("onClick" in item && item.type === "button") {
               return (
                 <button
                   key={idx}
@@ -153,7 +177,7 @@ export default function FoodOSMobileNav({
               >
                 <div className="relative">
                   <Icon className="h-5 w-5" />
-                  {item.badge && (
+                  {"badge" in item && item.badge && (
                     <span className="absolute -top-1 -right-3 rounded-full bg-emerald-500 px-1 py-0.2 text-[8px] font-bold text-white">
                       {item.badge}
                     </span>
@@ -171,7 +195,7 @@ export default function FoodOSMobileNav({
         </div>
       </nav>
 
-      {/* 3. Cajón Deslizante (Slide-over Drawer) con todos los Módulos */}
+      {/* 3. Cajón Deslizante (Slide-over Drawer) — generado desde menu.config.ts */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
@@ -205,186 +229,61 @@ export default function FoodOSMobileNav({
 
               {/* Lista Completa de Módulos */}
               <nav className="p-3 space-y-4 text-xs">
-                {/* CORE */}
-                <div>
-                  <div className="px-2 pb-1 text-[10px] font-bold text-kc-gold/70 uppercase tracking-widest">
-                    Módulo 1: Core Operativo
-                  </div>
-                  <div className="space-y-0.5">
-                    <Link
-                      href="/foodos"
-                      className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream"
-                    >
-                      <LayoutDashboard className="h-4 w-4 text-kc-rose-gold" />
-                      <span>Dashboard & Rentabilidad</span>
-                    </Link>
-                    <Link
-                      href="/foodos/pulso"
-                      className="flex items-center justify-between rounded-xl px-2.5 py-2 text-rose-300 font-semibold hover:bg-white/10"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <HeartPulse className="h-4 w-4" />
-                        <span>Pulso del Negocio</span>
-                      </div>
-                      <span className="rounded-full bg-rose-500/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                        NUEVO
-                      </span>
-                    </Link>
-                    <Link
-                      href="/foodos/ingredientes"
-                      className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream"
-                    >
-                      <span className="text-sm">🥑</span>
-                      <span>Ingredientes & Costos</span>
-                    </Link>
-                    <Link
-                      href="/foodos/productos"
-                      className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream"
-                    >
-                      <span className="text-sm">🍰</span>
-                      <span>Productos & Recetas</span>
-                    </Link>
-                    <Link
-                      href="/foodos/compras/escanear"
-                      className="flex items-center justify-between rounded-xl px-2.5 py-2 text-emerald-300 font-semibold hover:bg-white/10"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Camera className="h-4 w-4" />
-                        <span>Escanear Factura</span>
-                      </div>
-                      <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                        IA
-                      </span>
-                    </Link>
-                    <Link
-                      href="/foodos/compras/nueva"
-                      className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-cream/70 hover:bg-white/10 hover:text-kc-cream"
-                    >
-                      <ShoppingCart className="h-4 w-4 text-kc-cream/50" />
-                      <span>Ingresar Compra Manual</span>
-                    </Link>
-                    <Link
-                      href="/foodos/eventos"
-                      className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-gold hover:text-kc-blush hover:bg-white/10"
-                    >
-                      <DollarSign className="h-4 w-4" />
-                      <span>Eventos & Costeo</span>
-                    </Link>
-                    <Link
-                      href="/foodos/rentabilidad"
-                      className="flex items-center justify-between rounded-xl px-2.5 py-2 text-emerald-300 font-semibold hover:bg-white/10"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>Simulador Rentabilidad</span>
-                      </div>
-                      <span className="rounded-full bg-kc-gold px-1.5 py-0.5 text-[9px] font-bold text-kc-deep">
-                        PRO
-                      </span>
-                    </Link>
-                    <Link
-                      href="/foodos/contapro"
-                      className="flex items-center justify-between rounded-xl px-2.5 py-2 text-kc-cream/80 font-semibold hover:bg-white/10 hover:text-kc-cream"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Calculator className="h-4 w-4" />
-                        <span>Importar Contapro</span>
-                      </div>
-                      <span className="rounded-full bg-kc-mocha px-1.5 py-0.5 text-[9px] font-bold text-white">
-                        CONTABLE
-                      </span>
-                    </Link>
-                    <Link
-                      href="/foodos/copilot"
-                      className="flex items-center justify-between rounded-xl border border-kc-blush/25 px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Sparkles className="h-4 w-4 text-kc-blush" />
-                        <span>AI Copilot</span>
-                      </div>
-                      <span className="rounded-full bg-kc-blush/15 px-1.5 py-0.5 text-[9px] font-bold text-kc-blush">
-                        BETA
-                      </span>
-                    </Link>
-                  </div>
-                </div>
+                {FOODOS_MENU.map((seccion) => {
+                  const desbloqueada = !seccion.items[0]?.modulo || modulosActivos.includes(seccion.items[0].modulo);
 
-                {/* LOGÍSTICA */}
-                <div>
-                  <div className="flex items-center justify-between px-2 pb-1 text-[10px] font-bold text-kc-gold/70 uppercase tracking-widest">
-                    <span>Módulo 2: Logística</span>
-                    {!tieneLogistica && <span>🔒</span>}
-                  </div>
-                  <div className="space-y-0.5">
-                    {tieneLogistica ? (
-                      <>
-                        <Link
-                          href="/foodos/inventario"
-                          className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-gold hover:text-kc-blush hover:bg-white/10"
-                        >
-                          <Package className="h-4 w-4" />
-                          <span>Inventario & Stock</span>
-                        </Link>
-                        <Link
-                          href="/foodos/produccion/nueva"
-                          className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream"
-                        >
-                          <ChefHat className="h-4 w-4 text-kc-gold" />
-                          <span>Hoja de Producción</span>
-                        </Link>
-                      </>
-                    ) : (
-                      <Link
-                        href="/foodos/modulos"
-                        className="flex items-center justify-between rounded-xl bg-white/5 px-2.5 py-2 text-kc-cream/40 italic"
-                      >
-                        <span>Inventario Bloqueado</span>
-                        <span className="text-[10px] text-kc-rose-gold not-italic">Activar</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                  return (
+                    <div key={seccion.id}>
+                      <div className="flex items-center justify-between px-2 pb-1 text-[10px] font-bold text-kc-gold/70 uppercase tracking-widest">
+                        <span>{seccion.titulo}</span>
+                        {!desbloqueada && <span>🔒</span>}
+                      </div>
+                      <div className="space-y-0.5">
+                        {seccion.items.map((item: MenuItemConfig) => {
+                          const activo = tieneModulo(item.modulo);
+                          const Icon = ICONOS[item.iconKey] ?? Type;
 
-                {/* VENTAS */}
-                <div>
-                  <div className="flex items-center justify-between px-2 pb-1 text-[10px] font-bold text-kc-gold/70 uppercase tracking-widest">
-                    <span>Módulo 3: Ventas & SUNAT</span>
-                    {!tieneVentas && <span>🔒</span>}
-                  </div>
-                  <div className="space-y-0.5">
-                    {tieneVentas ? (
-                      <>
-                        <Link
-                          href="/foodos/ventas"
-                          className="flex items-center justify-between rounded-xl px-2.5 py-2 text-rose-300 font-bold hover:bg-white/10"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <Receipt className="h-4 w-4" />
-                            <span>Punto de Venta (POS)</span>
-                          </div>
-                          <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                            SUNAT
-                          </span>
-                        </Link>
-                        <Link
-                          href="/foodos/cotizador/nueva"
-                          className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream"
-                        >
-                          <FileSpreadsheet className="h-4 w-4 text-kc-rose-gold" />
-                          <span>Cotizador Catering</span>
-                        </Link>
-                      </>
-                    ) : (
-                      <Link
-                        href="/foodos/modulos"
-                        className="flex items-center justify-between rounded-xl bg-white/5 px-2.5 py-2 text-kc-cream/40 italic"
-                      >
-                        <span>Facturación Bloqueada</span>
-                        <span className="text-[10px] text-kc-rose-gold not-italic">Activar</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                          if (!activo) {
+                            return (
+                              <Link
+                                key={item.href}
+                                href="/foodos/modulos"
+                                className="flex items-center justify-between rounded-xl bg-white/5 px-2.5 py-2 text-kc-cream/40 italic"
+                              >
+                                <span>{item.emoji} {item.label} bloqueado</span>
+                                <span className="text-[10px] text-kc-rose-gold not-italic">Activar</span>
+                              </Link>
+                            );
+                          }
+
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className={`flex items-center justify-between rounded-xl px-2.5 py-2 text-kc-cream/80 hover:bg-white/10 hover:text-kc-cream ${
+                                item.badge === "nuevo" || item.badge === "ia" || item.badge === "sunat" || item.badge === "pro"
+                                  ? "font-semibold"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <Icon className="h-4 w-4 text-kc-rose-gold/80" />
+                                <span>
+                                  {item.emoji} {item.label}
+                                </span>
+                              </div>
+                              {item.badge && (
+                                <span className={`${MENU_BADGE_CLASES[item.badge]} rounded-full px-1.5 py-0.5 text-[9px] font-bold`}>
+                                  {MENU_BADGE_TEXTO[item.badge]}
+                                </span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </nav>
             </div>
 

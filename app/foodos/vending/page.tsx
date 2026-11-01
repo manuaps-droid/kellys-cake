@@ -1,7 +1,9 @@
-import { getProductos } from "@/features/productos/queries/get-productos";
-import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
 import PrediccionDemandaPanel from "@/features/prediccion/components/PrediccionDemandaPanel";
+import NuevaMaquinaForm from "@/features/vending/components/NuevaMaquinaForm";
 import { vendingService } from "@/features/vending/services/vending.service";
+import { crearMaquinaVending } from "@/features/vending/actions/vending-actions";
+import { guardarPrediccionDemanda } from "@/features/prediccion/actions/prediccion-actions";
+import { getMetricasProductos } from "@/features/rentabilidad/services/metricas-producto.service";
 import type { ResumenMaquina } from "@/features/vending/types/vending.types";
 
 export const metadata = {
@@ -12,79 +14,40 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function VentaVendingPage() {
-  const productos = await getProductos();
-
   let maquinas: ResumenMaquina[] = [];
   let errorMaquinas: string | null = null;
 
   try {
     maquinas = await vendingService.listarMaquinasConResumen();
-  } catch (e: any) {
-    errorMaquinas = e?.message ?? "No se pudieron cargar las máquinas.";
+  } catch (e: unknown) {
+    errorMaquinas =
+      e instanceof Error
+        ? e.message
+        : "No se pudieron cargar las máquinas.";
   }
 
-  const productosConCosteo = await Promise.all(
-    (productos ?? []).map(async (p) => {
-      const d = await calcularCosteoReal(p.id);
-      if (!d) return null;
-      return {
-        id: p.id,
-        nombre: String(p.nombre ?? ""),
-        precio_costo: Number(p.precio_costo) || 0,
-        precio_venta: Number(p.precio_venta) || 0,
-        margen_porcentaje: d.margenBrutoPct,
-        seleccionado: false,
-      };
-    })
-  );
+  // ── Métricas en batch (config compartida + costeos paralelos) ──
+  const metricas = await getMetricasProductos(true);
 
-  const productosValidos = productosConCosteo.filter(
-    (p) => p !== null
-  ) as Array<{
-    id: string;
-    nombre: string;
-    precio_costo: number;
-    precio_venta: number;
-    margen_porcentaje: number;
-    seleccionado: boolean;
-  }>;
-
-  const margenPromedio =
-    productosValidos.length > 0
-      ? productosValidos.reduce((t, p) => t + p.margen_porcentaje, 0) /
-        productosValidos.length
-      : 0;
-  const costoCompletoPromedio =
-    productosValidos.length > 0
-      ? productosValidos.reduce((t, p) => t + p.precio_costo, 0) /
-        productosValidos.length
-      : 0;
-  const precioPromedio =
-    productosValidos.length > 0
-      ? productosValidos.reduce((t, p) => t + p.precio_venta, 0) /
-        productosValidos.length
-      : 0;
+  const productosValidos = metricas.metricas.map((m) => ({
+    id: m.producto_id,
+    nombre: m.nombre,
+    precio_costo: m.precio_costo,
+    precio_venta: m.precio_venta,
+    margen_porcentaje: m.margen_bruto_pct,
+    seleccionado: false,
+  }));
 
   const promedios = {
-    margenBrutoPct: Math.round(margenPromedio * 10) / 10,
+    margenBrutoPct: metricas.margenPromedio,
     costoIngredientes: 0,
     costoEmpaques: 0,
     costoManoObra: 0,
     costoIndirectos: 0,
     costoVariable: 0,
-    costoCompleto: Math.round(costoCompletoPromedio * 100) / 100,
-    precioVenta: Math.round(precioPromedio * 100) / 100,
+    costoCompleto: metricas.costoCompletoPromedio,
+    precioVenta: metricas.precioVentaPromedio,
   };
-
-  const saludables = productosValidos.filter(
-    (p) => p.margen_porcentaje > 40
-  ).length;
-  const alerta = productosValidos.filter(
-    (p) => p.margen_porcentaje > 20 && p.margen_porcentaje <= 40
-  ).length;
-  const criticos = productosValidos.filter(
-    (p) => p.margen_porcentaje <= 20
-  ).length;
 
   return (
     <div className="space-y-8 p-6">
@@ -98,6 +61,9 @@ export default async function VentaVendingPage() {
         </p>
       </div>
 
+      {/* Formulario conectado a vending-actions */}
+      <NuevaMaquinaForm onCrear={crearMaquinaVending} />
+
       {/* Resumen de máquinas (datos reales de vending_maquinas) */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {errorMaquinas ? (
@@ -107,8 +73,8 @@ export default async function VentaVendingPage() {
           </div>
         ) : maquinas.length === 0 ? (
           <div className="col-span-full rounded-2xl border border-dashed border-kc-blush/60 bg-white p-6 text-center text-sm text-kc-mocha">
-            No hay máquinas registradas todavía. Ejecuta la migración SQL y
-            registra tu primera máquina expendedora.
+            No hay máquinas registradas todavía. Registra la primera con el
+            formulario de arriba.
           </div>
         ) : (
           maquinas.map((m) => (
@@ -178,14 +144,12 @@ export default async function VentaVendingPage() {
           ubicacion: m.ubicacion,
           formato: m.formato,
         }))}
-        onCalcular={async () => {
-          // La proyección detallada se conectará con calcularPrediccionAction
-        }}
+        onCalcular={guardarPrediccionDemanda}
         calculando={false}
         promedios={promedios}
-        saludables={saludables}
-        alerta={alerta}
-        criticos={criticos}
+        saludables={metricas.saludables}
+        alerta={metricas.alerta}
+        criticos={metricas.criticos}
       />
     </div>
   );

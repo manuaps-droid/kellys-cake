@@ -18,6 +18,23 @@ type MaquinaVendingUI = {
   formato: string;
 };
 
+type ResultadoPrediccionUI = {
+  promedios?: {
+    margenBrutoPct: number;
+    costoCompleto: number;
+    precioVenta: number;
+  };
+  saludables: number;
+  alerta: number;
+  criticos: number;
+  productos: Array<{
+    nombre: string;
+    margen: number;
+    costoCompleto: number;
+    precio: number;
+  }>;
+};
+
 type PromedioCapas = {
   margenBrutoPct: number;
   costoIngredientes: number;
@@ -36,7 +53,11 @@ type Props = {
     producto_ids: string[];
     maquina_id?: string;
     dias_proyectados: number;
-  }) => Promise<void>;
+  }) => Promise<{
+    success: boolean;
+    resultado?: ResultadoPrediccionUI;
+    error?: string;
+  }>;
   calculando: boolean;
   promedios: PromedioCapas;
   saludables: number;
@@ -57,6 +78,10 @@ export default function PrediccionDemandaPanel({
   const [productosSeleccionados, setProductosSeleccionados] = useState<string[]>([]);
   const [maquinaSeleccionada, setMaquinaSeleccionada] = useState<string>("");
   const [diasProyectados, setDiasProyectados] = useState(30);
+  const [resultadoCalculo, setResultadoCalculo] = useState<ResultadoPrediccionUI | null>(
+    null
+  );
+  const [errorCalculo, setErrorCalculo] = useState<string | null>(null);
 
   const toggleProducto = (id: string) => {
     setProductosSeleccionados((prev) =>
@@ -66,17 +91,71 @@ export default function PrediccionDemandaPanel({
 
   const handleCalcular = async () => {
     if (productosSeleccionados.length === 0) return;
-    await onCalcular({
+    setErrorCalculo(null);
+    const res = await onCalcular({
       producto_ids: productosSeleccionados,
       maquina_id: maquinaSeleccionada || undefined,
       dias_proyectados: diasProyectados,
     });
+    if (res.success && res.resultado) {
+      setResultadoCalculo(res.resultado);
+    } else {
+      setErrorCalculo(res.error || "Error al calcular.");
+    }
   };
 
+  // Vista: resultado del cálculo si existe, sino promedios del catálogo
+  const vista = resultadoCalculo
+    ? {
+        margenBrutoPct: resultadoCalculo.promedios
+          ? (resultadoCalculo.productos.reduce(
+              (t, p) => t + p.margen,
+              0
+            ) /
+              Math.max(1, resultadoCalculo.productos.length))
+        : promedios.margenBrutoPct,
+        costoCompleto: resultadoCalculo.promedios
+          ? resultadoCalculo.promedios.costoCompleto
+          : promedios.costoCompleto,
+        precioVenta: resultadoCalculo.promedios
+          ? resultadoCalculo.promedios.precioVenta
+          : promedios.precioVenta,
+        saludables: resultadoCalculo.saludables ?? saludables,
+        alerta: resultadoCalculo.alerta ?? alerta,
+        criticos: resultadoCalculo.criticos ?? criticos,
+        ranking: resultadoCalculo.productos.length > 0
+          ? resultadoCalculo.productos.map((p) => ({
+              nombre: p.nombre,
+              precio: p.precio,
+              costoCompleto: p.costoCompleto,
+              margen: p.margen,
+            }))
+          : productos.map((p) => ({
+              nombre: p.nombre,
+              precio: p.precio_venta || 0,
+              costoCompleto: p.precio_costo || 0,
+              margen: p.margen_porcentaje || 0,
+            })),
+      }
+    : {
+        margenBrutoPct: promedios.margenBrutoPct,
+        costoCompleto: promedios.costoCompleto,
+        precioVenta: promedios.precioVenta,
+        saludables,
+        alerta,
+        criticos,
+        ranking: productos.map((p) => ({
+          nombre: p.nombre,
+          precio: p.precio_venta || 0,
+          costoCompleto: p.precio_costo || 0,
+          margen: p.margen_porcentaje || 0,
+        })),
+      };
+
   const color =
-    promedios.margenBrutoPct > 40
+    vista.margenBrutoPct > 40
       ? "text-emerald-600"
-      : promedios.margenBrutoPct > 20
+      : vista.margenBrutoPct > 20
         ? "text-amber-600"
         : "text-red-600";
 
@@ -221,16 +300,23 @@ export default function PrediccionDemandaPanel({
 
       {/* Resultado */}
       <div className="rounded-2xl border border-kc-blush/40 bg-white p-6 shadow-sm">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-kc-mocha mb-4">
-          Resultado de Rentabilidad Promedio
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">
+            Resultado de Rentabilidad Promedio
+          </h2>
+          {resultadoCalculo && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+              Cálculo aplicado a {productosSeleccionados.length} producto(s)
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div
             className={`rounded-2xl p-5 text-center shadow-md ${
-              promedios.margenBrutoPct > 40
+              vista.margenBrutoPct > 40
                 ? "bg-emerald-600"
-                : promedios.margenBrutoPct > 20
+                : vista.margenBrutoPct > 20
                   ? "bg-amber-500"
                   : "bg-red-600"
             }`}
@@ -239,7 +325,7 @@ export default function PrediccionDemandaPanel({
               Margen Promedio
             </p>
             <p className={`text-4xl font-black text-white`}>
-              {Math.round(promedios.margenBrutoPct * 10) / 10}%
+              {Math.round(vista.margenBrutoPct * 10) / 10}%
             </p>
           </div>
           <div className="rounded-2xl border border-kc-blush/40 p-5 text-center">
@@ -247,7 +333,7 @@ export default function PrediccionDemandaPanel({
               Costo Promedio
             </p>
             <p className="text-2xl font-black text-kc-charcoal">
-              S/ {promedios.costoCompleto.toFixed(2)}
+              S/ {vista.costoCompleto.toFixed(2)}
             </p>
           </div>
           <div className="rounded-2xl border border-kc-blush/40 p-5 text-center">
@@ -255,7 +341,7 @@ export default function PrediccionDemandaPanel({
               Precio Promedio
             </p>
             <p className="text-2xl font-black text-kc-charcoal">
-              S/ {promedios.precioVenta.toFixed(2)}
+              S/ {vista.precioVenta.toFixed(2)}
             </p>
           </div>
           <div className="rounded-2xl border border-kc-blush/40 p-5 text-center">
@@ -263,11 +349,11 @@ export default function PrediccionDemandaPanel({
               Salud del Negocio
             </p>
             <p className="text-xs font-bold">
-              <span className="text-emerald-700">✅ {saludables} saludables</span>
+              <span className="text-emerald-700">✅ {vista.saludables} saludables</span>
               <br />
-              <span className="text-amber-700">⚠️ {alerta} en alerta</span>
+              <span className="text-amber-700">⚠️ {vista.alerta} en alerta</span>
               <br />
-              <span className="text-red-700">🚨 {criticos} críticos</span>
+              <span className="text-red-700">🚨 {vista.criticos} críticos</span>
             </p>
           </div>
         </div>
@@ -278,11 +364,11 @@ export default function PrediccionDemandaPanel({
             Ranking por Margen (mayor a menor)
           </h3>
           <div className="max-h-64 space-y-1 overflow-y-auto">
-            {[...productos]
-              .sort((a, b) => (b.margen_porcentaje || 0) - (a.margen_porcentaje || 0))
+            {[...vista.ranking]
+              .sort((a, b) => b.margen - a.margen)
               .map((p) => (
                 <div
-                  key={p.id}
+                  key={p.nombre}
                   className="flex items-center justify-between rounded-lg bg-kc-sand/50 px-3 py-1.5 text-xs"
                 >
                   <span className="truncate font-medium text-kc-charcoal">
@@ -290,18 +376,18 @@ export default function PrediccionDemandaPanel({
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
                     <span className="text-kc-mocha">
-                      S/ {(p.precio_venta || 0).toFixed(2)}
+                      S/ {p.precio.toFixed(2)}
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 font-bold ${
-                        (p.margen_porcentaje || 0) > 40
+                        p.margen > 40
                           ? "bg-emerald-100 text-emerald-700"
-                          : (p.margen_porcentaje || 0) > 20
+                          : p.margen > 20
                             ? "bg-amber-100 text-amber-700"
                             : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {(p.margen_porcentaje || 0).toFixed(1)}%
+                      {p.margen.toFixed(1)}%
                     </span>
                   </span>
                 </div>
@@ -309,9 +395,15 @@ export default function PrediccionDemandaPanel({
           </div>
         </div>
 
+        {errorCalculo && (
+          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
+            ⚠️ {errorCalculo}
+          </p>
+        )}
+
         <p className="mt-4 text-[10px] text-kc-mocha/70">
           {maquinas.length} máquina(s) vending disponibles · proyección a{" "}
-          {diasProyectados} días · color del margen: {color.replace("text-", "")}
+          {diasProyectados} días
         </p>
       </div>
     </div>

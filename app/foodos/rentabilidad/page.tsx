@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
-import type { DesgloseCosteo } from "@/features/rentabilidad/services/costeo-real.service";
+import { getCosteosCompletos } from "@/features/rentabilidad/services/costeo-real.service";
 import { SimuladorRentabilidad } from "@/features/rentabilidad/components/SimuladorRentabilidad";
 import { ProductoPreset } from "@/features/rentabilidad/types/rentabilidad.types";
 
@@ -9,6 +8,8 @@ export const metadata = {
   description:
     "Costeo profesional en 4 capas: ingredientes, empaques, mano de obra e indirectos. Datos reales, no multiplicadores.",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function RentabilidadPage() {
   const supabase = createAdminClient();
@@ -67,12 +68,10 @@ export default async function RentabilidadPage() {
     };
   });
 
-  // Calcular costeo real para cada producto (con receta activa)
-  const costeos: Record<string, DesgloseCosteo | null> = {};
-
-  for (const prod of productosExistentes) {
-    costeos[prod.id] = await calcularCosteoReal(prod.id);
-  }
+  // ── Batch: config compartida + costeos en paralelo (mata el N+1) ──
+  const costeos = await getCosteosCompletos(
+    productosExistentes.map((p) => p.id)
+  );
 
   return (
     <div className="p-4 sm:p-6 md:p-8 mx-auto max-w-7xl">

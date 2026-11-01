@@ -1,54 +1,50 @@
 import { getProductos } from "@/features/productos/queries/get-productos";
 import Link from "next/link";
 import { TrendingUp, ArrowRight, AlertTriangle, Sparkles, CheckCircle2 } from "lucide-react";
-import { calcularCosteoReal } from "@/features/rentabilidad/services/costeo-real.service";
 import RentabilidadPromedioCard from "@/features/rentabilidad/components/RentabilidadPromedioCard";
 import KpisFinancierosCard from "@/features/kpis/components/KpisFinancierosCard";
 import { getKpisFinancieros } from "@/features/kpis/services/kpis-financieros.service";
+import {
+  getMetricasProductos,
+  MARGEN_SALUDABLE_PCT,
+  MARGEN_ALERTA_PCT,
+  MARGEN_ESTRELLA_PCT,
+} from "@/features/rentabilidad/services/metricas-producto.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const productos = await getProductos();
 
-  const productosConReceta = productos?.filter((p) => p.precio_costo && p.precio_costo > 0) || [];
-  const rentables = productosConReceta.filter((p) => (p.margen_porcentaje || 0) > 50);
-  const alertaMargen = productosConReceta.filter((p) => (p.margen_porcentaje || 0) < 30);
+  // ── Fuente única de verdad: métricas con costeo real en batch ──
+  const metricas = await getMetricasProductos(true);
 
-  // ── Rentabilidad promedio real (productos con receta activa) ──
-  const conCosteo: Array<{
-    nombre: string;
-    margen: number;
-    costoCompleto: number;
-    precio: number;
-    mcPct: number;
-    mcUnit: number;
-  }> = [];
+  const conCosteo = metricas.metricas.map((m) => ({
+    nombre: m.nombre,
+    margen: m.margen_bruto_pct,
+    costoCompleto: m.costo_completo,
+    precio: m.precio_venta,
+  }));
 
-  for (const p of productos ?? []) {
-    const d = await calcularCosteoReal(p.id);
-    if (!d) continue;
-    const precio = Number(p.precio_venta) || 0;
-    conCosteo.push({
-      nombre: String(p.nombre ?? ""),
-      margen: d.margenBrutoPct,
-      costoCompleto: d.costoCompletoUnitario,
-      precio,
-      mcPct: d.margenContribucionPct,
-      mcUnit: d.margenContribucion,
-    });
-  }
+  const nCosteo = metricas.metricas.length;
+  const margenPromedio = metricas.margenPromedio;
 
-  const nCosteo = conCosteo.length;
-  const margenPromedio =
-    nCosteo > 0 ? conCosteo.reduce((t, x) => t + x.margen, 0) / nCosteo : null;
-
-  const saludables = conCosteo.filter((x) => x.margen > 40).length;
-  const enAlerta = conCosteo.filter((x) => x.margen > 20 && x.margen <= 40).length;
-  const criticos = conCosteo.filter((x) => x.margen <= 20).length;
+  const estrellas = metricas.estrellas;
+  const enRiesgo = metricas.metricas.filter(
+    (m) => m.margen_bruto_pct < MARGEN_SALUDABLE_PCT
+  );
 
   // ── KPIs financieros: ROS, ROI, ROE y punto de equilibrio ──
-  const kpis = await getKpisFinancieros(conCosteo);
+  const kpis = await getKpisFinancieros(
+    metricas.metricas.map((m) => ({
+      precio: m.precio_venta,
+      mcPct:
+        m.precio_venta > 0
+          ? ((m.precio_venta - m.costo_variable) / m.precio_venta) * 100
+          : 0,
+      mcUnit: m.margen_contribucion,
+    }))
+  );
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -98,13 +94,13 @@ export default async function AdminDashboard() {
           <p className="text-3xl font-bold text-kc-charcoal mt-2">{productos?.length || 0}</p>
           <span className="text-xs text-kc-mocha/70 mt-1 block">Registrados en FoodOS</span>
         </div>
-        {margenPromedio != null && (
+        {nCosteo > 0 && margenPromedio != null && (
           <RentabilidadPromedioCard
             margenPromedio={margenPromedio}
             totalConReceta={nCosteo}
-            saludables={saludables}
-            alerta={enAlerta}
-            criticos={criticos}
+            saludables={metricas.saludables}
+            alerta={metricas.alerta}
+            criticos={metricas.criticos}
             productos={conCosteo}
           />
         )}
@@ -127,8 +123,8 @@ export default async function AdminDashboard() {
           serieMensual={kpis.serieMensual}
         />
         <div className="bg-white p-6 rounded-2xl shadow-xs border border-kc-blush/40">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Productos Estrella (Margen &gt; 50%)</h3>
-          <p className="text-3xl font-bold text-emerald-600 mt-2">{rentables.length}</p>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-kc-mocha">Productos Estrella (Margen {'>'} {MARGEN_ESTRELLA_PCT}%)</h3>
+          <p className="text-3xl font-bold text-emerald-600 mt-2">{estrellas}</p>
           <span className="text-xs text-emerald-600 font-medium mt-1 block">Margen bruto altamente rentable</span>
         </div>
       </div>
@@ -140,23 +136,27 @@ export default async function AdminDashboard() {
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <span>Alertas de Rentabilidad en Catálogo</span>
           </h3>
-          {alertaMargen.length === 0 ? (
+          {enRiesgo.length === 0 ? (
             <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-200/60 text-emerald-800 text-sm">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>Todos tus productos costados tienen un margen saludable superior al 30%.</span>
+              <span>Todos tus productos costeados tienen un margen saludable superior al {MARGEN_SALUDABLE_PCT}%.</span>
             </div>
           ) : (
             <ul className="divide-y divide-kc-sand">
-              {alertaMargen.map((p) => (
-                <li key={p.id} className="py-3 flex justify-between items-center">
-                  <span className="font-semibold text-kc-charcoal text-sm">{p.nombre}</span>
+              {enRiesgo.map((m) => (
+                <li key={m.producto_id} className="py-3 flex justify-between items-center">
+                  <span className="font-semibold text-kc-charcoal text-sm">{m.nombre}</span>
                   <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-extrabold">
-                    {p.margen_porcentaje?.toFixed(1)}% Margen
+                    {m.margen_bruto_pct.toFixed(1)}% Margen
                   </span>
                 </li>
               ))}
             </ul>
           )}
+          <p className="mt-3 text-[10px] text-kc-mocha/70">
+            Alertas y semáforo usan la misma fuente: costeo real en 4 capas
+            (saludable {'>'} {MARGEN_SALUDABLE_PCT}% · alerta {MARGEN_ALERTA_PCT}-{MARGEN_SALUDABLE_PCT}% · crítico {'<'}= {MARGEN_ALERTA_PCT}%).
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xs border border-kc-blush/40 p-6 flex flex-col justify-center items-center text-center">

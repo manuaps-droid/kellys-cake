@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Geist,
-  Playfair_Display,
-  Poppins,
-} from "next/font/google";
+import { Geist, Playfair_Display, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 
 import "./globals.css";
@@ -77,9 +73,7 @@ async function getProductoSugerido(): Promise<ProductoSugerido | null> {
       .maybeSingle();
 
     if (destacado.data) {
-      return mapSugerido(
-        destacado.data as unknown as Record<string, unknown>
-      );
+      return mapSugerido(destacado.data as unknown as Record<string, unknown>);
     }
 
     const reciente = await supabase
@@ -90,9 +84,7 @@ async function getProductoSugerido(): Promise<ProductoSugerido | null> {
       .limit(1)
       .maybeSingle();
 
-    return mapSugerido(
-      reciente.data as unknown as Record<string, unknown>
-    );
+    return mapSugerido(reciente.data as unknown as Record<string, unknown>);
   } catch {
     return null;
   }
@@ -114,71 +106,6 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
 });
-
-// Metadata dinámica: lee desde la configuración de la tienda.
-// `generateMetadata` corre en el servidor, una sola vez por
-// request, paralelizable con el resto del render.
-export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getPublicSeo();
-
-  const title =
-    seo?.title ||
-    "Kelly's Cake | Pastelería Fina, Tortas Personalizadas y Delivery en Arequipa";
-  const description =
-    seo?.description ||
-    "Pastelería artesanal y tortas personalizadas en Arequipa. Diseñamos tortas de autor para cumpleaños y bodas, pastelería pet para mascotas, toppers en impresión 3D y delivery a domicilio.";
-
-  const defaultKeywords = [
-    "tortas personalizadas arequipa",
-    "pastelería fina arequipa",
-    "tortas de autor",
-    "tortas delivery arequipa",
-    "tortas para perros arequipa",
-    "toppers personalizados 3d arequipa",
-    "bocaditos para eventos arequipa",
-    "comprar torta online arequipa",
-  ];
-
-  const ogImage = seo?.og_image_url ?? undefined;
-  const verification = seo?.google_site_verification
-    ? { other: { "google-site-verification": seo.google_site_verification } }
-    : undefined;
-
-  return {
-    metadataBase: new URL(SITE_URL),
-    title,
-    description,
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-video-preview": -1,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-      },
-    },
-    keywords: seo?.keywords
-      ? seo.keywords.split(",").map((k) => k.trim())
-      : defaultKeywords,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      locale: "es_PE",
-      siteName: "Kelly's Cake",
-      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      ...(ogImage ? { images: [ogImage] } : {}),
-    },
-    verification,
-  };
-}
 
 export default async function RootLayout({
   children,
